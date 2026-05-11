@@ -1,0 +1,114 @@
+<!DOCTYPE html>
+<html xmlns:th="http://www.thymeleaf.org">
+<head>
+  <meta charset="UTF-8" />
+  <title>Recargar - Transcaribe</title>
+  <link rel="stylesheet" th:href="@{/style.css}" />
+</head>
+<body>
+  <div class="page">
+    <div th:replace="fragments/header :: header"></div>
+
+    <main class="center-card">
+      <div class="card recarga-container">
+        <button class="back-arrow"
+                th:onclick="|window.location.href='@{/menu}'|">
+          🡨
+        </button>
+
+        <h2>Recargar saldo</h2>
+        <p>Usuario: <strong th:text="${usuario.correo}"></strong></p>
+
+        <form th:action="@{/recargar}" method="post" class="recarga-form" id="recargaForm">
+          
+          <div class="form-section full-width">
+            <label for="monto">Monto a recargar</label>
+            <input id="monto" type="number" name="monto" min="1" step="1" placeholder="Ej: 5000" required />
+          </div>
+
+          <div class="form-section full-width">
+            <label>Método de pago</label>
+            <div class="radio-options">
+              <label><input type="radio" name="metodoPago" value="pse" checked onchange="togglePaymentFields()"/> PSE</label>
+              <label><input type="radio" name="metodoPago" value="tarjetaCredito" onchange="togglePaymentFields()"/> Tarjeta de crédito / débito</label>
+            </div>
+          </div>
+
+          <div id="pseFields" class="form-section full-width active-section">
+            <label for="correoPSE">Correo PSE</label>
+            <input id="correoPSE" name="correoPSE" type="email" placeholder="correo@ejemplo.com" />
+
+            <label for="contrasenaPSE">Contraseña PSE</label>
+            <input id="contrasenaPSE" name="contrasenaPSE" type="password" placeholder="Contraseña" />
+          </div>
+
+          <div id="tarjetaCreditoFields" class="form-section full-width" style="display: none;">
+            <label for="numeroTarjetaPago">Número de tarjeta (pago)</label>
+            <input id="numeroTarjetaPago" name="numeroTarjetaPago" type="text" inputmode="numeric" maxlength="19" placeholder="1234 5678 9012 3456" />
+
+            <div class="grid-2">
+              <div>
+                <label for="fechaVencimientoPago">Fecha de vencimiento (MM/AA)</label>
+                <input id="fechaVencimientoPago" name="fechaVencimientoPago" type="text" maxlength="5" placeholder="MM/AA" />
+              </div>
+              <div>
+                <label for="cvvPago">CVV</label>
+                <input id="cvvPago" name="cvvPago" type="password" inputmode="numeric" maxlength="4" placeholder="123" />
+              </div>
+            </div>
+          </div>
+
+          <div class="form-section full-width">
+            <label for="numeroTarjeta">Tarjeta Transcaribe destino</label>
+            <select id="numeroTarjeta" name="numeroTarjeta" required 
+                    style="width: 100%; padding: 12px; border-radius: 8px; border: 1px solid #ddd; background-color: white; font-size: 1rem;">
+              <option value="" disabled selected>Selecciona una de tus tarjetas</option>
+              <option th:each="t : ${usuario.tarjetas}" 
+                      th:value="${t.numeroTarjeta}" 
+                      th:text="${'Tarjeta: ' + t.numeroTarjeta + ' (Saldo: $' + t.saldo + ')'}">
+              </option>
+            </select>
+            <small class="small">El saldo se aplicará a la tarjeta que selecciones.</small>
+          </div>
+
+          <div class="form-section full-width button-section">
+            <button class="btn-recargar" type="submit" style="width: 100%; cursor: pointer;">Confirmar Recarga</button>
+          </div>
+        </form>
+
+        <p class="error" th:if="${error}" th:text="${error}"></p>
+      </div>
+    </main>
+
+    <div th:replace="fragments/footer :: footer"></div>
+  </div>
+
+  <script>
+    function togglePaymentFields(){
+      const method = document.querySelector('input[name="metodoPago"]:checked').value;
+      const pse = document.getElementById('pseFields');
+      const tc = document.getElementById('tarjetaCreditoFields');
+      if(method === 'tarjetaCredito') { 
+        pse.style.display = 'none'; 
+        tc.style.display = 'block'; 
+      } else { 
+        pse.style.display = 'block'; 
+        tc.style.display = 'none'; 
+      }
+    }
+
+    // Formateo de inputs de pago
+    document.addEventListener('input', (e)=>{
+      if(e.target.id === 'numeroTarjetaPago'){
+        let v = e.target.value.replace(/\D/g,'').slice(0,16);
+        e.target.value = v.replace(/(.{4})/g,'$1 ').trim();
+      }
+      if(e.target.id === 'fechaVencimientoPago'){
+        let v = e.target.value.replace(/\D/g,'').slice(0,4);
+        if(v.length > 2) v = v.slice(0,2) + '/' + v.slice(2);
+        e.target.value = v;
+      }
+    });
+  </script>
+</body>
+</html>

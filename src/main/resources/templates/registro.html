@@ -1,0 +1,119 @@
+<!DOCTYPE html>
+<html xmlns:th="http://www.thymeleaf.org">
+<head>
+  <meta charset="UTF-8">
+  <title>Registro - Transcaribe</title>
+  <link rel="stylesheet" th:href="@{/style.css}" />
+  <style>
+    /* Agrandamos el contenedor del formulario */
+    .login-card {
+      max-width: 450px; /* Antes era más angosto, ahora tiene más espacio */
+      width: 100%;
+      padding: 40px;
+    }
+
+    .form input {
+      margin-bottom: 15px;
+      padding: 12px; /* Inputs un poco más altos para que sea fácil escribir */
+    }
+
+    /* Estilo para cuando las contraseñas no coinciden */
+    .no-match {
+      border: 2px solid #ff4d4d !important;
+    }
+    
+    .match-error {
+      color: #ff4d4d;
+      font-size: 0.8rem;
+      margin-top: -10px;
+      margin-bottom: 10px;
+      display: none;
+    }
+  </style>
+</head>
+<body>
+  <div class="page">
+    <div th:replace="~{fragments/header :: header}"></div>
+
+    <main class="center-card">
+      <div class="card login-card"> 
+        <h1 class="title">Crear cuenta</h1>
+
+        <form th:action="@{/registro}" method="post" class="form" id="registroForm">
+          <input type="text" name="username" placeholder="Nombre completo" required />
+          <input type="email" name="correo" placeholder="Correo electrónico" required />
+          
+          <!-- Contraseña 1 -->
+          <input type="password" id="password" name="password" placeholder="Contraseña" required />
+          
+          <!-- Contraseña 2 -->
+          <input type="password" id="confirmPassword" placeholder="Confirmar contraseña" required />
+          <p id="passwordMessage" class="match-error">Las contraseñas no coinciden</p>
+          
+          <input type="text" 
+                 id="numeroTarjeta"
+                 name="numeroTarjeta" 
+                 placeholder="Número de Tarjeta (10 dígitos)" 
+                 maxlength="10" 
+                 inputmode="numeric"
+                 pattern="\d{10}"
+                 title="El número de tarjeta debe tener exactamente 10 dígitos numéricos"
+                 required />
+
+          <button class="primary" type="submit" id="btnRegistrar">Registrar</button>
+        </form>
+
+        <div class="register-row" style="margin-top: 20px;"> 
+          <span style="color: white; font-size: 0.9rem;">¿Ya tienes cuenta?</span>
+          <a th:href="@{/}" class="ghost" style="padding: 4px 10px; font-size: 0.85rem; text-decoration: none; border-radius: 8px;">Inicia sesión</a>
+        </div>
+
+        <div style="margin-top: 15px;">
+            <p class="error" th:if="${error}" th:text="${error}" 
+               style="background: rgba(255,0,0,0.2); color: #ffcccc; padding: 10px; border-radius: 8px; font-size: 0.9rem;"></p>
+            <p class="success" th:if="${mensaje}" th:text="${mensaje}"
+               style="background: rgba(0,255,0,0.2); color: #ccffcc; padding: 10px; border-radius: 8px; font-size: 0.9rem;"></p>
+        </div>
+      </div>
+    </main>
+
+    <div th:replace="~{fragments/footer :: footer}"></div>
+  </div>
+
+  <script>
+    const password = document.getElementById('password');
+    const confirmPassword = document.getElementById('confirmPassword');
+    const message = document.getElementById('passwordMessage');
+    const btn = document.getElementById('btnRegistrar');
+    const inputTarjeta = document.getElementById('numeroTarjeta');
+
+    // Validación de contraseñas
+    function validarPassword() {
+      if (confirmPassword.value === "") {
+        message.style.display = 'none';
+        return;
+      }
+
+      if (password.value !== confirmPassword.value) {
+        confirmPassword.classList.add('no-match');
+        message.style.display = 'block';
+        btn.disabled = true;
+        btn.style.opacity = "0.5";
+      } else {
+        confirmPassword.classList.remove('no-match');
+        message.style.display = 'none';
+        btn.disabled = false;
+        btn.style.opacity = "1";
+      }
+    }
+
+    password.addEventListener('change', validarPassword);
+    confirmPassword.addEventListener('keyup', validarPassword);
+
+    // Validación de número de tarjeta (Solo números)
+    inputTarjeta.addEventListener('input', function (e) {
+      this.value = this.value.replace(/[^0-9]/g, '');
+    });
+  </script>
+</body>
+</html>

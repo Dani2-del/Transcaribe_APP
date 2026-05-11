@@ -1,0 +1,328 @@
+<!DOCTYPE html>
+<html xmlns:th="http://www.thymeleaf.org">
+<head>
+    <meta charset="UTF-8">
+    <title>Admin Dashboard - Transcaribe</title>
+
+    <!-- Se agregó el "?" para evitar el error EL1007E cuando CSRF está desactivado -->
+    <meta name="_csrf" th:content="${_csrf?.token}"/>
+    <meta name="_csrf_header" th:content="${_csrf?.headerName}"/>
+
+    <link rel="stylesheet" th:href="@{/style.css}" />
+    
+    <style>
+        .card-select {
+            padding: 6px;
+            border-radius: 8px;
+            border: 1px solid #ddd;
+            background-color: #fff;
+            font-family: inherit;
+            cursor: pointer;
+            width: 100%;
+            min-width: 150px;
+        }
+        .saldo-display {
+            font-weight: bold;
+            color: #2e7d32;
+            white-space: nowrap;
+        }
+        .admin-table th {
+            text-align: left;
+            padding: 12px;
+        }
+        .role-badge {
+            font-size: 11px;
+            padding: 2px 6px;
+            border-radius: 4px;
+            background: #eee;
+            color: #666;
+            display: block;
+            margin-top: 4px;
+        }
+        .btn-excel {
+            background-color: #28a745;
+            color: white;
+            padding: 10px 18px;
+            border-radius: 8px;
+            text-decoration: none;
+            font-weight: bold;
+            font-size: 14px;
+            display: flex;
+            align-items: center;
+            gap: 8px;
+            border: none;
+            cursor: pointer;
+            transition: background 0.3s;
+        }
+        .btn-excel:hover {
+            background-color: #218838;
+        }
+    </style>
+</head>
+
+<body>
+<div class="page">
+    <div class="center-card wide">
+        <div class="card">
+            <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 20px;">
+                <div>
+                    <h2 style="margin: 0;">Panel administrador</h2>
+                    <p style="margin: 0;">Usuarios registrados:</p>
+                </div>
+                
+                <a th:href="@{/admin/reporte/excel}" class="btn-excel">
+                    📊 Descargar Reporte Excel
+                </a>
+            </div>
+
+            <div class="table-wrap">
+                <table class="admin-table">
+                    <thead>
+                    <tr>
+                        <th>ID</th>
+                        <th>Nombre / Rol</th>
+                        <th>Correo</th>
+                        <th>Tarjetas</th>
+                        <th>Saldo</th>
+                        <th>Acción</th>
+                    </tr>
+                    </thead>
+
+                    <tbody>
+                    <tr th:each="u : ${usuarios}">
+                        <td th:text="${u.id}"></td>
+                        <td>
+                            <span th:text="${u.nombre != null ? u.nombre : '-'}"></span>
+                            <small class="role-badge" th:text="${u.role}"></small>
+                        </td>
+                        <td th:text="${u.correo}"></td>
+                        
+                        <td>
+                            <select class="card-select" onchange="updateSaldoDisplay(this)">
+                                <option value="" data-saldo="0">Elegir tarjeta...</option>
+                                <option th:each="t : ${u.tarjetas}" 
+                                        th:value="${t.numeroTarjeta}" 
+                                        th:data-saldo="${t.saldo}"
+                                        th:text="${t.numeroTarjeta}">
+                                </option>
+                            </select>
+                        </td>
+
+                        <td class="saldo-display">$0</td>
+
+                        <td>
+                            <button class="card-btn"
+                                    th:attr="data-id=${u.id}"
+                                    onclick="openChargeModal(this)">
+                                Cobrar
+                            </button>
+
+                            <button class="card-btn"
+                                    th:attr="data-id=${u.id}, 
+                                             data-nombre=${u.nombre}, 
+                                             data-correo=${u.correo},
+                                             data-role=${u.role}"
+                                    onclick="openEditModal(this)">
+                                Editar
+                            </button>
+
+                            <button class="card-btn2"
+                                    th:if="${u.role != 'ROLE_ADMIN'}"
+                                    th:attr="data-id=${u.id}"
+                                    onclick="deleteUser(this)">
+                                Eliminar
+                            </button>
+                        </td>
+                    </tr>
+                    </tbody>
+                </table>
+            </div>
+
+            <button onclick="window.location.href='/'" class="ghost">Cerrar</button>
+        </div>
+    </div>
+</div>
+
+<!-- MODAL COBRAR -->
+<div id="chargeModal" style="display:none; position:fixed; inset:0; background:rgba(0,0,0,0.5); align-items:center; justify-content:center; z-index: 1000;">
+    <div style="background:white;padding:20px;border-radius:12px;width:420px;">
+        <h3>Cobrar pasaje</h3>
+        <p>Monto: <strong>3500</strong></p>
+        <input type="hidden" id="modalUserId" />
+        <button onclick="submitCharge()" class="primary">Confirmar</button>
+        <button onclick="closeModal()" class="ghost">Cancelar</button>
+        <div id="modalMsg"></div>
+    </div>
+</div>
+
+<!-- MODAL EDITAR -->
+<div id="editModal" style="display:none; position:fixed; inset:0; background:rgba(0,0,0,0.5); align-items:center; justify-content:center; z-index: 1000;">
+    <div style="background:white;padding:25px;border-radius:12px;width:420px; position:relative;">
+        <button onclick="closeEditModal()" 
+                style="position:absolute; top:10px; right:15px; border:none; background:none; font-size:20px; cursor:pointer;">
+            ✖
+        </button>
+        <h3>Editar usuario</h3>
+        
+        <input type="hidden" id="editUserId" />
+        
+        <label style="font-size: 13px; color: #666;">Nombre completo:</label>
+        <input type="text" id="editNombre" style="width:100%; padding:8px; margin-bottom:12px; border:1px solid #ccc; border-radius:6px;"><br>
+        
+        <label style="font-size: 13px; color: #666;">Correo electrónico:</label>
+        <input type="email" id="editCorreo" style="width:100%; padding:8px; margin-bottom:12px; border:1px solid #ccc; border-radius:6px;"><br>
+        
+        <label style="font-size: 13px; color: #666;">Rol asignado:</label>
+        <select id="editRole" style="width:100%; padding:8px; margin-bottom:12px; border:1px solid #ccc; border-radius:6px;">
+            <option value="ROLE_USER">Usuario (ROLE_USER)</option>
+            <option value="ROLE_ADMIN">Administrador (ROLE_ADMIN)</option>
+            <option value="ROLE_MODERADOR">Moderador (ROLE_MODERADOR)</option>
+        </select>
+
+        <label style="font-size: 13px; color: #666;">Seguridad:</label>
+        <input type="password" id="editPassword" placeholder="Nueva contraseña (dejar en blanco)" style="width:100%; padding:8px; margin-bottom:15px; border:1px solid #ccc; border-radius:6px;">
+        
+        <div style="display: flex; gap: 10px;">
+            <button type="button" onclick="submitEdit()" class="primary" style="flex:1;">Guardar cambios</button>
+            <button type="button" onclick="closeEditModal()" class="ghost" style="flex:1;">Cancelar</button>
+        </div>
+        
+        <div id="editMsg" style="margin-top:15px; text-align: center; font-weight: bold;"></div>
+    </div>
+</div>
+
+<script>
+const modal = document.getElementById('chargeModal');
+const editModal = document.getElementById('editModal');
+
+function updateSaldoDisplay(selectElement) {
+    const selectedOption = selectElement.options[selectElement.selectedIndex];
+    const saldo = selectedOption.getAttribute('data-saldo');
+    const row = selectElement.closest('tr');
+    const saldoCell = row.querySelector('.saldo-display');
+    
+    if (saldo && selectElement.value !== "") {
+        const formatted = new Number(saldo).toLocaleString('es-CO', {
+            style: 'currency',
+            currency: 'COP',
+            minimumFractionDigits: 0
+        });
+        saldoCell.textContent = formatted;
+    } else {
+        saldoCell.textContent = "$0";
+    }
+}
+
+function openChargeModal(btn){
+    document.getElementById('modalUserId').value = btn.getAttribute('data-id');
+    modal.style.display = 'flex';
+}
+
+function closeModal(){
+    modal.style.display = 'none';
+}
+
+function submitCharge(){
+    const userId = document.getElementById('modalUserId').value;
+    
+    // Obtenemos los valores de los metas con seguridad (pueden ser null)
+    const tokenMeta = document.querySelector('meta[name="_csrf"]');
+    const headerMeta = document.querySelector('meta[name="_csrf_header"]');
+    
+    const token = tokenMeta ? tokenMeta.getAttribute('content') : "";
+    const header = headerMeta ? headerMeta.getAttribute('content') : "";
+
+    const headers = { 'Content-Type':'application/x-www-form-urlencoded' };
+    
+    // Solo añadimos el header si existe (para evitar errores en JS)
+    if (header && token) {
+        headers[header] = token;
+    }
+
+    fetch('/admin/charge', {
+        method:'POST',
+        headers: headers,
+        body:new URLSearchParams({userId, amount:3500})
+    })
+    .then(r=>r.json())
+    .then(res=>{
+        if(res.status==='ok'){
+            location.reload();
+        }
+    });
+}
+
+function openEditModal(btn){
+    document.getElementById('editUserId').value = btn.getAttribute('data-id');
+    document.getElementById('editNombre').value = btn.getAttribute('data-nombre');
+    document.getElementById('editCorreo').value = btn.getAttribute('data-correo');
+    document.getElementById('editRole').value = btn.getAttribute('data-role');
+    document.getElementById('editPassword').value = '';
+    document.getElementById('editMsg').textContent = '';
+    editModal.style.display = 'flex';
+}
+
+function closeEditModal(){
+    editModal.style.display = 'none';
+}
+
+function submitEdit(){
+    const userId = document.getElementById('editUserId').value;
+    const nombre = document.getElementById('editNombre').value;
+    const correo = document.getElementById('editCorreo').value;
+    const role = document.getElementById('editRole').value;
+    const password = document.getElementById('editPassword').value;
+
+    const tokenMeta = document.querySelector('meta[name="_csrf"]');
+    const headerMeta = document.querySelector('meta[name="_csrf_header"]');
+    
+    const token = tokenMeta ? tokenMeta.getAttribute('content') : "";
+    const header = headerMeta ? headerMeta.getAttribute('content') : "";
+
+    const headers = { 'Content-Type':'application/x-www-form-urlencoded' };
+    if (header && token) headers[header] = token;
+
+    fetch('/admin/editUser',{
+        method:'POST',
+        headers: headers,
+        body:new URLSearchParams({userId, nombre, correo, role, password})
+    })
+    .then(r => r.json())
+    .then(res=>{
+        if(res.status==='ok'){
+            document.getElementById('editMsg').style.color = "green";
+            document.getElementById('editMsg').textContent = "Usuario actualizado ✅";
+            setTimeout(() => location.reload(), 1000);
+        }
+    });
+}
+
+function deleteUser(btn){
+    const userId = btn.getAttribute('data-id');
+    if(!confirm("¿Está seguro de que desea eliminar este usuario?")) return;
+
+    const tokenMeta = document.querySelector('meta[name="_csrf"]');
+    const headerMeta = document.querySelector('meta[name="_csrf_header"]');
+    
+    const token = tokenMeta ? tokenMeta.getAttribute('content') : "";
+    const header = headerMeta ? headerMeta.getAttribute('content') : "";
+
+    const headers = { 'Content-Type':'application/x-www-form-urlencoded' };
+    if (header && token) headers[header] = token;
+
+    fetch('/admin/deleteUser',{
+        method:'POST',
+        headers: headers,
+        body:new URLSearchParams({userId})
+    })
+    .then(r=>r.json())
+    .then(res=>{
+        if(res.status==='ok'){
+            location.reload();
+        }
+    });
+}
+</script>
+
+</body>
+</html>

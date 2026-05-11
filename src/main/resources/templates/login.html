@@ -1,0 +1,114 @@
+<!DOCTYPE html>
+<html xmlns:th="http://www.thymeleaf.org">
+<head>
+    <meta charset="UTF-8">
+    <title>Login - Transcaribe</title>
+    <link rel="stylesheet" th:href="@{/style.css}" />
+    <style>
+        .oauth-section { margin-top: 20px; text-align: center; }
+        .separator { display: flex; align-items: center; text-align: center; color: #888; margin: 20px 0; }
+        .separator::before, .separator::after { content: ''; flex: 1; border-bottom: 1px solid #ddd; }
+        .separator:not(:empty)::before { margin-right: .5em; }
+        .separator:not(:empty)::after { margin-left: .5em; }
+        
+        .button-google {
+            display: flex; 
+            align-items: center; 
+            justify-content: center;
+            background-color: white; 
+            color: #757575; 
+            border: 1px solid #ddd;
+            padding: 10px; 
+            border-radius: 4px; 
+            text-decoration: none;
+            font-weight: bold; 
+            transition: all 0.3s; 
+            width: 100%; 
+            box-sizing: border-box;
+        }
+        .button-google:hover { 
+            background-color: #f7f7f7; 
+            box-shadow: 0 1px 3px rgba(0,0,0,0.1); 
+            border-color: #ccc;
+        }
+        .google-icon { 
+            width: 18px; 
+            height: 18px; 
+            margin-right: 12px; 
+            display: block;
+        }
+
+      /* Estilo para el link de olvidar contraseña corregido a blanco */
+      .forgot-password {
+          display: block;
+          text-align: right;
+          font-size: 0.85em;
+          margin-top: -10px;
+          margin-bottom: 15px;
+          color: #ffffff; /* Cambio a blanco */
+          text-decoration: none;
+          transition: opacity 0.3s; /* Opcional: para un efecto suave al pasar el mouse */
+      }
+
+      .forgot-password:hover { 
+          text-decoration: underline; 
+          opacity: 0.8; /* Para que el usuario note que es un link al poner el cursor */
+      }
+    </style>
+</head>
+<body class="login-page">
+  <div class="page">
+    <div th:replace="~{fragments/header :: header}"></div>
+
+    <main class="center-card">
+      <div class="card login-card">
+        <h1 class="title">Bienvenido</h1>
+        <p class="subtitle">Ingresa a tu cuenta de Transcaribe</p>
+
+        <form th:action="@{/login}" method="post" class="form">
+          <input type="text" name="correo" placeholder="Correo electrónico" required />
+          <input type="password" name="password" placeholder="Contraseña" required />
+          
+          <!-- AGREGADO: Enlace de recuperación -->
+          <a th:href="@{/olvido-password}" class="forgot-password">¿Olvidaste tu contraseña?</a>
+
+          <button class="primary" type="submit">Ingresar</button>
+        </form>
+
+        <div class="oauth-section">
+          <div class="separator">o</div>
+          <a th:href="@{/oauth2/authorization/google}" class="button-google">
+            <img src="https://fonts.gstatic.com/s/i/productlogos/googleg/v6/24px.svg" 
+                 alt="Google Logo" 
+                 class="google-icon">
+            Continuar con Google
+          </a>
+        </div>
+
+        <div class="row small register-row" style="margin-top: 25px;">
+          <span>¿No tienes cuenta?</span>
+          <a th:href="@{/registro}" class="button-link register-button">Regístrate</a>
+        </div>
+
+        <div class="messages" style="margin-top: 15px;">
+          <!-- Errores de login -->
+          <p class="error" th:if="${param.error}" style="color: #d93025; font-size: 0.9em;">
+            Credenciales incorrectas. Intenta de nuevo.
+          </p>
+          
+          <!-- Mensajes de éxito (Como el de contraseña restablecida) -->
+          <p class="success" th:if="${mensaje}" th:text="${mensaje}" 
+             style="color: #188038; font-size: 0.9em; background: #e6f4ea; padding: 10px; border-radius: 5px; text-align: center;">
+          </p>
+
+          <p class="error" th:if="${param.sessionExpired}" style="color: #d93025; font-size: 0.9em;">
+            Tu sesión ha expirado. Por favor, inicia sesión nuevamente.
+          </p>
+        </div>
+      </div>
+    </main>
+
+    <div th:replace="~{fragments/footer :: footer}"></div>
+  </div>
+</body>
+</html>

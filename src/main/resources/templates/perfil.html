@@ -1,0 +1,59 @@
+<!DOCTYPE html>
+<html xmlns:th="http://www.thymeleaf.org">
+<head>
+  <meta charset="UTF-8" />
+  <title>Editar Perfil</title>
+  <link rel="stylesheet" th:href="@{/style.css}" />
+</head>
+<body>
+  <div class="page">
+
+    <main class="center-card">
+      <div class="card">
+        <button class="back-arrow"
+                onclick="window.location.href='/menu'">
+          🡨
+        </button>
+
+        <h2>Editar credenciales</h2>
+
+        <!-- 🔹 MENSAJES -->
+        <p class="success" th:if="${mensaje}" th:text="${mensaje}"></p>
+        <p class="error" th:if="${error}" th:text="${error}"></p>
+
+        <!-- 🔹 FORMULARIO -->
+        <form th:action="@{/perfil}" method="post">
+
+          <label>Nombre</label>
+          <input type="text"
+                 name="nombre"
+                 th:value="${usuario.nombre}"
+                 required />
+
+          <label>Correo</label>
+          <input type="email"
+                 name="correo"
+                 th:value="${usuario.correo}"
+                 required />
+
+          <label>Nueva contraseña</label>
+          <input type="password"
+                 name="password"
+                 placeholder="Dejar vacío para no cambiar" />
+
+          <div style="margin-top:15px; display:flex; gap:10px;">
+
+            <button type="submit" class="card-btn">
+              Guardar cambios
+            </button>
+
+          </div>
+
+        </form>
+
+      </div>
+    </main>
+
+  </div>
+</body>
+</html>
