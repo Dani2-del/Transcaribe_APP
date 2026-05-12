@@ -1,7 +1,7 @@
 package com.transcaribe.transcaribe.Security;
 
 import java.io.IOException;
-import org.springframework.context.annotation.Lazy;
+
 import org.springframework.security.authentication.UsernamePasswordAuthenticationToken;
 import org.springframework.security.core.context.SecurityContextHolder;
 import org.springframework.security.core.userdetails.UserDetails;
@@ -24,8 +24,7 @@ public class JwtAuthenticationFilter extends OncePerRequestFilter {
     private final JwtService jwtService;
     private final UserDetailsService userDetailsService;
 
-    // Se añade @Lazy para evitar que el fallo de conexión a DB detenga el arranque del contexto de seguridad
-    public JwtAuthenticationFilter(JwtService jwtService, @Lazy UserDetailsService userDetailsService) {
+    public JwtAuthenticationFilter(JwtService jwtService, UserDetailsService userDetailsService) {
         this.jwtService = jwtService;
         this.userDetailsService = userDetailsService;
     }
@@ -33,8 +32,10 @@ public class JwtAuthenticationFilter extends OncePerRequestFilter {
     @Override
     protected void doFilterInternal(HttpServletRequest request, HttpServletResponse response, FilterChain filterChain)
             throws ServletException, IOException {
-        
         String token = getTokenFromRequest(request);
+
+        // Luego se Valida el token.
+        // Si es válido, autenticar al usuario dentro de Spring Security.
 
         if (token != null && SecurityContextHolder.getContext().getAuthentication() == null) {
             try {
@@ -50,7 +51,6 @@ public class JwtAuthenticationFilter extends OncePerRequestFilter {
                     SecurityContextHolder.getContext().setAuthentication(authToken);
                 }
             } catch (Exception ex) {
-                // En caso de token inválido o error de DB, limpiamos el contexto
                 SecurityContextHolder.clearContext();
             }
         }
@@ -58,19 +58,23 @@ public class JwtAuthenticationFilter extends OncePerRequestFilter {
         filterChain.doFilter(request, response);
     }
 
+    // Revisar si llega un token en el header Authorization.
     private String getTokenFromRequest(HttpServletRequest request) {
         String authHeader = request.getHeader("Authorization");
         if (authHeader != null && authHeader.startsWith("Bearer ")) {
             return authHeader.substring(7);
         }
 
-        if (request.getCookies() != null) {
-            for (Cookie cookie : request.getCookies()) {
-                if (JWT_COOKIE_NAME.equals(cookie.getName())) {
-                    return cookie.getValue();
-                }
+        if (request.getCookies() == null) {
+            return null;
+        }
+        // Si no llega en header, revisar si existe una cookie JWT_TOKEN.
+        for (Cookie cookie : request.getCookies()) {
+            if (JWT_COOKIE_NAME.equals(cookie.getName())) {
+                return cookie.getValue();
             }
         }
+
         return null;
     }
 }

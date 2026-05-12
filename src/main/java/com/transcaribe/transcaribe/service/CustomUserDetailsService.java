@@ -1,6 +1,8 @@
 package com.transcaribe.transcaribe.service;
 
 import java.util.Collections;
+
+import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.security.core.userdetails.*;
 import org.springframework.security.core.authority.SimpleGrantedAuthority;
 import org.springframework.stereotype.Service;
@@ -11,12 +13,8 @@ import com.transcaribe.transcaribe.Repository.UsuarioRepository;
 @Service
 public class CustomUserDetailsService implements UserDetailsService {
 
-    private final UsuarioRepository usuarioRepository;
-
-    // Inyección por constructor (Práctica recomendada en Spring Boot 3)
-    public CustomUserDetailsService(UsuarioRepository usuarioRepository) {
-        this.usuarioRepository = usuarioRepository;
-    }
+    @Autowired
+    private UsuarioRepository usuarioRepository;
 
     @Override
     public UserDetails loadUserByUsername(String correo) throws UsernameNotFoundException {
@@ -27,6 +25,7 @@ public class CustomUserDetailsService implements UserDetailsService {
         String role = user.getRole().startsWith("ROLE_") 
                 ? user.getRole() 
                 : "ROLE_" + user.getRole();
+
 
         return new User(
                 user.getCorreo(),
