@@ -12,6 +12,7 @@ import java.io.ByteArrayInputStream;
 import java.io.ByteArrayOutputStream;
 import java.io.IOException;
 import java.util.List;
+import java.util.stream.Collectors;
 
 @Service
 public class ExcelReportService {
@@ -24,62 +25,76 @@ public class ExcelReportService {
         this.transaccionRepository = transaccionRepository;
     }
 
-    public ByteArrayInputStream generarReporteGeneral() throws IOException {
+    /**
+     * Genera el reporte filtrando por tipo:
+     *  - "todo"     → todas las transacciones
+     *  - "anual"    → transacciones del año indicado
+     *  - "mensual"  → transacciones del año + mes indicados
+     *  - "diario"   → transacciones del año + mes + día indicados
+     */
+    public ByteArrayInputStream generarReporte(String tipo, Integer anio, Integer mes, Integer dia) throws IOException {
         try (Workbook workbook = new XSSFWorkbook(); ByteArrayOutputStream out = new ByteArrayOutputStream()) {
-            
-            // --- 1. Estilos de encabezado ---
-            CellStyle headerCellStyle = workbook.createCellStyle();
+
+            // --- Estilos ---
+            CellStyle headerStyle = workbook.createCellStyle();
             Font headerFont = workbook.createFont();
             headerFont.setBold(true);
             headerFont.setColor(IndexedColors.WHITE.getIndex());
-            headerCellStyle.setFont(headerFont);
-            headerCellStyle.setFillForegroundColor(IndexedColors.DARK_BLUE.getIndex());
-            headerCellStyle.setFillPattern(FillPatternType.SOLID_FOREGROUND);
+            headerStyle.setFont(headerFont);
+            headerStyle.setFillForegroundColor(IndexedColors.DARK_BLUE.getIndex());
+            headerStyle.setFillPattern(FillPatternType.SOLID_FOREGROUND);
 
-            // --- 2. HOJA 1: RESUMEN DE USUARIOS ---
+            // --- Hoja 1: Resumen Usuarios ---
             Sheet sheetUsers = workbook.createSheet("Resumen Usuarios");
-            String[] columnasUsers = {"ID", "Nombre", "Correo", "Rol"};
-            
-            Row headerRowUsers = sheetUsers.createRow(0);
-            for (int i = 0; i < columnasUsers.length; i++) {
-                Cell cell = headerRowUsers.createCell(i);
-                cell.setCellValue(columnasUsers[i]);
-                cell.setCellStyle(headerCellStyle);
+            String[] colUsers = {"ID", "Nombre", "Correo", "Rol"};
+            Row headerUsers = sheetUsers.createRow(0);
+            for (int i = 0; i < colUsers.length; i++) {
+                Cell cell = headerUsers.createCell(i);
+                cell.setCellValue(colUsers[i]);
+                cell.setCellStyle(headerStyle);
             }
-
             List<Usuario> usuarios = usuarioRepository.findAll();
-            int rowIdxUser = 1;
+            int rowU = 1;
             for (Usuario u : usuarios) {
-                Row row = sheetUsers.createRow(rowIdxUser++);
+                Row row = sheetUsers.createRow(rowU++);
                 row.createCell(0).setCellValue(u.getId());
                 row.createCell(1).setCellValue(u.getNombre() != null ? u.getNombre() : "N/A");
                 row.createCell(2).setCellValue(u.getCorreo());
                 row.createCell(3).setCellValue(u.getRole());
             }
-            
-            // Autoajustar Hoja 1
-            for (int i = 0; i < columnasUsers.length; i++) sheetUsers.autoSizeColumn(i);
+            for (int i = 0; i < colUsers.length; i++) sheetUsers.autoSizeColumn(i);
 
-            // --- 3. HOJA 2: TODAS LAS TRANSACCIONES ---
-            Sheet sheetTrans = workbook.createSheet("Historial Global");
-            String[] columnasTrans = {"Fecha y Hora", "ID Transacción", "Usuario (Correo)", "Nombre", "Tipo", "Monto"};
-
-            Row headerRowTrans = sheetTrans.createRow(0);
-            for (int i = 0; i < columnasTrans.length; i++) {
-                Cell cell = headerRowTrans.createCell(i);
-                cell.setCellValue(columnasTrans[i]);
-                cell.setCellStyle(headerCellStyle);
+            // --- Hoja 2: Transacciones filtradas ---
+            // Título dinámico según filtro
+            String nombreHoja = buildNombreHoja(tipo, anio, mes, dia);
+            Sheet sheetTrans = workbook.createSheet(nombreHoja);
+            String[] colTrans = {"Fecha y Hora", "ID Transacción", "Usuario (Correo)", "Nombre", "Tipo", "Monto"};
+            Row headerTrans = sheetTrans.createRow(0);
+            for (int i = 0; i < colTrans.length; i++) {
+                Cell cell = headerTrans.createCell(i);
+                cell.setCellValue(colTrans[i]);
+                cell.setCellStyle(headerStyle);
             }
 
-            List<Transaccion> todasLasTransacciones = transaccionRepository.findAll();
-            int rowIdxTrans = 1;
-            for (Transaccion t : todasLasTransacciones) {
-                Row row = sheetTrans.createRow(rowIdxTrans++);
-                
-                // Fecha (Convertir a String para evitar errores de formato)
+            // Filtrar transacciones
+            List<Transaccion> transacciones = transaccionRepository.findAll().stream()
+                .filter(t -> {
+                    if (t.getFecha() == null) return false;
+                    if ("todo".equals(tipo)) return true;
+                    if (anio != null && t.getFecha().getYear() != anio) return false;
+                    if (("mensual".equals(tipo) || "diario".equals(tipo)) && mes != null
+                            && t.getFecha().getMonthValue() != mes) return false;
+                    if ("diario".equals(tipo) && dia != null
+                            && t.getFecha().getDayOfMonth() != dia) return false;
+                    return true;
+                })
+                .collect(Collectors.toList());
+
+            int rowT = 1;
+            for (Transaccion t : transacciones) {
+                Row row = sheetTrans.createRow(rowT++);
                 row.createCell(0).setCellValue(t.getFecha() != null ? t.getFecha().toString() : "Sin fecha");
                 row.createCell(1).setCellValue(t.getId());
-                
                 if (t.getUsuario() != null) {
                     row.createCell(2).setCellValue(t.getUsuario().getCorreo());
                     row.createCell(3).setCellValue(t.getUsuario().getNombre());
@@ -87,17 +102,27 @@ public class ExcelReportService {
                     row.createCell(2).setCellValue("N/A");
                     row.createCell(3).setCellValue("N/A");
                 }
-                
                 row.createCell(4).setCellValue(t.getTipo());
                 row.createCell(5).setCellValue(t.getMonto());
             }
+            for (int i = 0; i < colTrans.length; i++) sheetTrans.autoSizeColumn(i);
 
-            // Autoajustar Hoja 2
-            for (int i = 0; i < columnasTrans.length; i++) sheetTrans.autoSizeColumn(i);
-
-            // --- 4. Escritura final ---
             workbook.write(out);
             return new ByteArrayInputStream(out.toByteArray());
+        }
+    }
+
+    // Mantener compatibilidad con el método anterior
+    public ByteArrayInputStream generarReporteGeneral() throws IOException {
+        return generarReporte("todo", null, null, null);
+    }
+
+    private String buildNombreHoja(String tipo, Integer anio, Integer mes, Integer dia) {
+        switch (tipo) {
+            case "anual":   return "Año " + anio;
+            case "mensual": return "Mes " + mes + "-" + anio;
+            case "diario":  return "Día " + dia + "-" + mes + "-" + anio;
+            default:        return "Historial Global";
         }
     }
 }

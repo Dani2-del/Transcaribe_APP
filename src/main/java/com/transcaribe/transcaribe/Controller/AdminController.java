@@ -24,8 +24,8 @@ public class AdminController {
     private final ServiceTranscaribe serviceTranscaribe;
     private final ExcelReportService excelService;
 
-    public AdminController(UsuarioRepository usuarioRepository, 
-                           ServiceTranscaribe serviceTranscaribe, 
+    public AdminController(UsuarioRepository usuarioRepository,
+                           ServiceTranscaribe serviceTranscaribe,
                            ExcelReportService excelService) {
         this.usuarioRepository = usuarioRepository;
         this.serviceTranscaribe = serviceTranscaribe;
@@ -37,34 +37,57 @@ public class AdminController {
     public String mostrarDashboard(Model model) {
         List<Usuario> usuarios = usuarioRepository.findAll();
         model.addAttribute("usuarios", usuarios);
-        return "admin/dashboard"; 
+        return "admin/dashboard";
     }
 
-    // --- MÉTODO RECARGA/COBRO (Original) ---
+    // --- DESCARGA EXCEL CON FILTROS ---
+    @GetMapping("/reporte/excel")
+    public ResponseEntity<InputStreamResource> descargarExcel(
+            @RequestParam(defaultValue = "todo") String tipo,
+            @RequestParam(required = false) Integer anio,
+            @RequestParam(required = false) Integer mes,
+            @RequestParam(required = false) Integer dia) throws IOException {
+
+        // Nombre del archivo según filtro
+        String filename = switch (tipo) {
+            case "anual"   -> "Reporte_" + anio + ".xlsx";
+            case "mensual" -> "Reporte_" + anio + "-" + String.format("%02d", mes) + ".xlsx";
+            case "diario"  -> "Reporte_" + anio + "-" + String.format("%02d", mes) + "-" + String.format("%02d", dia) + ".xlsx";
+            default        -> "Reporte_Transcaribe.xlsx";
+        };
+
+        InputStreamResource file = new InputStreamResource(
+            excelService.generarReporte(tipo, anio, mes, dia)
+        );
+
+        return ResponseEntity.ok()
+                .header(HttpHeaders.CONTENT_DISPOSITION, "attachment; filename=" + filename)
+                .contentType(MediaType.parseMediaType(
+                    "application/vnd.openxmlformats-officedocument.spreadsheetml.sheet"))
+                .body(file);
+    }
+
+    // --- COBRAR PASAJE ---
     @PostMapping("/charge")
     @ResponseBody
-    public ResponseEntity<Map<String, Object>> chargePassenger(@RequestParam String userId, @RequestParam double amount) {
+    public ResponseEntity<Map<String, Object>> chargePassenger(
+            @RequestParam String userId, @RequestParam double amount) {
         Map<String, Object> response = new HashMap<>();
         boolean ok = serviceTranscaribe.cobrarPasajePorAdmin(userId, amount);
-
         if (!ok) {
             response.put("status", "error");
             response.put("message", "Saldo insuficiente o usuario no encontrado");
             return ResponseEntity.badRequest().body(response);
         }
-
         Usuario actualizado = usuarioRepository.findById(userId).get();
         response.put("status", "ok");
         response.put("usuarioSaldo", actualizado.getSaldoTotal());
-        // Agregamos el saldo de la primera tarjeta por si lo necesitas en el JS
-        if (!actualizado.getTarjetas().isEmpty()) {
+        if (!actualizado.getTarjetas().isEmpty())
             response.put("tarjetaSaldo", actualizado.getTarjetas().get(0).getSaldo());
-        }
-
         return ResponseEntity.ok(response);
     }
 
-    // --- EDITAR USUARIO (Original) ---
+    // --- EDITAR USUARIO ---
     @PostMapping("/editUser")
     @ResponseBody
     public ResponseEntity<Map<String, Object>> editUser(
@@ -73,7 +96,6 @@ public class AdminController {
             @RequestParam String correo,
             @RequestParam String role,
             @RequestParam(required = false) String password) {
-
         Map<String, Object> response = new HashMap<>();
         try {
             Optional<Usuario> opt = usuarioRepository.findById(userId);
@@ -82,11 +104,7 @@ public class AdminController {
                 u.setNombre(nombre);
                 u.setCorreo(correo);
                 u.setRole(role);
-
-                if (password != null && !password.trim().isEmpty()) {
-                    u.setPasswordHash(password); 
-                }
-
+                if (password != null && !password.trim().isEmpty()) u.setPasswordHash(password);
                 usuarioRepository.save(u);
                 response.put("status", "ok");
                 return ResponseEntity.ok(response);
@@ -102,7 +120,7 @@ public class AdminController {
         }
     }
 
-    // --- ELIMINAR USUARIO (Original) ---
+    // --- ELIMINAR USUARIO ---
     @PostMapping("/deleteUser")
     @ResponseBody
     public ResponseEntity<Map<String, Object>> deleteUser(@RequestParam String userId) {
@@ -115,17 +133,5 @@ public class AdminController {
             response.put("status", "error");
             return ResponseEntity.status(500).body(response);
         }
-    }
-
-    // --- NUEVO: DESCARGAR EXCEL ---
-    @GetMapping("/reporte/excel")
-    public ResponseEntity<InputStreamResource> descargarExcel() throws IOException {
-        String filename = "Reporte_Transcaribe.xlsx";
-        InputStreamResource file = new InputStreamResource(excelService.generarReporteGeneral());
-
-        return ResponseEntity.ok()
-                .header(HttpHeaders.CONTENT_DISPOSITION, "attachment; filename=" + filename)
-                .contentType(MediaType.parseMediaType("application/vnd.openxmlformats-officedocument.spreadsheetml.sheet"))
-                .body(file);
     }
 }
