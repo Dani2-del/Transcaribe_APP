@@ -36,42 +36,40 @@ public class SecurityConfig {
     @Bean
     public SecurityFilterChain filterChain(HttpSecurity http) throws Exception {
         http
-            .csrf(csrf -> csrf.disable()) 
-            
+            .csrf(csrf -> csrf.disable())
+
             .authorizeHttpRequests(auth -> auth
-                // --- RUTAS PÚBLICAS TOTALMENTE CORREGIDAS ---
                 .requestMatchers(
-                    "/",                     // Raíz
-                    "/login",                // Página de login
-                    "/registro",             // Registro de usuario
-                    "/verificar-otp/**",     // Verificación de cuenta nueva
-                    "/olvido-password",      // Formulario para pedir el código
-                    "/verificar-codigo-recuperar-password/**", // Vista de ingreso de código
-                    "/validar-codigo-restablecimiento",        // Acción POST de validación
-                    "/restablecer-password",                   // Vista de nueva contraseña
-                    "/confirmar-restablecimiento",             // Acción POST de guardado final
-                    "/style.css",            // Estilos
-                    "/error/**",             // Páginas de error
-                    "/images/**",            // Imágenes estáticas
-                    "/js/**"                 // Scripts
+                    "/",
+                    "/login",
+                    "/registro",
+                    "/verificar-otp/**",
+                    "/olvido-password",
+                    "/verificar-codigo-recuperar-password/**",
+                    "/validar-codigo-restablecimiento",
+                    "/restablecer-password",
+                    "/confirmar-restablecimiento",
+                    "/style.css",
+                    "/error/**",
+                    "/images/**",
+                    "/js/**"
                 ).permitAll()
 
-                // Rutas protegidas por rol
-                .requestMatchers("/choose-view").hasAnyRole("ADMIN", "MODERADOR")
+                // CORRECCIÓN: choose-view accesible para cualquier autenticado
+                // El controlador ya maneja la lógica de roles internamente
+                .requestMatchers("/choose-view").authenticated()
+
                 .requestMatchers("/admin/**").hasRole("ADMIN")
                 .requestMatchers("/mod/**").hasRole("MODERADOR")
 
-                // Cualquier otra ruta requiere autenticación
                 .anyRequest().authenticated()
             )
 
-            // --- CONFIGURACIÓN DE OAUTH2 (GOOGLE) CORREGIDA ---
             .oauth2Login(oauth2 -> oauth2
-                .loginPage("/login") // CAMBIADO de "/" a "/login" para evitar el bucle
+                .loginPage("/login")
                 .successHandler(oauth2SuccessHandler)
             )
 
-            // --- CONFIGURACIÓN DE LOGIN TRADICIONAL ---
             .formLogin(form -> form
                 .loginPage("/login")
                 .loginProcessingUrl("/login")
@@ -79,8 +77,8 @@ public class SecurityConfig {
                 .passwordParameter("password")
                 .successHandler((request, response, authentication) -> {
                     var roles = authentication.getAuthorities();
-                    boolean isStaff = roles.stream().anyMatch(r -> 
-                        r.getAuthority().equals("ROLE_ADMIN") || 
+                    boolean isStaff = roles.stream().anyMatch(r ->
+                        r.getAuthority().equals("ROLE_ADMIN") ||
                         r.getAuthority().equals("ROLE_MODERADOR"));
 
                     if (isStaff) {
@@ -90,13 +88,11 @@ public class SecurityConfig {
                     }
                 })
                 .failureHandler((request, response, exception) -> {
-                    // Si el usuario no ha verificado su cuenta (isVerificado = false)
-                    if (exception instanceof DisabledException || 
+                    if (exception instanceof DisabledException ||
                         (exception.getCause() != null && exception.getCause() instanceof DisabledException)) {
                         String correo = request.getParameter("correo");
                         response.sendRedirect("/verificar-otp?correo=" + correo);
                     } else {
-                        // Enviamos el error directamente al login, no a la raíz
                         response.sendRedirect("/login?error=true");
                     }
                 })
@@ -115,7 +111,7 @@ public class SecurityConfig {
 
             .sessionManagement(session -> session
                 .sessionCreationPolicy(SessionCreationPolicy.IF_REQUIRED)
-                .maximumSessions(1) 
+                .maximumSessions(1)
                 .expiredUrl("/login?expired=true")
             )
 

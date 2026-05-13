@@ -317,4 +317,9 @@ public void procesarNotificacionLogin(String correo) {
             }
         });
     }
+
+    // Agrega esto en ServiceTranscaribe.java
+public Usuario buscarPorId(String id) {
+    return repositorioUsuarios.findById(id).orElse(null);
+}
 }

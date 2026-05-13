@@ -1,14 +1,18 @@
 package com.transcaribe.transcaribe.Controller;
 
+import com.transcaribe.transcaribe.Model.Usuario;
 import com.transcaribe.transcaribe.Repository.BusRepository;
 import com.transcaribe.transcaribe.service.BusService;
+import com.transcaribe.transcaribe.service.ServiceTranscaribe;
+import com.transcaribe.transcaribe.service.EmailService;
+
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.http.ResponseEntity;
-import org.springframework.stereotype.Controller; // Cambiamos a Controller para manejar vistas y API
+import org.springframework.stereotype.Controller;
 import org.springframework.web.bind.annotation.*;
 import org.springframework.web.servlet.mvc.support.RedirectAttributes;
 
-@Controller // Usamos Controller general para permitir tanto redirecciones como ResponseBody
+@Controller
 @RequestMapping("/api/buses")
 public class BusController {
 
@@ -16,26 +20,60 @@ public class BusController {
     private BusService busService;
 
     @Autowired
+    private ServiceTranscaribe service;
+
+    @Autowired
     private BusRepository busRepository;
+
+    @Autowired
+    private EmailService emailService;
 
     /**
      * ENDPOINT PARA LA API (JSON)
-     * Usado si haces peticiones desde JavaScript/Postman
+     * Procesa el pago y envía notificación automática.
      */
     @PostMapping("/pagar/{usuarioId}/{busId}")
-    @ResponseBody // Esto permite que devuelva texto/JSON en lugar de buscar un HTML
+    @ResponseBody
     public ResponseEntity<String> pagar(
             @PathVariable String usuarioId, 
             @PathVariable String busId,
             @RequestParam String numeroTarjeta) {
         try {
+            // 1. Ejecutar la lógica de pago (Costo $3900.00 definido en BusService)
             String resultado = busService.pagarPasajeConTarjetaEspecifica(usuarioId, busId, numeroTarjeta);
             
+            // 2. Verificar errores de saldo o validación de tarjeta
             if (resultado.contains("Saldo insuficiente") || resultado.contains("no es válida")) {
                 return ResponseEntity.badRequest().body(resultado);
             }
+
+            // --- INTEGRACIÓN DEL CORREO DE GASTO ---
+            try {
+                // Buscamos el usuario en la BD para obtener nombre y correo
+                Usuario usuarioDestino = service.buscarPorId(usuarioId);
+                
+                if (usuarioDestino != null) {
+                    // Valor según tu BusService: 3900.0
+                    double costoPasaje = 3900.0; 
+                    
+                    // Extraemos el saldo restante del string de respuesta para el correo
+                    // Opcionalmente podrías llamar a un método "obtenerSaldo"
+                    String saldoRestante = resultado.split("\\$")[1]; 
+
+                    emailService.enviarNotificacionGasto(
+                        usuarioDestino.getCorreo(),
+                        usuarioDestino.getNombre(),
+                        costoPasaje,
+                        saldoRestante
+                    );
+                }
+            } catch (Exception e) {
+                System.err.println("Error al enviar el correo de ticket: " + e.getMessage());
+            }
+            // ---------------------------------------
             
             return ResponseEntity.ok(resultado);
+            
         } catch (Exception e) {
             return ResponseEntity.badRequest().body("Error al procesar el pago: " + e.getMessage());
         }
@@ -43,6 +81,7 @@ public class BusController {
 
     /**
      * CONFIGURACIÓN INICIAL
+     * Crea el bus B-210 con las rutas de Cartagena.
      */
     @PostMapping("/setup")
     @ResponseBody
@@ -53,7 +92,7 @@ public class BusController {
 
     /**
      * MÉTODO PARA LA VISTA (HTML)
-     * Este es el que tenías en el controlador anterior para el botón de "Simular Viaje"
+     * Maneja la redirección y mensajes flash para la interfaz web.
      */
     @PostMapping("/simular-viaje")
     public String simularViaje(@RequestParam String usuarioId, 
@@ -61,17 +100,34 @@ public class BusController {
                                RedirectAttributes redirectAttributes) {
         
         try {
-            // Buscamos el primer bus disponible para la simulación
             var buses = busRepository.findAll();
             if (buses.isEmpty()) {
                 redirectAttributes.addFlashAttribute("error", "No hay buses configurados. Ejecuta el setup primero.");
                 return "redirect:/menu";
             }
 
+            // Tomamos el primer bus (B-210) para la simulación
             String busId = buses.get(0).getId(); 
             String resultado = busService.pagarPasajeConTarjetaEspecifica(usuarioId, busId, numeroTarjeta);
 
-            if (resultado.contains("confirmado")) {
+            if (resultado.contains("Cobro exitoso")) {
+                // --- NOTIFICACIÓN EN SIMULACIÓN ---
+                try {
+                    Usuario u = service.buscarPorId(usuarioId);
+                    if (u != null) {
+                        String saldoRestante = resultado.split("\\$")[1];
+                        emailService.enviarNotificacionGasto(
+                            u.getCorreo(), 
+                            u.getNombre(), 
+                            3900.0, 
+                            saldoRestante
+                        );
+                    }
+                } catch (Exception ex) {
+                    System.err.println("Error correo simulación: " + ex.getMessage());
+                }
+                // ----------------------------------
+                
                 redirectAttributes.addFlashAttribute("mensaje", resultado + " ✅");
             } else {
                 redirectAttributes.addFlashAttribute("error", resultado + " ❌");

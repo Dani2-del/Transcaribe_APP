@@ -1,6 +1,6 @@
 	spring.application.name=transcaribe_db
 	
-	spring.data.mongodb.uri=mongodb://localhost:27017/transcaribe_db
+	spring.data.mongodb.uri=mongodb+srv://Admin:RtKGhwlYZ8XNUuSL@cluster0.dhwrxtd.mongodb.net/transcaribe_db
 	
 
 	spring.mail.host=smtp.gmail.com
