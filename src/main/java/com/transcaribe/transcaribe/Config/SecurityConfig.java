@@ -55,13 +55,13 @@ public class SecurityConfig {
                     "/js/**"
                 ).permitAll()
 
-                // CORRECCIÓN: choose-view accesible para cualquier autenticado
-                // El controlador ya maneja la lógica de roles internamente
+                // El selector de vista solo para usuarios autenticados (Admin/User)
                 .requestMatchers("/choose-view").authenticated()
 
+                // Acceso restringido solo a Administradores
                 .requestMatchers("/admin/**").hasRole("ADMIN")
-                .requestMatchers("/mod/**").hasRole("MODERADOR")
 
+                // Cualquier otra ruta requiere estar logueado
                 .anyRequest().authenticated()
             )
 
@@ -77,13 +77,16 @@ public class SecurityConfig {
                 .passwordParameter("password")
                 .successHandler((request, response, authentication) -> {
                     var roles = authentication.getAuthorities();
-                    boolean isStaff = roles.stream().anyMatch(r ->
-                        r.getAuthority().equals("ROLE_ADMIN") ||
-                        r.getAuthority().equals("ROLE_MODERADOR"));
+                    
+                    // Verificamos si el usuario tiene el rol de Administrador
+                    boolean isAdmin = roles.stream().anyMatch(r ->
+                        r.getAuthority().equals("ROLE_ADMIN"));
 
-                    if (isStaff) {
+                    if (isAdmin) {
+                        // Si es Admin, va a la pantalla de selección (Admin vs Usuario)
                         response.sendRedirect("/choose-view");
                     } else {
+                        // Si es un usuario normal, va directo al menú
                         response.sendRedirect("/menu");
                     }
                 })

@@ -1,0 +1,30 @@
+services:
+  app:
+    build: .
+    ports:
+      - "8080:8080"
+    environment:
+      # Conexión a tu MongoDB Atlas (Nube)
+      - SPRING_DATA_MONGODB_URI=mongodb+srv://Admin:RtKGhwlYZ8XNUuSL@cluster0.dhwrxtd.mongodb.net/transcaribe_db
+      
+      # Configuración de Correo (Gmail)
+      - SPRING_MAIL_USERNAME=transcaribeapp@gmail.com
+      - SPRING_MAIL_PASSWORD=qfgqxxequczcejmu
+      
+      # Seguridad JWT
+      - APP_JWT_SECRET=ddn72mcGX9V47icYqHQjaYIWh+MoS3R31lyXGAjqffE=
+      
+      # Google OAuth2
+      - GOOGLE_CLIENT_ID=126707567986-1ejdn0k07gto37kqhg35qdanfonpn92o.apps.googleusercontent.com
+      - GOOGLE_CLIENT_SECRET=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
+      
+      # Puerto configurado en tu properties
+      - SERVER_PORT=8080
+    restart: always
+
+# El servicio de DB local se comenta si prefieres usar Atlas (la nube), 
+# pero lo dejo aquí por si quieres cambiarlo luego:
+#  db:
+#    image: mongo:latest
+#    ports:
+#      - "27017:27017"

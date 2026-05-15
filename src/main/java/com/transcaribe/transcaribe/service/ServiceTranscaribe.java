@@ -176,7 +176,7 @@ public class ServiceTranscaribe {
                 }).orElse(false);
     }
 
-    // --- 9. EDITAR CREDENCIALES ---
+        // --- 9. EDITAR CREDENCIALES ---
         public boolean editarCredenciales(String idUsuarioObjetivo, String nuevoNombre, String nuevoCorreo, String nuevaPassword, Usuario usuarioActual) {
             Optional<Usuario> optUsuario = repositorioUsuarios.findById(idUsuarioObjetivo);
             if (optUsuario.isEmpty()) return false;
@@ -184,12 +184,14 @@ public class ServiceTranscaribe {
             Usuario objetivo = optUsuario.get();
             if (!objetivo.isActivo()) return false;
 
-            // Guardamos el correo antiguo por si cambia, para notificar a la dirección anterior
             String correoAnterior = objetivo.getCorreo();
             boolean huboCambiosCriticos = false;
 
-            if (Usuario.ROLE_MODERADOR.equals(usuarioActual.getRole())) return false;
-            if (Usuario.ROLE_USER.equals(usuarioActual.getRole()) && !usuarioActual.getId().equals(idUsuarioObjetivo)) return false;
+            // --- CORRECCIÓN AQUÍ ---
+            // 1. Si no es ADMIN y el ID no coincide, no tiene permiso (Se eliminó la línea de Moderador)
+            if (!Usuario.ROLE_ADMIN.equals(usuarioActual.getRole()) && !usuarioActual.getId().equals(idUsuarioObjetivo)) {
+                return false;
+            }
 
             if (nuevoNombre != null && !nuevoNombre.isBlank()) objetivo.setNombre(nuevoNombre);
             
@@ -207,12 +209,9 @@ public class ServiceTranscaribe {
 
             repositorioUsuarios.save(objetivo);
 
-            // 🚀 AQUÍ VAN LAS NOTIFICACIONES
             if (huboCambiosCriticos) {
-                // 1. Notificamos al correo actual/nuevo que hubo un cambio
                 emailService.enviarNotificacionLogin(objetivo.getCorreo(), objetivo.getNombre()); 
                 
-                // 2. Si cambió el correo, opcionalmente podrías enviar un aviso al correo anterior
                 if (!correoAnterior.equals(objetivo.getCorreo())) {
                     emailService.enviarNotificacionLogin(correoAnterior, objetivo.getNombre());
                 }
