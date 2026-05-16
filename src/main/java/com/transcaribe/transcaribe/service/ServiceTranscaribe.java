@@ -29,7 +29,6 @@ public class ServiceTranscaribe {
         this.emailService = emailService;
     }
 
-    // --- 1. REGISTRO ---
     public boolean registrar(String nombre, String correo, String contrasena, String numeroTarjeta) {
         if (repositorioUsuarios.findByCorreo(correo).isPresent()) {
             return false;
@@ -43,7 +42,6 @@ public class ServiceTranscaribe {
 
         Usuario nuevoUsuario = new Usuario(correo, passwordEncoder.encode(contrasena), nombre);
         
-        // CORRECCIÓN: Agregamos la tarjeta inicial a la lista embebida
         nuevoUsuario.agregarTarjeta(numeroLimpio, BigDecimal.ZERO);
         nuevoUsuario.setCodigoVerificacion(codigoOtp);
         nuevoUsuario.setVerificado(false); 
@@ -58,7 +56,6 @@ public class ServiceTranscaribe {
         return true;
     }
 
-    // --- 2. VERIFICACIÓN OTP ---
     public boolean verificarCodigo(String correo, String codigoIntroducido) {
         Optional<Usuario> opt = repositorioUsuarios.findByCorreo(correo);
 
@@ -81,10 +78,8 @@ public class ServiceTranscaribe {
         return false;
     }
 
-    // --- 3. RECARGA GENÉRICA ---
     public void recargar(Usuario usuario, double monto) {
         if (usuario != null && usuario.isActivo() && monto > 0 && !usuario.getTarjetas().isEmpty()) {
-            // CORRECCIÓN: Uso de BigDecimal.add()
             Tarjeta t = usuario.getTarjetas().get(0);
             t.setSaldo(t.getSaldo().add(BigDecimal.valueOf(monto)));
             
@@ -94,24 +89,20 @@ public class ServiceTranscaribe {
         }
     }
 
-    // --- 4. GASTO GENÉRICO ---
     public void gastar(Usuario usuario, double monto) {
         if (usuario != null && usuario.isActivo() && !usuario.getTarjetas().isEmpty()) {
             Tarjeta t = usuario.getTarjetas().get(0);
             BigDecimal montoBD = BigDecimal.valueOf(monto);
             
-            // CORRECCIÓN: Uso de compareTo() y subtract()
             if (t.getSaldo().compareTo(montoBD) >= 0) {
                 t.setSaldo(t.getSaldo().subtract(montoBD));
                 repositorioUsuarios.save(usuario);
                 servicioTransacciones.registrarTransaccion(usuario, "Gasto Directo", monto);
-                // NOTIFICACIÓN
             emailService.enviarNotificacionGasto(usuario.getCorreo(), usuario.getNombre(), monto, t.getSaldo().toString());
             }
         }
     }
 
-    // --- 5. RECARGA ESPECÍFICA EN TARJETA ---
     public boolean recargarEnTarjeta(Usuario usuario, String numeroTarjeta, double monto) {
         if (usuario == null || !usuario.isActivo() || monto <= 0) return false;
 
@@ -119,7 +110,6 @@ public class ServiceTranscaribe {
                 .filter(t -> t.getNumeroTarjeta().equals(numeroTarjeta))
                 .findFirst()
                 .map(t -> {
-                    // CORRECCIÓN: Uso de BigDecimal.add()
                     t.setSaldo(t.getSaldo().add(BigDecimal.valueOf(monto)));
                     repositorioUsuarios.save(usuario);
                     servicioTransacciones.registrarTransaccion(usuario, "Recarga Tarjeta: " + ocultarNumeroTarjeta(numeroTarjeta), monto);
@@ -127,13 +117,11 @@ public class ServiceTranscaribe {
                 }).orElse(false);
     }
 
-    // --- 6. OBTENER TARJETA PRINCIPAL ---
     public Tarjeta obtenerTarjetaDeUsuario(Usuario usuario) {
         if (usuario == null || usuario.getTarjetas().isEmpty()) return null;
         return usuario.getTarjetas().get(0);
     }
 
-    // --- 7. COBRO PASAJE POR ADMIN ---
     public boolean cobrarPasajePorAdmin(String idUsuario, double monto) {
         Optional<Usuario> opt = repositorioUsuarios.findById(idUsuario);
         if (opt.isEmpty()) return false;
@@ -144,7 +132,6 @@ public class ServiceTranscaribe {
         Tarjeta t = u.getTarjetas().get(0);
         BigDecimal montoBD = BigDecimal.valueOf(monto);
 
-        // CORRECCIÓN: Uso de compareTo() y subtract()
         if (t.getSaldo().compareTo(montoBD) >= 0) {
             t.setSaldo(t.getSaldo().subtract(montoBD));
             repositorioUsuarios.save(u);
@@ -154,7 +141,6 @@ public class ServiceTranscaribe {
         return false;
     }
 
-    // --- 8. COBRO PASAJE NORMAL (Por tarjeta específica) ---
     public boolean cobrarPasaje(String idUsuario, String numeroTarjeta, double monto) {
         Optional<Usuario> opt = repositorioUsuarios.findById(idUsuario);
         if (opt.isEmpty()) return false;
@@ -165,7 +151,6 @@ public class ServiceTranscaribe {
                 .findFirst()
                 .map(t -> {
                     BigDecimal montoBD = BigDecimal.valueOf(monto);
-                    // CORRECCIÓN: Uso de compareTo() y subtract()
                     if (t.getSaldo().compareTo(montoBD) >= 0) {
                         t.setSaldo(t.getSaldo().subtract(montoBD));
                         repositorioUsuarios.save(u);
@@ -176,7 +161,6 @@ public class ServiceTranscaribe {
                 }).orElse(false);
     }
 
-        // --- 9. EDITAR CREDENCIALES ---
         public boolean editarCredenciales(String idUsuarioObjetivo, String nuevoNombre, String nuevoCorreo, String nuevaPassword, Usuario usuarioActual) {
             Optional<Usuario> optUsuario = repositorioUsuarios.findById(idUsuarioObjetivo);
             if (optUsuario.isEmpty()) return false;
@@ -187,8 +171,6 @@ public class ServiceTranscaribe {
             String correoAnterior = objetivo.getCorreo();
             boolean huboCambiosCriticos = false;
 
-            // --- CORRECCIÓN AQUÍ ---
-            // 1. Si no es ADMIN y el ID no coincide, no tiene permiso (Se eliminó la línea de Moderador)
             if (!Usuario.ROLE_ADMIN.equals(usuarioActual.getRole()) && !usuarioActual.getId().equals(idUsuarioObjetivo)) {
                 return false;
             }
@@ -220,7 +202,6 @@ public class ServiceTranscaribe {
             return true;
         }
 
-    // --- 10. UTILIDAD: AGREGAR TARJETA EXTRA ---
     public boolean agregarNuevaTarjeta(String idUsuario, String nuevoNumero) {
         Optional<Usuario> opt = repositorioUsuarios.findById(idUsuario);
         if (opt.isPresent()) {
@@ -242,19 +223,17 @@ public class ServiceTranscaribe {
 
 
     public String agregarNuevaTarjetaConValidacion(String idUsuario, String nuevoNumero) {
-    // 1. Verificar si la tarjeta ya existe en el sistema (en cualquier usuario)
     Optional<Usuario> dueñoExistente = repositorioUsuarios.findByNumeroTarjetaEnLista(nuevoNumero);
     
     if (dueñoExistente.isPresent()) {
         return "La tarjeta ya está registrada por otro usuario.";
     }
 
-    // 2. Si no existe, proceder con la lógica de agregado
+
     Optional<Usuario> opt = repositorioUsuarios.findById(idUsuario);
     if (opt.isPresent()) {
         Usuario u = opt.get();
         
-        // Verificar que el usuario actual no la tenga ya repetida en su propia lista
         boolean yaLaTiene = u.getTarjetas().stream()
                 .anyMatch(t -> t.getNumeroTarjeta().equals(nuevoNumero));
         
@@ -270,24 +249,21 @@ public class ServiceTranscaribe {
 }
 
 public boolean eliminarTarjetaDeUsuario(String usuarioId, String numeroTarjeta) {
-    // 1. Buscamos al usuario por su ID
     return repositorioUsuarios.findById(usuarioId).map(usuario -> {
-        // 2. Removemos la tarjeta de la lista si coincide el número
-        // Es recomendable dejar al menos una tarjeta siempre
         if (usuario.getTarjetas().size() > 1) {
             boolean removida = usuario.getTarjetas().removeIf(t -> 
                 t.getNumeroTarjeta().equals(numeroTarjeta));
             
             if (removida) {
-                repositorioUsuarios.save(usuario); // 3. Guardamos el usuario actualizado
+                repositorioUsuarios.save(usuario); 
                 return true;
             }
         }
-        return false; // No se eliminó (era la única o no se encontró)
+        return false; 
     }).orElse(false);
 }
 
-// --- NOTIFICACIÓN DE SEGURIDAD ---
+
 public void procesarNotificacionLogin(String correo) {
     repositorioUsuarios.findByCorreo(correo).ifPresent(u -> {
         try {
@@ -296,19 +272,15 @@ public void procesarNotificacionLogin(String correo) {
             System.err.println("No se pudo enviar la alerta de inicio de sesión: " + e.getMessage());
         }
     });
-}
-// --- 11. ACTUALIZAR CONTRASEÑA (PARA RECUPERACIÓN) ---
-    public void actualizarPassword(String idUsuario, String nuevaPassword) {
-        // Buscamos al usuario por su ID
+}  
+public void actualizarPassword(String idUsuario, String nuevaPassword) {
+
         repositorioUsuarios.findById(idUsuario).ifPresent(usuario -> {
-            // Encriptamos la nueva contraseña antes de guardarla
             String passwordEncriptada = passwordEncoder.encode(nuevaPassword);
             usuario.setPasswordHash(passwordEncriptada);
             
-            // Guardamos los cambios en la base de datos
             repositorioUsuarios.save(usuario);
             
-            // Opcional: Enviamos una notificación de seguridad para avisar que la clave cambió
             try {
                 emailService.enviarNotificacionLogin(usuario.getCorreo(), usuario.getNombre());
             } catch (Exception e) {
@@ -317,7 +289,6 @@ public void procesarNotificacionLogin(String correo) {
         });
     }
 
-    // Agrega esto en ServiceTranscaribe.java
 public Usuario buscarPorId(String id) {
     return repositorioUsuarios.findById(id).orElse(null);
 }

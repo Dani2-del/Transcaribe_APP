@@ -44,35 +44,29 @@ public class OAuth2AuthenticationSuccessHandler implements AuthenticationSuccess
 
         if (email == null) throw new RuntimeException("Google no retornó email");
 
-        // Buscar o crear usuario en MongoDB
         Optional<Usuario> existingUser = userRepository.findByCorreo(email);
         Usuario usuario;
 
         if (existingUser.isPresent()) {
             usuario = existingUser.get();
         } else {
-            // Usamos tu modelo de Transcaribe
             usuario = new Usuario(email, "", name != null ? name : email);
-            usuario.setVerificado(true); // Si viene de Google, ya está verificado
+            usuario.setVerificado(true); 
             userRepository.save(usuario);
         }
-
-        // Crear UserDetails compatible
         var userDetails = User.withUsername(usuario.getCorreo())
                 .password("")
-                .authorities(usuario.getRole()) // Ya viene con "ROLE_USER" desde el modelo
+                .authorities(usuario.getRole()) 
                 .build();
-
-        // Generar JWT y guardarlo en Cookie
         String token = jwtService.generateToken(userDetails);
         jwtCookieService.addJwtCookie(response, token);
-
-        // Actualizar contexto de seguridad
         var authToken = new UsernamePasswordAuthenticationToken(
                 userDetails, null, userDetails.getAuthorities());
         SecurityContextHolder.getContext().setAuthentication(authToken);
-
-        // Redirigir a tu menú principal
-        response.sendRedirect("/menu");
+        if (Usuario.ROLE_ADMIN.equals(usuario.getRole())) {
+            response.sendRedirect("/choose-view");
+        } else {
+            response.sendRedirect("/menu");
+        }
     }
 }

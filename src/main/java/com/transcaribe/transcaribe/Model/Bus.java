@@ -19,7 +19,7 @@ public class Bus {
     private String placa;
 
     @Field("rutas_disponibles")
-    private List<String> rutas; // Ejemplo: ["T101", "X104", "Ruta Circular"]
+    private List<String> rutas; 
 
     @Field("activo")
     private boolean activo = true;

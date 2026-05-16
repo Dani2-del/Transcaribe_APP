@@ -25,13 +25,6 @@ public class ExcelReportService {
         this.transaccionRepository = transaccionRepository;
     }
 
-    /**
-     * Genera el reporte filtrando por tipo:
-     *  - "todo"     → todas las transacciones
-     *  - "anual"    → transacciones del año indicado
-     *  - "mensual"  → transacciones del año + mes indicados
-     *  - "diario"   → transacciones del año + mes + día indicados
-     */
     public ByteArrayInputStream generarReporte(String tipo, Integer anio, Integer mes, Integer dia) throws IOException {
         try (Workbook workbook = new XSSFWorkbook(); ByteArrayOutputStream out = new ByteArrayOutputStream()) {
 
@@ -76,7 +69,6 @@ public class ExcelReportService {
                 cell.setCellStyle(headerStyle);
             }
 
-            // Filtrar transacciones
             List<Transaccion> transacciones = transaccionRepository.findAll().stream()
                 .filter(t -> {
                     if (t.getFecha() == null) return false;
@@ -112,7 +104,6 @@ public class ExcelReportService {
         }
     }
 
-    // Mantener compatibilidad con el método anterior
     public ByteArrayInputStream generarReporteGeneral() throws IOException {
         return generarReporte("todo", null, null, null);
     }

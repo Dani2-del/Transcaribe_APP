@@ -15,28 +15,21 @@ public class ChooseViewController {
     public ChooseViewController(UsuarioRepository usuarioRepository) {
         this.usuarioRepository = usuarioRepository;
     }
+@GetMapping("/choose-view")
+public String chooseView(Authentication authentication, Model model) {
+    if (authentication == null) return "redirect:/login";
 
-    @GetMapping("/choose-view")
-    public String chooseView(Authentication authentication, Model model) {
-        if (authentication == null) {
-            return "redirect:/login";
-        }
+    String correo = authentication.getName();
+    Usuario usuario = usuarioRepository.findByCorreo(correo).orElse(null);
 
-        String correo = authentication.getName();
-        Usuario usuario = usuarioRepository.findByCorreo(correo).orElse(null);
+    if (usuario == null) return "redirect:/login";
 
-        if (usuario == null) {
-            return "redirect:/login";
-        }
-
-        // Si es solo ROLE_USER, va directo al menú sin pasar por choose-view
-        if (Usuario.ROLE_USER.equals(usuario.getRole())) {
-            return "redirect:/menu";
-        }
-
-        // Si es ADMIN o MODERADOR, mostramos la pantalla de selección
-        model.addAttribute("nombre", usuario.getNombre() != null ? usuario.getNombre() : usuario.getCorreo());
-        model.addAttribute("usuario", usuario);
-        return "choose-view";
+    if (!Usuario.ROLE_ADMIN.equals(usuario.getRole())) {
+        return "redirect:/menu";
     }
+
+    model.addAttribute("nombre", usuario.getNombre());
+    model.addAttribute("usuario", usuario);
+    return "choose-view";
+}
 }

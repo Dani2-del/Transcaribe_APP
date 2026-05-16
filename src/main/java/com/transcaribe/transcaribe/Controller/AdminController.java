@@ -32,7 +32,6 @@ public class AdminController {
         this.excelService = excelService;
     }
 
-    // --- VISTA PRINCIPAL ---
     @GetMapping("/dashboard")
     public String mostrarDashboard(Model model) {
         List<Usuario> usuarios = usuarioRepository.findAll();
@@ -40,7 +39,6 @@ public class AdminController {
         return "admin/dashboard";
     }
 
-    // --- DESCARGA EXCEL CON FILTROS ---
     @GetMapping("/reporte/excel")
     public ResponseEntity<InputStreamResource> descargarExcel(
             @RequestParam(defaultValue = "todo") String tipo,
@@ -48,7 +46,6 @@ public class AdminController {
             @RequestParam(required = false) Integer mes,
             @RequestParam(required = false) Integer dia) throws IOException {
 
-        // Nombre del archivo según filtro
         String filename = switch (tipo) {
             case "anual"   -> "Reporte_" + anio + ".xlsx";
             case "mensual" -> "Reporte_" + anio + "-" + String.format("%02d", mes) + ".xlsx";
@@ -67,7 +64,6 @@ public class AdminController {
                 .body(file);
     }
 
-    // --- COBRAR PASAJE ---
     @PostMapping("/charge")
     @ResponseBody
     public ResponseEntity<Map<String, Object>> chargePassenger(
@@ -87,7 +83,6 @@ public class AdminController {
         return ResponseEntity.ok(response);
     }
 
-    // --- EDITAR USUARIO ---
     @PostMapping("/editUser")
     @ResponseBody
     public ResponseEntity<Map<String, Object>> editUser(
@@ -120,7 +115,6 @@ public class AdminController {
         }
     }
 
-    // --- ELIMINAR USUARIO ---
     @PostMapping("/deleteUser")
     @ResponseBody
     public ResponseEntity<Map<String, Object>> deleteUser(@RequestParam String userId) {

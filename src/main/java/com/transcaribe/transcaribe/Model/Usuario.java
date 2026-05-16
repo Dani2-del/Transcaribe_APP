@@ -23,7 +23,6 @@ public class Usuario {
     @Indexed(unique = true)
     private String correo;
 
-    // CORRECCIÓN: Cambiamos "password" por "password_hash" para que coincida con MongoDB
     @Field("password_hash")
     private String passwordHash;
 
@@ -51,20 +50,15 @@ public class Usuario {
     @Field("tarjetas")
     private List<Tarjeta> tarjetas = new ArrayList<>();
 
-    // ... otros campos existentes ...
-
     @Field("reset_token")
     private String resetToken;
 
     @Field("token_expiry")
     private LocalDateTime tokenExpiry;
 
-    // ... resto del código ...
-
     public Usuario() {
     }
 
-    // Asegúrate de que este constructor se use en tu Service de registro
     public Usuario(String correo, String passwordHash, String nombre) {
         this.correo = correo;
         this.passwordHash = passwordHash;
@@ -76,14 +70,12 @@ public class Usuario {
         this.tarjetas = new ArrayList<>();
     }
 
-    // Getters y Setters
     public String getId() { return id; }
     public void setId(String id) { this.id = id; }
 
     public String getCorreo() { return correo; }
     public void setCorreo(String correo) { this.correo = correo; }
 
-    // NOTA: Para Spring Security, este es el que debe devolver el hash
     public String getPasswordHash() { return passwordHash; }
     public void setPasswordHash(String passwordHash) { this.passwordHash = passwordHash; }
 
@@ -121,8 +113,6 @@ public class Usuario {
         return tarjetas; 
     }
     public void setTarjetas(List<Tarjeta> tarjetas) { this.tarjetas = tarjetas; }
-
-    // --- Métodos de lógica de negocio ---
 
     public void agregarTarjeta(String numero, BigDecimal saldoInicial) {
         if (this.tarjetas == null) this.tarjetas = new ArrayList<>();

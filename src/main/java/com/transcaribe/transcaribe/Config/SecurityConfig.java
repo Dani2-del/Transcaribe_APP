@@ -54,22 +54,14 @@ public class SecurityConfig {
                     "/images/**",
                     "/js/**"
                 ).permitAll()
-
-                // El selector de vista solo para usuarios autenticados (Admin/User)
                 .requestMatchers("/choose-view").authenticated()
-
-                // Acceso restringido solo a Administradores
                 .requestMatchers("/admin/**").hasRole("ADMIN")
-
-                // Cualquier otra ruta requiere estar logueado
                 .anyRequest().authenticated()
             )
-
             .oauth2Login(oauth2 -> oauth2
                 .loginPage("/login")
                 .successHandler(oauth2SuccessHandler)
             )
-
             .formLogin(form -> form
                 .loginPage("/login")
                 .loginProcessingUrl("/login")
@@ -77,16 +69,12 @@ public class SecurityConfig {
                 .passwordParameter("password")
                 .successHandler((request, response, authentication) -> {
                     var roles = authentication.getAuthorities();
-                    
-                    // Verificamos si el usuario tiene el rol de Administrador
                     boolean isAdmin = roles.stream().anyMatch(r ->
                         r.getAuthority().equals("ROLE_ADMIN"));
 
                     if (isAdmin) {
-                        // Si es Admin, va a la pantalla de selección (Admin vs Usuario)
                         response.sendRedirect("/choose-view");
                     } else {
-                        // Si es un usuario normal, va directo al menú
                         response.sendRedirect("/menu");
                     }
                 })
@@ -103,7 +91,6 @@ public class SecurityConfig {
             )
 
             .addFilterBefore(jwtAuthFilter, UsernamePasswordAuthenticationFilter.class)
-
             .logout(logout -> logout
                 .logoutUrl("/logout")
                 .logoutSuccessUrl("/login")
@@ -111,17 +98,14 @@ public class SecurityConfig {
                 .invalidateHttpSession(true)
                 .permitAll()
             )
-
             .sessionManagement(session -> session
                 .sessionCreationPolicy(SessionCreationPolicy.IF_REQUIRED)
                 .maximumSessions(1)
                 .expiredUrl("/login?expired=true")
             )
-
             .exceptionHandling(exception -> exception
                 .accessDeniedPage("/error/403")
             );
-
         return http.build();
     }
 

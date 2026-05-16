@@ -39,7 +39,7 @@
             </div>
           </div>
 
-          <div id="pseFields" class="form-section full-width active-section">
+          <div id="pseFields" class="form-section full-width">
             <label for="correoPSE" style="color: #4a5568;">Correo PSE</label>
             <input id="correoPSE" name="correoPSE" type="email" placeholder="correo@ejemplo.com" />
 
@@ -49,16 +49,16 @@
 
           <div id="tarjetaCreditoFields" class="form-section full-width" style="display: none;">
             <label for="numeroTarjetaPago" style="color: #4a5568;">Número de tarjeta (pago)</label>
-            <input id="numeroTarjetaPago" name="numeroTarjetaPago" type="text" inputmode="numeric" maxlength="19" placeholder="1234 5678 9012 3456" />
+            <input id="numeroTarjetaPago" name="numeroTarjetaPago" type="text" inputmode="numeric" maxlength="19" placeholder="1234 5678 9012 3456" disabled />
 
             <div class="grid-2">
               <div>
                 <label for="fechaVencimientoPago" style="color: #4a5568;">Fecha de vencimiento (MM/AA)</label>
-                <input id="fechaVencimientoPago" name="fechaVencimientoPago" type="text" maxlength="5" placeholder="MM/AA" />
+                <input id="fechaVencimientoPago" name="fechaVencimientoPago" type="text" maxlength="5" placeholder="MM/AA" disabled />
               </div>
               <div>
                 <label for="cvvPago" style="color: #4a5568;">CVV</label>
-                <input id="cvvPago" name="cvvPago" type="password" inputmode="numeric" maxlength="4" placeholder="123" />
+                <input id="cvvPago" name="cvvPago" type="password" inputmode="numeric" maxlength="4" placeholder="123" disabled />
               </div>
             </div>
           </div>
@@ -91,27 +91,36 @@
   </div>
 
   <script>
-    function togglePaymentFields(){
+    function togglePaymentFields() {
       const method = document.querySelector('input[name="metodoPago"]:checked').value;
       const pse = document.getElementById('pseFields');
       const tc = document.getElementById('tarjetaCreditoFields');
-      if(method === 'tarjetaCredito') { 
-        pse.style.display = 'none'; 
-        tc.style.display = 'block'; 
-      } else { 
-        pse.style.display = 'block'; 
-        tc.style.display = 'none'; 
+
+      if (method === 'tarjetaCredito') {
+        pse.style.display = 'none';
+        pse.querySelectorAll('input').forEach(i => i.disabled = true);
+
+        tc.style.display = 'block';
+        tc.querySelectorAll('input').forEach(i => i.disabled = false);
+      } else {
+        pse.style.display = 'block';
+        pse.querySelectorAll('input').forEach(i => i.disabled = false);
+
+        tc.style.display = 'none';
+        tc.querySelectorAll('input').forEach(i => i.disabled = true);
       }
     }
 
-    document.addEventListener('input', (e)=>{
-      if(e.target.id === 'numeroTarjetaPago'){
-        let v = e.target.value.replace(/\D/g,'').slice(0,16);
-        e.target.value = v.replace(/(.{4})/g,'$1 ').trim();
+    document.addEventListener('DOMContentLoaded', togglePaymentFields);
+
+    document.addEventListener('input', (e) => {
+      if (e.target.id === 'numeroTarjetaPago') {
+        let v = e.target.value.replace(/\D/g, '').slice(0, 16);
+        e.target.value = v.replace(/(.{4})/g, '$1 ').trim();
       }
-      if(e.target.id === 'fechaVencimientoPago'){
-        let v = e.target.value.replace(/\D/g,'').slice(0,4);
-        if(v.length > 2) v = v.slice(0,2) + '/' + v.slice(2);
+      if (e.target.id === 'fechaVencimientoPago') {
+        let v = e.target.value.replace(/\D/g, '').slice(0, 4);
+        if (v.length > 2) v = v.slice(0, 2) + '/' + v.slice(2);
         e.target.value = v;
       }
     });

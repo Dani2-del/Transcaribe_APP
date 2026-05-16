@@ -22,10 +22,6 @@ public class UsuarioController {
     @Autowired
     private TransaccionService transaccionService;
 
-    /**
-     * Obtiene el objeto Usuario completo desde la base de datos 
-     * basado en el correo de la sesión actual de Spring Security.
-     */
     private Usuario obtenerUsuarioLogueado() {
         String correo = SecurityContextHolder.getContext().getAuthentication().getName();
         return usuarioRepository.findByCorreo(correo).orElse(null);
@@ -39,12 +35,10 @@ public class UsuarioController {
             return "redirect:/login";
         }
 
-        // Si el usuario no ha completado el registro OTP, lo devolvemos
         if (!usuario.isVerificado()) {
             return "redirect:/verificar-otp?correo=" + usuario.getCorreo();
         }
 
-        // Notificación opcional de inicio de sesión
         service.procesarNotificacionLogin(usuario.getCorreo());
         
         model.addAttribute("usuario", usuario);
@@ -74,8 +68,6 @@ public class UsuarioController {
             return "redirect:/login";
         }
 
-        // El ServiceTranscaribe ya contiene la lógica que quitó al Moderador.
-        // Solo permitirá el cambio si es ADMIN o si el ID es del mismo usuario.
         boolean ok = service.editarCredenciales(usuarioActual.getId(), nombre, correo, password, usuarioActual);
         
         if (!ok) {
@@ -84,7 +76,6 @@ public class UsuarioController {
             model.addAttribute("mensaje", "¡Datos actualizados correctamente! ✅");
         }
         
-        // Refrescamos los datos del usuario para que la vista muestre los cambios
         Usuario usuarioRefrescado = usuarioRepository.findById(usuarioActual.getId()).orElse(usuarioActual);
         model.addAttribute("usuario", usuarioRefrescado);
         

@@ -5,19 +5,17 @@
   <title>Registro - Transcaribe</title>
   <link rel="stylesheet" th:href="@{/style.css}" />
   <style>
-    /* Agrandamos el contenedor del formulario */
     .login-card {
-      max-width: 450px; /* Antes era más angosto, ahora tiene más espacio */
+      max-width: 450px;
       width: 100%;
       padding: 40px;
     }
 
     .form input {
       margin-bottom: 15px;
-      padding: 12px; /* Inputs un poco más altos para que sea fácil escribir */
+      padding: 12px;
     }
 
-    /* Estilo para cuando las contraseñas no coinciden */
     .no-match {
       border: 2px solid #ff4d4d !important;
     }
@@ -43,10 +41,8 @@
           <input type="text" name="username" placeholder="Nombre completo" required />
           <input type="email" name="correo" placeholder="Correo electrónico" required />
           
-          <!-- Contraseña 1 -->
-          <input type="password" id="password" name="password" placeholder="Contraseña" required />
+          <input type="password" id="password" name="password" placeholder="Contraseña" required minlength="8" />
           
-          <!-- Contraseña 2 -->
           <input type="password" id="confirmPassword" placeholder="Confirmar contraseña" required />
           <p id="passwordMessage" class="match-error">Las contraseñas no coinciden</p>
           
@@ -64,7 +60,7 @@
         </form>
 
         <div class="register-row" style="margin-top: 20px;"> 
-          <span style="color: white; font-size: 0.9rem;">¿Ya tienes cuenta?</span>
+          <span style="color: rgb(95, 93, 93); font-size: 0.9rem;">¿Ya tienes cuenta?</span>
           <a th:href="@{/}" class="ghost" style="padding: 4px 10px; font-size: 0.85rem; text-decoration: none; border-radius: 8px;">Inicia sesión</a>
         </div>
 
@@ -87,14 +83,19 @@
     const btn = document.getElementById('btnRegistrar');
     const inputTarjeta = document.getElementById('numeroTarjeta');
 
-    // Validación de contraseñas
     function validarPassword() {
       if (confirmPassword.value === "") {
         message.style.display = 'none';
         return;
       }
 
-      if (password.value !== confirmPassword.value) {
+      if (password.value.length < 8) {
+        message.textContent = "La contraseña debe tener mínimo 8 caracteres";
+        message.style.display = 'block';
+        btn.disabled = true;
+        btn.style.opacity = "0.5";
+      } else if (password.value !== confirmPassword.value) {
+        message.textContent = "Las contraseñas no coinciden";
         confirmPassword.classList.add('no-match');
         message.style.display = 'block';
         btn.disabled = true;
@@ -110,7 +111,6 @@
     password.addEventListener('change', validarPassword);
     confirmPassword.addEventListener('keyup', validarPassword);
 
-    // Validación de número de tarjeta (Solo números)
     inputTarjeta.addEventListener('input', function (e) {
       this.value = this.value.replace(/[^0-9]/g, '');
     });

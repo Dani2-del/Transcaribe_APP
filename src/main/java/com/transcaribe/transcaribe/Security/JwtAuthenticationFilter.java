@@ -34,9 +34,6 @@ public class JwtAuthenticationFilter extends OncePerRequestFilter {
             throws ServletException, IOException {
         String token = getTokenFromRequest(request);
 
-        // Luego se Valida el token.
-        // Si es válido, autenticar al usuario dentro de Spring Security.
-
         if (token != null && SecurityContextHolder.getContext().getAuthentication() == null) {
             try {
                 String username = jwtService.extractUsername(token);
@@ -57,8 +54,6 @@ public class JwtAuthenticationFilter extends OncePerRequestFilter {
 
         filterChain.doFilter(request, response);
     }
-
-    // Revisar si llega un token en el header Authorization.
     private String getTokenFromRequest(HttpServletRequest request) {
         String authHeader = request.getHeader("Authorization");
         if (authHeader != null && authHeader.startsWith("Bearer ")) {
@@ -68,7 +63,6 @@ public class JwtAuthenticationFilter extends OncePerRequestFilter {
         if (request.getCookies() == null) {
             return null;
         }
-        // Si no llega en header, revisar si existe una cookie JWT_TOKEN.
         for (Cookie cookie : request.getCookies()) {
             if (JWT_COOKIE_NAME.equals(cookie.getName())) {
                 return cookie.getValue();

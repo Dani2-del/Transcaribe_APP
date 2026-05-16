@@ -8,12 +8,12 @@ import org.springframework.stereotype.Service;
 public class JwtCookieService {
 
     public static final String JWT_COOKIE_NAME = "JWT_TOKEN";
-    private final int cookieExpiry = 86400; // 24 horas
+    private final int cookieExpiry = 86400; 
 
     public void addJwtCookie(HttpServletResponse response, String token) {
         Cookie cookie = new Cookie(JWT_COOKIE_NAME, token);
-        cookie.setHttpOnly(true); // Protege contra XSS
-        cookie.setSecure(false);  // Cambiar a true si usas HTTPS
+        cookie.setHttpOnly(true); 
+        cookie.setSecure(false);  
         cookie.setPath("/");
         cookie.setMaxAge(cookieExpiry);
         response.addCookie(cookie);

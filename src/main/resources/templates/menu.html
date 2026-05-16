@@ -4,6 +4,32 @@
     <meta charset="UTF-8" />
     <title>Menú - Transcaribe</title>
     <link rel="stylesheet" th:href="@{/style.css}" />
+<style>
+    .admin-switch-btn {
+        position: fixed;
+        bottom: 24px;
+        right: 24px;
+        background: #ff8c00;
+        color: white;
+        border: none;
+        border-radius: 50px;
+        padding: 16px 28px;        /* antes: 12px 20px */
+        font-size: 1.1rem;         /* antes: 0.9rem */
+        font-weight: bold;
+        cursor: pointer;
+        box-shadow: 0 4px 15px rgba(255, 140, 0, 0.4);
+        display: flex;
+        align-items: center;
+        gap: 8px;
+        text-decoration: none;
+        transition: transform 0.2s, box-shadow 0.2s;
+        z-index: 999;
+    }
+    .admin-switch-btn:hover {
+        transform: translateY(-2px);
+        box-shadow: 0 6px 20px rgba(255, 140, 0, 0.5);
+    }
+</style>
 </head>
 <body class="menu-page">
     <div class="page">
@@ -98,7 +124,14 @@
             </div>
         </main>
 
-        <div th:replace="~{fragments/footer :: footer}"></div> 
+        <!-- Botón flotante solo visible para administradores -->
+        <a th:if="${usuario.role == 'ROLE_ADMIN'}"
+           th:href="@{/admin/dashboard}"
+           class="admin-switch-btn">
+            ⚙️ Panel Admin
+        </a>
+
+        <div th:replace="~{fragments/footer :: footer}"></div>
     </div>
 </body>
 </html>

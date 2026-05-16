@@ -81,7 +81,7 @@ public class EmailService {
                 System.err.println("Error al enviar código: " + e.getMessage());
             }
         }
-        // --- Notificación de Inicio de Sesión ---
+        
 @Async
 public void enviarNotificacionLogin(String destinatario, String nombre) {
     try {
@@ -107,7 +107,6 @@ public void enviarNotificacionLogin(String destinatario, String nombre) {
     }
 }
 
-// --- Notificación de Recarga Exitosa ---
 @Async
 public void enviarNotificacionRecarga(String destinatario, String nombre, double monto, String saldoActual) {
     try {
@@ -135,7 +134,6 @@ public void enviarNotificacionRecarga(String destinatario, String nombre, double
     }
 }
 
-// --- Notificación de Gasto/Descuento ---
 @Async
 public void enviarNotificacionGasto(String destinatario, String nombre, double monto, String saldoRestante) {
     try {
@@ -189,10 +187,10 @@ public void enviarNotificacionGasto(String destinatario, String nombre, double m
 
             helper.setText(contenidoHtml, true);
             mailSender.send(message);
-            System.out.println("✅ Correo enviado con éxito a: " + destinatario);
+            System.out.println(" Correo enviado con éxito a: " + destinatario);
         } catch (Exception e) {
-            System.err.println("❌ Error crítico al enviar correo: " + e.getMessage());
-            e.printStackTrace(); // Esto te dirá exactamente qué falló en la consola
+            System.err.println(" Error crítico al enviar correo: " + e.getMessage());
+            e.printStackTrace(); 
         }
     }
         }
