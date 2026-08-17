@@ -49,13 +49,14 @@ public class SecurityConfig {
                     "/validar-codigo-restablecimiento",
                     "/restablecer-password",
                     "/confirmar-restablecimiento",
-                    "/style.css",
+                    "/css/**",
                     "/error/**",
                     "/images/**",
                     "/js/**"
                 ).permitAll()
                 .requestMatchers("/choose-view").authenticated()
                 .requestMatchers("/admin/**").hasRole("ADMIN")
+                .requestMatchers("/conductor/**").hasRole("CONDUCTOR")
                 .anyRequest().authenticated()
             )
             .oauth2Login(oauth2 -> oauth2
@@ -71,8 +72,10 @@ public class SecurityConfig {
                     var roles = authentication.getAuthorities();
                     boolean isAdmin = roles.stream().anyMatch(r ->
                         r.getAuthority().equals("ROLE_ADMIN"));
+                    boolean isConductor = roles.stream().anyMatch(r ->
+                        r.getAuthority().equals("ROLE_CONDUCTOR"));
 
-                    if (isAdmin) {
+                    if (isAdmin || isConductor) {
                         response.sendRedirect("/choose-view");
                     } else {
                         response.sendRedirect("/menu");

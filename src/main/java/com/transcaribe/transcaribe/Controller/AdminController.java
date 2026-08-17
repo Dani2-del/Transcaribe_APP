@@ -12,6 +12,7 @@ import org.springframework.ui.Model;
 import org.springframework.web.bind.annotation.*;
 
 import com.transcaribe.transcaribe.Model.Usuario;
+import com.transcaribe.transcaribe.Repository.BusRepository;
 import com.transcaribe.transcaribe.Repository.UsuarioRepository;
 import com.transcaribe.transcaribe.service.ExcelReportService;
 import com.transcaribe.transcaribe.service.ServiceTranscaribe;
@@ -23,19 +24,23 @@ public class AdminController {
     private final UsuarioRepository usuarioRepository;
     private final ServiceTranscaribe serviceTranscaribe;
     private final ExcelReportService excelService;
+    private final BusRepository busRepository;
 
     public AdminController(UsuarioRepository usuarioRepository,
                            ServiceTranscaribe serviceTranscaribe,
-                           ExcelReportService excelService) {
+                           ExcelReportService excelService,
+                           BusRepository busRepository) {
         this.usuarioRepository = usuarioRepository;
         this.serviceTranscaribe = serviceTranscaribe;
         this.excelService = excelService;
+        this.busRepository = busRepository;
     }
 
     @GetMapping("/dashboard")
     public String mostrarDashboard(Model model) {
         List<Usuario> usuarios = usuarioRepository.findAll();
         model.addAttribute("usuarios", usuarios);
+        model.addAttribute("buses", busRepository.findAll());
         return "admin/dashboard";
     }
 
@@ -90,7 +95,8 @@ public class AdminController {
             @RequestParam String nombre,
             @RequestParam String correo,
             @RequestParam String role,
-            @RequestParam(required = false) String password) {
+            @RequestParam(required = false) String password,
+            @RequestParam(required = false) String busAsignado) {
         Map<String, Object> response = new HashMap<>();
         try {
             Optional<Usuario> opt = usuarioRepository.findById(userId);
@@ -100,6 +106,13 @@ public class AdminController {
                 u.setCorreo(correo);
                 u.setRole(role);
                 if (password != null && !password.trim().isEmpty()) u.setPasswordHash(password);
+
+                if (Usuario.ROLE_CONDUCTOR.equals(role)) {
+                    u.setBusAsignado(busAsignado != null && !busAsignado.isBlank() ? busAsignado : null);
+                } else {
+                    u.setBusAsignado(null);
+                }
+
                 usuarioRepository.save(u);
                 response.put("status", "ok");
                 return ResponseEntity.ok(response);

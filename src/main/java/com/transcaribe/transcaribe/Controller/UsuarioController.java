@@ -4,6 +4,7 @@ import com.transcaribe.transcaribe.Model.Usuario;
 import com.transcaribe.transcaribe.Repository.UsuarioRepository;
 import com.transcaribe.transcaribe.service.ServiceTranscaribe;
 import com.transcaribe.transcaribe.service.TransaccionService;
+import com.transcaribe.transcaribe.service.BusService;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.security.core.context.SecurityContextHolder;
 import org.springframework.stereotype.Controller;
@@ -21,6 +22,9 @@ public class UsuarioController {
     
     @Autowired
     private TransaccionService transaccionService;
+
+    @Autowired
+    private BusService busService;
 
     private Usuario obtenerUsuarioLogueado() {
         String correo = SecurityContextHolder.getContext().getAuthentication().getName();
@@ -93,5 +97,46 @@ public class UsuarioController {
         model.addAttribute("usuario", usuario);
         model.addAttribute("transacciones", transaccionService.obtenerTransaccionesPorUsuario(usuario));
         return "historial";
+    }
+
+    @GetMapping("/rutas")
+    public String rutas(Model model) {
+        Usuario usuario = obtenerUsuarioLogueado();
+
+        if (usuario == null) {
+            return "redirect:/login";
+        }
+
+        model.addAttribute("usuario", usuario);
+        model.addAttribute("rutasDisponibles", busService.obtenerTodasLasRutas());
+        return "rutas";
+    }
+
+    @PostMapping("/rutas/favorito/agregar")
+    public String agregarFavorito(@RequestParam String ruta, Model model) {
+        Usuario usuario = obtenerUsuarioLogueado();
+
+        if (usuario == null) {
+            return "redirect:/login";
+        }
+
+        usuario.agregarRutaFavorita(ruta);
+        usuarioRepository.save(usuario);
+
+        return "redirect:/rutas";
+    }
+
+    @PostMapping("/rutas/favorito/eliminar")
+    public String eliminarFavorito(@RequestParam String ruta, Model model) {
+        Usuario usuario = obtenerUsuarioLogueado();
+
+        if (usuario == null) {
+            return "redirect:/login";
+        }
+
+        usuario.eliminarRutaFavorita(ruta);
+        usuarioRepository.save(usuario);
+
+        return "redirect:/rutas";
     }
 }

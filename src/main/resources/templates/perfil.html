@@ -1,53 +1,53 @@
 <!DOCTYPE html>
 <html xmlns:th="http://www.thymeleaf.org">
 <head>
+  <link rel="stylesheet" th:href="@{/css/usuario.css}" />
   <meta charset="UTF-8" />
   <title>Editar Perfil</title>
-  <link rel="stylesheet" th:href="@{/style.css}" />
 </head>
 <body>
   <div class="page">
 
     <main class="center-card">
-      <div class="card">
+      <div class="card card-narrow">
         <button class="back-arrow"
                 onclick="window.location.href='/menu'">
           🡨
         </button>
 
         <h2>Editar credenciales</h2>
+        <p class="form-hint">Actualiza tu nombre, correo o contraseña.</p>
 
         <!-- 🔹 MENSAJES -->
         <p class="success" th:if="${mensaje}" th:text="${mensaje}"></p>
         <p class="error" th:if="${error}" th:text="${error}"></p>
 
         <!-- 🔹 FORMULARIO -->
-        <form th:action="@{/perfil}" method="post">
+        <form class="form" th:action="@{/perfil}" method="post">
 
-          <label>Nombre</label>
+          <label for="nombre">Nombre</label>
           <input type="text"
+                 id="nombre"
                  name="nombre"
                  th:value="${usuario.nombre}"
                  required />
 
-          <label>Correo</label>
+          <label for="correo">Correo</label>
           <input type="email"
+                 id="correo"
                  name="correo"
                  th:value="${usuario.correo}"
                  required />
 
-          <label>Nueva contraseña</label>
+          <label for="password">Nueva contraseña</label>
           <input type="password"
+                 id="password"
                  name="password"
                  placeholder="Dejar vacío para no cambiar" />
 
-          <div style="margin-top:15px; display:flex; gap:10px;">
-
-            <button type="submit" class="card-btn">
-              Guardar cambios
-            </button>
-
-          </div>
+          <button type="submit" class="primary" style="margin-top: 10px;">
+            Guardar cambios
+          </button>
 
         </form>
 

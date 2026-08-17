@@ -1,7 +1,9 @@
+
 package com.transcaribe.transcaribe.Security;
 
 import java.io.IOException;
 import java.util.Optional;
+
 
 import org.springframework.security.authentication.UsernamePasswordAuthenticationToken;
 import org.springframework.security.core.Authentication;
@@ -63,7 +65,11 @@ public class OAuth2AuthenticationSuccessHandler implements AuthenticationSuccess
         var authToken = new UsernamePasswordAuthenticationToken(
                 userDetails, null, userDetails.getAuthorities());
         SecurityContextHolder.getContext().setAuthentication(authToken);
-        if (Usuario.ROLE_ADMIN.equals(usuario.getRole())) {
+
+        boolean esAdmin = Usuario.ROLE_ADMIN.equals(usuario.getRole());
+        boolean esConductor = Usuario.ROLE_CONDUCTOR.equals(usuario.getRole());
+
+        if (esAdmin || esConductor) {
             response.sendRedirect("/choose-view");
         } else {
             response.sendRedirect("/menu");

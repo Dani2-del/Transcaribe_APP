@@ -15,6 +15,7 @@ public class Usuario {
 
     public static final String ROLE_USER = "ROLE_USER";
     public static final String ROLE_ADMIN = "ROLE_ADMIN";
+    public static final String ROLE_CONDUCTOR = "ROLE_CONDUCTOR";
 
     @Id
     private String id;
@@ -50,6 +51,12 @@ public class Usuario {
     @Field("tarjetas")
     private List<Tarjeta> tarjetas = new ArrayList<>();
 
+    @Field("rutas_favoritas")
+    private List<String> rutasFavoritas = new ArrayList<>();
+
+    @Field("bus_asignado")
+    private String busAsignado;
+
     @Field("reset_token")
     private String resetToken;
 
@@ -68,6 +75,7 @@ public class Usuario {
         this.activo = true;
         this.verificado = false;
         this.tarjetas = new ArrayList<>();
+        this.rutasFavoritas = new ArrayList<>();
     }
 
     public String getId() { return id; }
@@ -106,11 +114,11 @@ public class Usuario {
     public LocalDateTime getTokenExpiry() { return tokenExpiry; }
     public void setTokenExpiry(LocalDateTime tokenExpiry) { this.tokenExpiry = tokenExpiry; }
 
-    public List<Tarjeta> getTarjetas() { 
+    public List<Tarjeta> getTarjetas() {
         if (this.tarjetas == null) {
             this.tarjetas = new ArrayList<>();
         }
-        return tarjetas; 
+        return tarjetas;
     }
     public void setTarjetas(List<Tarjeta> tarjetas) { this.tarjetas = tarjetas; }
 
@@ -135,5 +143,28 @@ public class Usuario {
                 .reduce(BigDecimal.ZERO, BigDecimal::add);
     }
 
-    
+    public List<String> getRutasFavoritas() {
+        if (this.rutasFavoritas == null) {
+            this.rutasFavoritas = new ArrayList<>();
+        }
+        return rutasFavoritas;
+    }
+    public void setRutasFavoritas(List<String> rutasFavoritas) { this.rutasFavoritas = rutasFavoritas; }
+
+    public void agregarRutaFavorita(String ruta) {
+        if (this.rutasFavoritas == null) this.rutasFavoritas = new ArrayList<>();
+        if (!this.rutasFavoritas.contains(ruta)) {
+            this.rutasFavoritas.add(ruta);
+        }
+    }
+
+    public void eliminarRutaFavorita(String ruta) {
+        if (this.rutasFavoritas != null) {
+            this.rutasFavoritas.remove(ruta);
+        }
+    }
+
+    public String getBusAsignado() { return busAsignado; }
+    public void setBusAsignado(String busAsignado) { this.busAsignado = busAsignado; }
+
 }

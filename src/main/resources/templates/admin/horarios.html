@@ -1,0 +1,117 @@
+<!DOCTYPE html>
+<html xmlns:th="http://www.thymeleaf.org">
+<head>
+  <link rel="stylesheet" th:href="@{/css/admin.css}" />
+    <meta charset="UTF-8">
+    <title>Horarios de Conductores - Transcaribe</title>
+</head>
+<body>
+<div class="page">
+    <div class="center-card">
+        <div class="card">
+            <h2 style="margin-bottom: 5px;">📅 Horarios de Conductores</h2>
+            <p style="margin-top: 0; color: #718096;">Programa la ruta, fecha y horario de cada conductor.</p>
+
+            <form th:action="@{/admin/horarios/crear}" method="post">
+                <div class="form-grid">
+                    <div class="form-row">
+                        <label>Conductor</label>
+                        <select id="selectConductor" name="conductorId" required onchange="actualizarRutas()">
+                            <option value="" disabled selected>Selecciona un conductor...</option>
+                            <option th:each="c : ${conductores}"
+                                    th:value="${c.id}"
+                                    th:text="${(c.nombre != null ? c.nombre : c.correo)}">
+                            </option>
+                        </select>
+                    </div>
+
+                    <div class="form-row">
+                        <label>Ruta</label>
+                        <select id="selectRuta" name="ruta" required>
+                            <option value="" disabled selected>Selecciona un conductor primero...</option>
+                        </select>
+                    </div>
+
+                    <div class="form-row">
+                        <label>Fecha</label>
+                        <input type="date" name="fecha" required />
+                    </div>
+
+                    <div class="form-row">
+                        <label>Hora de inicio</label>
+                        <input type="time" name="horaInicio" required />
+                    </div>
+
+                    <div class="form-row">
+                        <label>Hora de fin</label>
+                        <input type="time" name="horaFin" required />
+                    </div>
+                </div>
+
+                <button type="submit" class="primary" style="width: 100%; padding: 12px;">Programar horario</button>
+            </form>
+
+            <hr style="margin: 25px 0; border: 0; border-top: 1px solid #eee;">
+
+            <h3>Horarios programados</h3>
+
+            <div th:if="${#lists.isEmpty(horarios)}" class="error-message">
+                <p>Aún no hay horarios programados.</p>
+            </div>
+
+            <div th:each="h : ${horarios}" class="horario-row">
+                <div class="horario-info">
+                    👤 <strong th:text="${nombreConductor[h.conductorId]}"></strong>
+                    &nbsp;·&nbsp; 🚌 <strong th:text="${h.ruta}"></strong>
+                    &nbsp;·&nbsp; 📆 <span th:text="${h.fecha}"></span>
+                    &nbsp;·&nbsp; 🕐 <span th:text="${h.horaInicio} + ' - ' + ${h.horaFin}"></span>
+                </div>
+                <form th:action="@{/admin/horarios/eliminar}" method="post">
+                    <input type="hidden" name="id" th:value="${h.id}" />
+                    <button type="submit" class="btn-eliminar-horario" title="Eliminar"
+                            onclick="return confirm('¿Eliminar este horario?')">🗑️</button>
+                </form>
+            </div>
+
+            <button onclick="window.location.href='/admin/dashboard'" class="ghost" style="margin-top: 20px;">Volver al panel</button>
+        </div>
+    </div>
+</div>
+
+<script th:inline="javascript">
+    var busRutasPorId   = /*[[${busRutasPorId}]]*/ {};
+    var busPorConductor = /*[[${busPorConductor}]]*/ {};
+
+    function actualizarRutas() {
+        var conductorId = document.getElementById('selectConductor').value;
+        var busId = busPorConductor[conductorId];
+        var rutas = (busId && busRutasPorId[busId]) ? busRutasPorId[busId] : [];
+
+        var selectRuta = document.getElementById('selectRuta');
+        selectRuta.innerHTML = '';
+
+        if (rutas.length === 0) {
+            var opt = document.createElement('option');
+            opt.value = '';
+            opt.textContent = 'Este conductor no tiene bus/rutas asignadas';
+            selectRuta.appendChild(opt);
+            return;
+        }
+
+        var placeholder = document.createElement('option');
+        placeholder.value = '';
+        placeholder.disabled = true;
+        placeholder.selected = true;
+        placeholder.textContent = 'Selecciona una ruta...';
+        selectRuta.appendChild(placeholder);
+
+        rutas.forEach(function (r) {
+            var opt = document.createElement('option');
+            opt.value = r;
+            opt.textContent = r;
+            selectRuta.appendChild(opt);
+        });
+    }
+</script>
+</body>
+</html>

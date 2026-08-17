@@ -1,0 +1,72 @@
+<!DOCTYPE html>
+<html xmlns:th="http://www.thymeleaf.org">
+<head>
+  <link rel="stylesheet" th:href="@{/css/conductor.css}" />
+  <meta charset="UTF-8" />
+  <title>Panel Conductor - Transcaribe</title>
+</head>
+<body>
+  <div class="page">
+    <div th:replace="fragments/header :: header"></div>
+
+    <main class="center-card">
+      <div class="card" style="max-width: 600px;">
+        <h2 style="margin-bottom: 20px;">Panel Conductor</h2>
+
+        <div th:if="${bus != null}" class="bus-info">
+            🚌 Bus asignado: <strong th:text="${bus.placa}"></strong>
+        </div>
+
+        <div th:if="${bus == null}" class="error-message">
+          <p>No tienes un bus asignado todavía.</p>
+        </div>
+
+        <h4 style="margin-bottom: 10px;">📥 Tu bandeja de horarios asignados</h4>
+
+        <div th:if="${#lists.isEmpty(horarios)}" class="error-message" style="margin-bottom: 20px;">
+            <p>No tienes rutas asignadas.</p>
+        </div>
+
+        <div th:each="h : ${horarios}" class="horario-item">
+            <div class="horario-info">
+                <div class="ruta">🚌 <span th:text="${h.ruta}"></span></div>
+                <div class="detalle">
+                    📆 <span th:text="${h.fecha}"></span>
+                    &nbsp;·&nbsp; 🕐 <span th:text="${h.horaInicio} + ' - ' + ${h.horaFin}"></span>
+                </div>
+                <span class="badge-estado badge-pendiente" th:if="${h.estado == 'PENDIENTE'}">Pendiente</span>
+                <span class="badge-estado badge-en-curso" th:if="${h.estado == 'EN_CURSO'}">En curso</span>
+            </div>
+
+            <form th:if="${h.estado == 'PENDIENTE'}" th:action="@{/conductor/iniciar-ruta}" method="post" style="display:inline;">
+                <input type="hidden" name="horarioId" th:value="${h.id}" />
+                <button type="submit" class="btn-iniciar"
+                        onclick="return confirm('¿Está seguro de iniciar esta ruta? Se notificará a los usuarios interesados.')">
+                    Iniciar
+                </button>
+            </form>
+
+            <form th:if="${h.estado == 'EN_CURSO'}" th:action="@{/conductor/terminar-ruta}" method="post" style="display:inline;">
+                <input type="hidden" name="horarioId" th:value="${h.id}" />
+                <button type="submit" class="btn-terminar"
+                        onclick="return confirm('¿Está seguro de terminar esta ruta?')">
+                    Terminar ruta
+                </button>
+            </form>
+        </div>
+
+        <div class="row" style="margin-top: 30px;">
+          <form th:action="@{/logout}" method="post" style="width: 100%;">
+              <button class="ghost" type="submit" style="width: 100%; cursor: pointer;">Cerrar sesión</button>
+          </form>
+        </div>
+
+        <p class="error" th:if="${error}" th:text="${error}"></p>
+        <p class="success" th:if="${mensaje}" th:text="${mensaje}"></p>
+      </div>
+    </main>
+
+    <div th:replace="fragments/footer :: footer"></div>
+  </div>
+</body>
+</html>

@@ -1,6 +1,7 @@
 package com.transcaribe.transcaribe.Controller;
 
 import com.transcaribe.transcaribe.Model.Usuario;
+import com.transcaribe.transcaribe.Model.Tarjeta;
 import com.transcaribe.transcaribe.Repository.BusRepository;
 import com.transcaribe.transcaribe.service.BusService;
 import com.transcaribe.transcaribe.service.ServiceTranscaribe;
@@ -50,6 +51,14 @@ public class BusController {
                         costoPasaje,
                         saldoRestante
                     );
+
+                    Tarjeta tarjetaUsada = usuarioDestino.getTarjetas().stream()
+                        .filter(t -> t.getNumeroTarjeta().equals(numeroTarjeta))
+                        .findFirst()
+                        .orElse(null);
+                    if (tarjetaUsada != null) {
+                        service.verificarYNotificarLimiteSaldo(usuarioDestino, tarjetaUsada);
+                    }
                 }
             } catch (Exception e) {
                 System.err.println("Error al enviar el correo de ticket: " + e.getMessage());
@@ -92,6 +101,14 @@ public class BusController {
                             3900.0, 
                             saldoRestante
                         );
+
+                        Tarjeta tarjetaUsada = u.getTarjetas().stream()
+                            .filter(t -> t.getNumeroTarjeta().equals(numeroTarjeta))
+                            .findFirst()
+                            .orElse(null);
+                        if (tarjetaUsada != null) {
+                            service.verificarYNotificarLimiteSaldo(u, tarjetaUsada);
+                        }
                     }
                 } catch (Exception ex) {
                     System.err.println("Error correo simulación: " + ex.getMessage());

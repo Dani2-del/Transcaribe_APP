@@ -1,38 +1,16 @@
 <!DOCTYPE html>
 <html xmlns:th="http://www.thymeleaf.org">
 <head>
+  <link rel="stylesheet" th:href="@{/css/usuario.css}" />
     <meta charset="UTF-8">
     <title>Seleccionar Vista - Transcaribe</title>
-    <link rel="stylesheet" th:href="@{/style.css}" />
-    <style>
-        .selection-container {
-            display: flex;
-            gap: 20px;
-            justify-content: center;
-            margin-top: 50px;
-        }
-        .choice-card {
-            padding: 30px;
-            border-radius: 15px;
-            background: white;
-            box-shadow: 0 4px 15px rgba(0,0,0,0.1);
-            text-align: center;
-            width: 200px;
-            transition: transform 0.2s;
-            cursor: pointer;
-            text-decoration: none;
-            color: inherit;
-        }
-        .choice-card:hover { transform: scale(1.05); }
-        .choice-card i { font-size: 40px; display: block; margin-bottom: 15px; }
-    </style>
 </head>
 <body>
     <div class="page">
         <div class="center-card">
             <h1>Bienvenido, <span th:text="${nombre}"></span></h1>
             <p>Selecciona cómo deseas ingresar hoy:</p>
-            
+
             <div class="selection-container">
                 <a href="/menu" class="choice-card">
                     <span>👤</span>
@@ -40,10 +18,16 @@
                     <p>Ver mis tarjetas y saldo</p>
                 </a>
 
-                <a href="/admin/dashboard" class="choice-card">
+                <a th:if="${esAdmin}" href="/admin/dashboard" class="choice-card">
                     <span>⚙️</span>
                     <h3>Panel de Control</h3>
                     <p>Gestionar el sistema</p>
+                </a>
+
+                <a th:if="${esConductor}" href="/conductor/panel" class="choice-card">
+                    <span>🚌</span>
+                    <h3>Panel Conductor</h3>
+                    <p>Ver mis rutas y horarios</p>
                 </a>
             </div>
         </div>

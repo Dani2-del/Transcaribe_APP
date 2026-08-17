@@ -1,60 +1,9 @@
 <!DOCTYPE html>
 <html xmlns:th="http://www.thymeleaf.org">
 <head>
+  <link rel="stylesheet" th:href="@{/css/usuario.css}" />
     <meta charset="UTF-8">
     <title>Login - Transcaribe</title>
-    <link rel="stylesheet" th:href="@{/style.css}" />
-    <style>
-        .oauth-section { margin-top: 20px; text-align: center; }
-        .separator { display: flex; align-items: center; text-align: center; color: #888; margin: 20px 0; }
-        .separator::before, .separator::after { content: ''; flex: 1; border-bottom: 1px solid #ddd; }
-        .separator:not(:empty)::before { margin-right: .5em; }
-        .separator:not(:empty)::after { margin-left: .5em; }
-        
-        .button-google {
-            display: flex; 
-            align-items: center; 
-            justify-content: center;
-            background-color: white; 
-            color: #757575; 
-            border: 1px solid #ddd;
-            padding: 10px; 
-            border-radius: 4px; 
-            text-decoration: none;
-            font-weight: bold; 
-            transition: all 0.3s; 
-            width: 100%; 
-            box-sizing: border-box;
-        }
-        .button-google:hover { 
-            background-color: #f7f7f7; 
-            box-shadow: 0 1px 3px rgba(0,0,0,0.1); 
-            border-color: #ccc;
-        }
-        .google-icon { 
-            width: 18px; 
-            height: 18px; 
-            margin-right: 12px; 
-            display: block;
-        }
-
-      /* Estilo para el link de olvidar contraseña corregido a blanco */
-      .forgot-password {
-          display: block;
-          text-align: right;
-          font-size: 0.85em;
-          margin-top: -10px;
-          margin-bottom: 15px;
-          color: #424141; /* Cambio a blanco */
-          text-decoration: none;
-          transition: opacity 0.3s; /* Opcional: para un efecto suave al pasar el mouse */
-      }
-
-      .forgot-password:hover { 
-          text-decoration: underline; 
-          opacity: 0.8; /* Para que el usuario note que es un link al poner el cursor */
-      }
-    </style>
 </head>
 <body class="login-page">
   <div class="page">

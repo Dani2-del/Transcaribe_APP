@@ -9,7 +9,7 @@ import com.transcaribe.transcaribe.Repository.TransaccionRepository;
 import com.transcaribe.transcaribe.Repository.UsuarioRepository;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
-
+import java.util.stream.Collectors;
 import java.math.BigDecimal; 
 import java.time.LocalDateTime;
 import java.util.ArrayList;
@@ -85,6 +85,15 @@ public class BusService {
         return "Saldo insuficiente en la tarjeta " + numeroTarjeta;
     }
 }
+    public List<String> obtenerTodasLasRutas() {
+        return busRepository.findAll().stream()
+                .filter(Bus::isActivo)
+                .filter(b -> b.getRutas() != null)
+                .flatMap(b -> b.getRutas().stream())
+                .distinct()
+                .sorted()
+                .collect(Collectors.toList());
+    }
 }
 
 

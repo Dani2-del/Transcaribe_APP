@@ -1,36 +1,9 @@
 <!DOCTYPE html>
 <html xmlns:th="http://www.thymeleaf.org">
 <head>
+  <link rel="stylesheet" th:href="@{/css/usuario.css}" />
     <meta charset="UTF-8" />
     <title>Menú - Transcaribe</title>
-    <link rel="stylesheet" th:href="@{/style.css}" />
-    <link rel="stylesheet" href="/Transcaribe_APP/src/main/resources/static/style.css">
-<style>
-    .admin-switch-btn {
-        position: fixed;
-        bottom: 24px;
-        right: 24px;
-        background: #ff8c00;
-        color: white;
-        border: none;
-        border-radius: 50px;
-        padding: 16px 28px;        /* antes: 12px 20px */
-        font-size: 1.1rem;         /* antes: 0.9rem */
-        font-weight: bold;
-        cursor: pointer;
-        box-shadow: 0 4px 15px rgba(255, 140, 0, 0.4);
-        display: flex;
-        align-items: center;
-        gap: 8px;
-        text-decoration: none;
-        transition: transform 0.2s, box-shadow 0.2s;
-        z-index: 999;
-    }
-    .admin-switch-btn:hover {
-        transform: translateY(-2px);
-        box-shadow: 0 6px 20px rgba(255, 140, 0, 0.5);
-    }
-</style>
 </head>
 <body class="menu-page">
     <div class="page">
@@ -77,49 +50,53 @@
                         Configuración
                     </button>
 
-                    <div class="bus-container" style="background: white; padding: 20px; border-radius: 15px; box-shadow: 0 4px 6px rgba(0,0,0,0.05); margin-bottom: 15px; width: 100%; box-sizing: border-box;">
-                        
+                    <button class="card-btn"
+                            th:onclick="|window.location.href='@{/rutas}'|">
+                        Opciones de Rutas
+                    </button>
+
+                    <button class="card-btn"
+                            th:onclick="|window.location.href='@{/limite-saldo}'|">
+                        Configurar Límite
+                    </button>
+
+                    <div class="bus-container" style="margin-bottom: 15px; width: 100%; box-sizing: border-box;">
+
                         <form th:action="@{/api/buses/simular-viaje}" method="post">
-                            
+
                             <input type="hidden" th:if="${_csrf}" th:name="${_csrf.parameterName}" th:value="${_csrf.token}" />
-                            
+
                             <input type="hidden" name="usuarioId" th:value="${usuario.id}" />
-                            
+
                             <div style="margin-bottom: 15px;">
-                                <label style="display: block; font-size: 0.9rem; color: #ff8c00; font-weight: bold; margin-bottom: 8px;">
+                                <label style="display: block; font-size: 0.9rem; color: var(--coral); font-weight: bold; margin-bottom: 8px;">
                                     📍 Pagar con mi tarjeta:
                                 </label>
-                                <select name="numeroTarjeta" class="select-bus" required 
-                                        style="width: 100%; padding: 12px; border-radius: 10px; border: 2px solid #fff3e0; background: #fafafa; color: #333; font-weight: 500;">
+                                <select name="numeroTarjeta" class="select-bus" required>
                                     <option value="" disabled selected>Selecciona tu tarjeta Transcaribe...</option>
-                                    <option th:each="t : ${usuario.tarjetas}" 
-                                            th:value="${t.numeroTarjeta}" 
+                                    <option th:each="t : ${usuario.tarjetas}"
+                                            th:value="${t.numeroTarjeta}"
                                             th:text="${'💳 ' + t.numeroTarjeta + ' (Saldo: $' + #numbers.formatDecimal(t.saldo, 0, 'COMMA', 0, 'POINT') + ')'}">
                                     </option>
                                 </select>
                             </div>
 
-                            <button type="submit" class="card-btn"
-                                    style="width: 100%; padding: 15px; border-radius: 10px; background: white; color: #f09454; border: 2px solid #f09454; font-weight: bold; font-size: 1.1rem; cursor: pointer; transition: 0.3s ease; display: flex; align-items: center; justify-content: center; gap: 10px;"
+                            <button type="submit" class="bus-btn"
                                     onclick="return confirm('¿Confirmas el pago de $3.000 para tu viaje?')">
-                                <span style="font-size: 1.4rem;"></span> Simular Viaje
+                                Simular Viaje
                             </button>
                         </form>
                     </div>
 
-                    <form th:action="@{/logout}" method="post" style="width: 100%;">
+                    <form th:action="@{/logout}" method="post" style="grid-column: 1 / -1;">
                         <input type="hidden" th:if="${_csrf}" th:name="${_csrf.parameterName}" th:value="${_csrf.token}" />
                         <button class="ghost" type="submit" style="width: 100%; cursor: pointer;">Cerrar sesión</button>
                     </form>
                 </div>
 
                 <div style="margin-top: 15px; text-align: center; width: 100%;">
-                    <p class="success" th:if="${mensaje}" th:text="${mensaje}" 
-                       style="color: #28a745; font-weight: bold; background: #e8f5e9; padding: 10px; border-radius: 5px;">
-                    </p>
-                    <p class="error" th:if="${error}" th:text="${error}" 
-                       style="color: #dc3545; font-weight: bold; background: #ffebee; padding: 10px; border-radius: 5px;">
-                    </p>
+                    <p class="success" th:if="${mensaje}" th:text="${mensaje}"></p>
+                    <p class="error" th:if="${error}" th:text="${error}"></p>
                 </div>
 
             </div>

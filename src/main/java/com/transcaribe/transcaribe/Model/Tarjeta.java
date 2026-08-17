@@ -8,6 +8,7 @@ public class Tarjeta {
     private String numeroTarjeta;
     private LocalDateTime fechaCreacion;
     private BigDecimal saldo;
+    private BigDecimal limiteSaldo;
 
     public Tarjeta() {
     }
@@ -18,7 +19,13 @@ public class Tarjeta {
         this.fechaCreacion = LocalDateTime.now();
     }
 
-    // Getters y Setters
+    public Tarjeta(String numeroTarjeta, BigDecimal saldo, BigDecimal limiteSaldo) {
+        this.numeroTarjeta = numeroTarjeta;
+        this.saldo = saldo;
+        this.limiteSaldo = limiteSaldo;
+        this.fechaCreacion = LocalDateTime.now();
+    }
+
     public String getNumeroTarjeta() {
         return numeroTarjeta;
     }
@@ -41,5 +48,13 @@ public class Tarjeta {
 
     public void setSaldo(BigDecimal saldo) {
         this.saldo = saldo;
+    }
+
+    public BigDecimal getLimiteSaldo() {
+        return limiteSaldo;
+    }
+
+    public void setLimiteSaldo(BigDecimal limiteSaldo) {
+        this.limiteSaldo = limiteSaldo;
     }
 }

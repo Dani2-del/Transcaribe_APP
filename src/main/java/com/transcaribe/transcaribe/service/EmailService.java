@@ -193,4 +193,62 @@ public void enviarNotificacionGasto(String destinatario, String nombre, double m
             e.printStackTrace(); 
         }
     }
+
+    @Async
+    public void enviarNotificacionRutaIniciada(String destinatario, String nombre, String ruta, String placaBus) {
+        try {
+            MimeMessage message = mailSender.createMimeMessage();
+            MimeMessageHelper helper = new MimeMessageHelper(message, true, "UTF-8");
+
+            helper.setTo(destinatario);
+            helper.setSubject("🚌 Tu ruta favorita " + ruta + " acaba de salir - Transcaribe");
+            helper.setFrom(remitente);
+
+            String contenidoHtml =
+                "<div style='font-family: Arial, sans-serif; border: 1px solid #ddd; border-radius: 10px; padding: 20px; max-width: 500px;'>" +
+                    "<h2 style='color: #ff8c00; text-align: center;'>🚌 ¡Tu ruta favorita va en camino!</h2>" +
+                    "<p>Hola <strong>" + nombre + "</strong>,</p>" +
+                    "<p>El bus de la ruta <strong>" + ruta + "</strong> (placa " + placaBus + ") acaba de iniciar su recorrido.</p>" +
+                    "<p style='font-size: 13px; color: #555;'>Te avisamos porque tienes esta ruta guardada en tus favoritas.</p>" +
+                "</div>";
+
+            helper.setText(contenidoHtml, true);
+            mailSender.send(message);
+        } catch (Exception e) {
+            System.err.println("Error notificación ruta iniciada: " + e.getMessage());
         }
+    }
+    @Async
+    public void enviarAlertaSaldoBajo(String destinatario, String nombre, String numeroTarjeta, String saldoActual, String limite) {
+        try {
+            MimeMessage message = mailSender.createMimeMessage();
+            MimeMessageHelper helper = new MimeMessageHelper(message, true, "UTF-8");
+
+            helper.setTo(destinatario);
+            helper.setSubject("⚠️ Alerta de Saldo Bajo - Transcaribe");
+            helper.setFrom(remitente);
+
+            String tarjetaOculta = (numeroTarjeta != null && numeroTarjeta.length() >= 4)
+                    ? "**** **** " + numeroTarjeta.substring(numeroTarjeta.length() - 4)
+                    : "****";
+
+            String contenidoHtml =
+                "<div style='font-family: Arial, sans-serif; border: 1px solid #ddd; border-radius: 10px; padding: 20px; max-width: 500px;'>" +
+                    "<h2 style='color: #d97706; text-align: center;'>⚠️ Alerta de Saldo Bajo</h2>" +
+                    "<p>Hola <strong>" + nombre + "</strong>,</p>" +
+                    "<p>Tu tarjeta de Transcaribe ha alcanzado o superado el límite de saldo mínimo configurado.</p>" +
+                    "<div style='background-color: #fffbeeb0; padding: 15px; border-radius: 5px; border-left: 5px solid #d97706; margin: 15px 0;'>" +
+                        "💳 <strong>Tarjeta:</strong> " + tarjetaOculta + "<br>" +
+                        "💰 <strong>Saldo actual:</strong> $" + saldoActual + " COP<br>" +
+                        "⚙️ <strong>Límite configurado:</strong> $" + limite + " COP" +
+                    "</div>" +
+                    "<p style='font-size: 13px; color: #555;'>Te recomendamos realizar una recarga pronto para continuar viajando sin inconvenientes.</p>" +
+                "</div>";
+
+            helper.setText(contenidoHtml, true);
+            mailSender.send(message);
+        } catch (Exception e) {
+            System.err.println("Error al enviar alerta de saldo bajo: " + e.getMessage());
+        }
+    }
+}
