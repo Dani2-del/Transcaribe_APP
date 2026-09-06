@@ -83,7 +83,7 @@
       </div>
 
       <div class="about-card">
-        <img th:src="@{/images/Background.png}" alt="Ilustración del sistema Transcaribe en Cartagena" />
+        <img th:src="@{/Imagenes/cuadro1.png}" alt="Flota de buses articulados de Transcaribe en Cartagena" />
         <p style="color: var(--piedra); font-size: 0.92rem; margin: 0 0 16px;">
           Construido como proyecto de la Electiva I, replicando los flujos reales de un
           sistema de transporte integrado: registro, verificación, pagos y roles diferenciados.
@@ -131,6 +131,44 @@
     </div>
   </section>
 
+  <!-- ===== RUTAS ===== -->
+  <section class="section" id="rutas">
+    <div class="wrap">
+      <div class="section-head">
+        <h2>Conoce el mapa de rutas</h2>
+        <p>El sistema combina troncales, pretroncales, alimentadoras y complementarias para cubrir la ciudad.</p>
+      </div>
+
+      <div class="map-showcase">
+        <img th:src="@{/images/Rutas/preview/mapa-general.jpg}" alt="Mapa general del sistema Transcaribe" />
+      </div>
+
+      <div class="route-cards">
+        <figure class="route-card-img" style="--rc: var(--coral);">
+          <span class="route-badge">Troncal</span>
+          <img th:src="@{/images/Rutas/preview/t100e.jpg}" alt="Ruta troncal T100E, Portal - Centro" />
+          <figcaption>T100E · Portal - Centro</figcaption>
+        </figure>
+        <figure class="route-card-img" style="--rc: var(--caribe);">
+          <span class="route-badge">Pretroncal</span>
+          <img th:src="@{/images/Rutas/preview/x101.jpg}" alt="Ruta pretroncal X101, Campanos - Centro" />
+          <figcaption>X101 · Campanos - Centro</figcaption>
+        </figure>
+        <figure class="route-card-img" style="--rc: var(--indigo);">
+          <span class="route-badge">Alimentadora</span>
+          <img th:src="@{/images/Rutas/preview/a102.jpg}" alt="Ruta alimentadora A102, Portal - Universidad Tecnológica" />
+          <figcaption>A102 · Portal - UTB</figcaption>
+        </figure>
+        <figure class="route-card-img" style="--rc: var(--verde);">
+          <span class="route-badge">Complementaria</span>
+          <img th:src="@{/images/Rutas/preview/c001.jpg}" alt="Ruta complementaria C001, Ciudad Jardín - Manga - Centro" />
+          <figcaption>C001 · Manga - Centro</figcaption>
+        </figure>
+      </div>
+      <p class="rutas-note">Vista previa de algunas rutas reales del sistema · dentro de la app encuentras el listado completo y tus rutas favoritas.</p>
+    </div>
+  </section>
+
   <!-- ===== ROLES ===== -->
   <section class="section" id="roles">
     <div class="wrap">
@@ -175,6 +213,7 @@
   <!-- ===== CTA FINAL ===== -->
   <section class="final-cta">
     <div class="wrap">
+      <img th:src="@{/Imagenes/articulado1-copia.png}" alt="Bus articulado Transcaribe" class="cta-bus" />
       <h2>¿Listo para subirte?</h2>
       <p>Crea tu cuenta en unos minutos y deja el efectivo y las filas atrás.</p>
       <a th:href="@{/registro}" class="btn btn-primary">Crear cuenta →</a>
