@@ -14,17 +14,17 @@ public class AuthController {
 
     @GetMapping("/login")
     public String login() {
-        return "login"; 
+        return "usuarios/auth/login"; 
     }
 
     @GetMapping("/")
     public String index() {
-        return "redirect:/login"; 
+        return "index";
     }
 
     @GetMapping("/registro")
     public String registro() {
-        return "registro";
+        return "usuarios/auth/registro";
     }
 
     @PostMapping("/registro")
@@ -38,13 +38,13 @@ public class AuthController {
             return "redirect:/verificar-otp?correo=" + correo;
         }
         model.addAttribute("error", "Error al registrar. El correo ya existe o la tarjeta es inválida.");
-        return "registro";
+        return "usuarios/auth/registro";
     }
 
     @GetMapping("/verificar-otp")
     public String mostrarVerificacion(@RequestParam String correo, Model model) {
         model.addAttribute("correo", correo);
-        return "verificar-codigo";
+        return "usuarios/auth/verificar-codigo";
     }
 
     @PostMapping("/verificar-otp")
@@ -52,10 +52,10 @@ public class AuthController {
         boolean validado = service.verificarCodigo(correo, codigo);
         if (validado) {
             model.addAttribute("mensaje", "¡Cuenta activada! Ya puedes iniciar sesión ✅");
-            return "login";
+            return "usuarios/auth/login";
         }
         model.addAttribute("error", "El código ingresado es incorrecto.");
         model.addAttribute("correo", correo);
-        return "verificar-codigo";
+        return "usuarios/auth/verificar-codigo";
     }
 }

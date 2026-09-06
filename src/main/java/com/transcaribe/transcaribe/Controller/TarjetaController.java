@@ -49,22 +49,6 @@ public class TarjetaController {
     }
 
     /**
-     * Renderiza la vista del saldo actual de las tarjetas asociadas al usuario.
-     * 
-     * @param model Modelo de Spring UI
-     * @return Vista HTML 'saldo'
-     */
-    @GetMapping("/saldo")
-    public String saldo(Model model) {
-        Usuario usuario = obtenerUsuarioLogueado();
-        if (usuario != null) {
-            model.addAttribute("usuario", usuario);
-            model.addAttribute("tarjetas", usuario.getTarjetas());
-        }
-        return "saldo";
-    }
-
-    /**
      * Renderiza el formulario de recarga de saldo.
      * 
      * @param model Modelo de Spring UI
@@ -77,7 +61,7 @@ public class TarjetaController {
             model.addAttribute("usuario", usuario);
             model.addAttribute("tarjetas", usuario.getTarjetas());
         }
-        return "recarga";
+        return "usuarios/tarjetas/recarga";
     }
 
     /**
@@ -105,7 +89,7 @@ public class TarjetaController {
                     model.addAttribute("usuario", usuario);
                     model.addAttribute("tarjetas", usuario.getTarjetas());
                 }
-                return "recarga";
+                return "usuarios/tarjetas/recarga";
             }
         } else if ("tarjetaCredito".equalsIgnoreCase(metodoPago)) {
             if (numeroTarjetaPago == null || numeroTarjetaPago.isBlank() || 
@@ -116,7 +100,7 @@ public class TarjetaController {
                     model.addAttribute("usuario", usuario);
                     model.addAttribute("tarjetas", usuario.getTarjetas());
                 }
-                return "recarga";
+                return "usuarios/tarjetas/recarga";
             }
         }
 
@@ -129,7 +113,7 @@ public class TarjetaController {
                 model.addAttribute("usuario", usuario);
                 model.addAttribute("tarjetas", usuario.getTarjetas());
             }
-            return "recarga";
+            return "usuarios/tarjetas/recarga";
         }
 
         // Envío asíncrono de comprobante de recarga por correo
@@ -151,7 +135,7 @@ public class TarjetaController {
             System.err.println("Error al enviar notificación de recarga: " + e.getMessage());
         }
 
-        return "Recarga-exitosa";
+        return "usuarios/tarjetas/Recarga-exitosa";
     }
 
     /**
@@ -167,7 +151,7 @@ public class TarjetaController {
             model.addAttribute("usuario", usuario);
             model.addAttribute("tarjetas", usuario.getTarjetas());
         }
-        return "tarjetas";
+        return "usuarios/tarjetas/tarjetas";
     }
 
     /**
@@ -227,7 +211,7 @@ public class TarjetaController {
         }
         model.addAttribute("usuario", usuario);
         model.addAttribute("tarjetas", usuario.getTarjetas());
-        return "limite-saldo";
+        return "usuarios/tarjetas/limite-saldo";
     }
 
     /**

@@ -25,7 +25,7 @@ public class PasswordRecoveryController {
 
     @GetMapping("/olvido-password")
     public String mostrarOlvidoPassword() {
-        return "olvido-password";
+        return "usuarios/password-recovery/olvido-password";
     }
 
     @PostMapping("/olvido-password")
@@ -47,7 +47,7 @@ public class PasswordRecoveryController {
     @GetMapping("/verificar-codigo-recuperar-password")
     public String mostrarVistaCodigo(@RequestParam("correo") String correo, Model model) {
         model.addAttribute("correo", correo);
-        return "verificar-codigo-recuperar-password"; 
+        return "usuarios/password-recovery/verificar-codigo-recuperar-password"; 
     }
 
     @PostMapping("/validar-codigo-restablecimiento")
@@ -65,7 +65,7 @@ public class PasswordRecoveryController {
     @GetMapping("/restablecer-password")
     public String mostrarVistaRestablecer(Model model) {
         if (!model.containsAttribute("correo")) return "redirect:/olvido-password"; 
-        return "restablecer-password"; 
+        return "usuarios/password-recovery/restablecer-password"; 
     }
 
     @PostMapping("/confirmar-restablecimiento")

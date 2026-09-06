@@ -46,7 +46,7 @@ public class UsuarioController {
         service.procesarNotificacionLogin(usuario.getCorreo());
         
         model.addAttribute("usuario", usuario);
-        return "menu";
+        return "usuarios/cuenta/menu";
     }
 
     @GetMapping("/perfil")
@@ -58,7 +58,7 @@ public class UsuarioController {
         }
         
         model.addAttribute("usuario", usuario);
-        return "perfil";
+        return "usuarios/cuenta/perfil";
     }
 
     @PostMapping("/perfil")
@@ -83,7 +83,7 @@ public class UsuarioController {
         Usuario usuarioRefrescado = usuarioRepository.findById(usuarioActual.getId()).orElse(usuarioActual);
         model.addAttribute("usuario", usuarioRefrescado);
         
-        return "perfil";
+        return "usuarios/cuenta/perfil";
     }
 
     @GetMapping("/historial")
@@ -96,7 +96,7 @@ public class UsuarioController {
 
         model.addAttribute("usuario", usuario);
         model.addAttribute("transacciones", transaccionService.obtenerTransaccionesPorUsuario(usuario));
-        return "historial";
+        return "usuarios/cuenta/historial";
     }
 
     @GetMapping("/rutas")
@@ -109,7 +109,7 @@ public class UsuarioController {
 
         model.addAttribute("usuario", usuario);
         model.addAttribute("rutasDisponibles", busService.obtenerTodasLasRutas());
-        return "rutas";
+        return "usuarios/cuenta/rutas";
     }
 
     @PostMapping("/rutas/favorito/agregar")
