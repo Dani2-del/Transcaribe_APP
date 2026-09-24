@@ -3,6 +3,9 @@ package com.transcaribe.transcaribe.Controller;
 import java.io.IOException;
 import java.util.*;
 
+import org.springframework.data.domain.PageRequest;
+import org.springframework.data.domain.Page;
+import org.springframework.data.domain.Sort;
 import org.springframework.http.HttpHeaders;
 import org.springframework.http.MediaType;
 import org.springframework.core.io.InputStreamResource;
@@ -36,10 +39,26 @@ public class AdminController {
         this.busRepository = busRepository;
     }
 
+    private static final int TAMANO_PAGINA = 20;
+
     @GetMapping("/dashboard")
-    public String mostrarDashboard(Model model) {
-        List<Usuario> usuarios = usuarioRepository.findAll();
-        model.addAttribute("usuarios", usuarios);
+    public String mostrarDashboard(
+            @RequestParam(defaultValue = "0") int page,
+            @RequestParam(required = false) String search,
+            Model model) {
+
+        PageRequest pageable = PageRequest.of(page, TAMANO_PAGINA, Sort.by("nombre").ascending());
+
+        Page<Usuario> resultado = (search != null && !search.isBlank())
+                ? usuarioRepository.findByNombreContainingIgnoreCaseOrCorreoContainingIgnoreCase(
+                search.trim(), search.trim(), pageable)
+                : usuarioRepository.findAll(pageable);
+
+        model.addAttribute("usuarios", resultado.getContent());
+        model.addAttribute("currentPage", resultado.getNumber());
+        model.addAttribute("totalPages", resultado.getTotalPages());
+        model.addAttribute("totalUsuarios", resultado.getTotalElements());
+        model.addAttribute("search", search != null ? search : "");
         model.addAttribute("buses", busRepository.findAll());
         return "admin/dashboard";
     }
@@ -59,13 +78,13 @@ public class AdminController {
         };
 
         InputStreamResource file = new InputStreamResource(
-            excelService.generarReporte(tipo, anio, mes, dia)
+                excelService.generarReporte(tipo, anio, mes, dia)
         );
 
         return ResponseEntity.ok()
                 .header(HttpHeaders.CONTENT_DISPOSITION, "attachment; filename=" + filename)
                 .contentType(MediaType.parseMediaType(
-                    "application/vnd.openxmlformats-officedocument.spreadsheetml.sheet"))
+                        "application/vnd.openxmlformats-officedocument.spreadsheetml.sheet"))
                 .body(file);
     }
 

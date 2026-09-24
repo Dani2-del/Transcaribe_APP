@@ -4,13 +4,48 @@
   <link rel="stylesheet" th:href="@{/css/admin.css}" />
     <meta charset="UTF-8">
     <title>Horarios de Conductores - Transcaribe</title>
+    <style>
+        .header-row { display: flex; justify-content: space-between; align-items: flex-start; gap: 12px; flex-wrap: wrap; }
+        .btn-secundario {
+            background-color: #2f855a; color: white; border: none;
+            padding: 10px 16px; border-radius: 8px; font-weight: bold;
+            font-size: 14px; cursor: pointer; white-space: nowrap;
+        }
+        .btn-secundario:hover { background-color: #276749; }
+        .bus-row {
+            display: flex; justify-content: space-between; align-items: center;
+            padding: 10px 14px; border: 1px solid #eee; border-radius: 8px; margin-bottom: 8px;
+        }
+        .bus-rutas { color: #718096; font-size: 13px; }
+        .modal-overlay {
+            display: none; position: fixed; inset: 0; background: rgba(0,0,0,0.45);
+            align-items: center; justify-content: center; z-index: 50;
+        }
+        .modal-overlay.abierto { display: flex; }
+        .modal-box {
+            background: white; border-radius: 12px; padding: 24px;
+            width: 100%; max-width: 420px;
+        }
+        .flash-ok { background: #e6fffa; color: #22543d; border: 1px solid #38a169; padding: 10px 14px; border-radius: 8px; margin-bottom: 14px; }
+        .flash-error { background: #fff5f5; color: #822727; border: 1px solid #f56565; padding: 10px 14px; border-radius: 8px; margin-bottom: 14px; }
+    </style>
 </head>
 <body>
 <div class="page">
     <div class="center-card">
         <div class="card">
-            <h2 style="margin-bottom: 5px;">📅 Horarios de Conductores</h2>
-            <p style="margin-top: 0; color: #718096;">Programa la ruta, fecha y horario de cada conductor.</p>
+            <div class="header-row">
+                <div>
+                    <h2 style="margin-bottom: 5px;">📅 Horarios de Conductores</h2>
+                    <p style="margin-top: 0; color: #718096;">Programa la ruta, fecha y horario de cada conductor.</p>
+                </div>
+                <button type="button" class="btn-secundario" onclick="document.getElementById('modalBus').classList.add('abierto')">
+                    🚌 Registrar bus
+                </button>
+            </div>
+
+            <div th:if="${mensaje}" class="flash-ok" th:text="${mensaje}"></div>
+            <div th:if="${error}" class="flash-error" th:text="${error}"></div>
 
             <form th:action="@{/admin/horarios/crear}" method="post">
                 <div class="form-grid">
@@ -53,6 +88,31 @@
 
             <hr style="margin: 25px 0; border: 0; border-top: 1px solid #eee;">
 
+            <h3>Buses registrados</h3>
+
+            <div th:if="${#lists.isEmpty(buses)}" class="error-message">
+                <p>Aún no hay buses registrados. Usa el botón "Registrar bus" para agregar el primero.</p>
+            </div>
+
+            <div th:each="b : ${buses}" class="bus-row">
+                <div>
+                    🚌 <strong th:text="${b.placa}"></strong>
+                    &nbsp;·&nbsp;
+                    <span class="bus-rutas" th:text="${#lists.size(b.rutas)} + ' rutas: ' + ${#strings.listJoin(b.rutas, ', ')}"></span>
+                </div>
+                <div style="display:flex; gap:8px;">
+                    <button type="button" class="btn-secundario" style="padding:6px 12px;"
+                            th:attr="onclick=|abrirEditarBus('${b.id}', '${b.placa}', '${#strings.listJoin(b.rutas, ', ')}')|">✏️ Editar</button>
+                    <form th:action="@{/admin/horarios/buses/eliminar}" method="post">
+                        <input type="hidden" name="id" th:value="${b.id}" />
+                        <button type="submit" class="btn-eliminar-horario" title="Eliminar bus"
+                                onclick="return confirm('¿Eliminar este bus? Solo se puede si ningún conductor lo tiene asignado.')">🗑️</button>
+                    </form>
+                </div>
+            </div>
+
+            <hr style="margin: 25px 0; border: 0; border-top: 1px solid #eee;">
+
             <h3>Horarios programados</h3>
 
             <div th:if="${#lists.isEmpty(horarios)}" class="error-message">
@@ -78,9 +138,59 @@
     </div>
 </div>
 
+<div class="modal-overlay" id="modalBus">
+    <div class="modal-box">
+        <h3 style="margin-top: 0;">Registrar nuevo bus</h3>
+        <form th:action="@{/admin/horarios/buses/crear}" method="post">
+            <div class="form-row">
+                <label>Placa</label>
+                <input type="text" name="placa" placeholder="Ej: B-211" required />
+            </div>
+            <div class="form-row" style="margin-top: 10px;">
+                <label>Rutas (separadas por coma)</label>
+                <input type="text" name="rutas" placeholder="Ej: T100E, X101, A104" required />
+            </div>
+            <div style="display: flex; gap: 10px; margin-top: 16px;">
+                <button type="submit" class="primary" style="flex:1;">Guardar bus</button>
+                <button type="button" class="ghost" style="flex:1;"
+                        onclick="document.getElementById('modalBus').classList.remove('abierto')">Cancelar</button>
+            </div>
+        </form>
+    </div>
+</div>
+
+<div class="modal-overlay" id="modalEditarBus">
+    <div class="modal-box">
+        <h3 style="margin-top: 0;">Editar bus</h3>
+        <form th:action="@{/admin/horarios/buses/editar}" method="post">
+            <input type="hidden" name="id" id="editarBusId" />
+            <div class="form-row">
+                <label>Placa</label>
+                <input type="text" name="placa" id="editarBusPlaca" required />
+            </div>
+            <div class="form-row" style="margin-top: 10px;">
+                <label>Rutas (separadas por coma)</label>
+                <input type="text" name="rutas" id="editarBusRutas" required />
+            </div>
+            <div style="display: flex; gap: 10px; margin-top: 16px;">
+                <button type="submit" class="primary" style="flex:1;">Guardar cambios</button>
+                <button type="button" class="ghost" style="flex:1;"
+                        onclick="document.getElementById('modalEditarBus').classList.remove('abierto')">Cancelar</button>
+            </div>
+        </form>
+    </div>
+</div>
+
 <script th:inline="javascript">
     var busRutasPorId   = /*[[${busRutasPorId}]]*/ {};
     var busPorConductor = /*[[${busPorConductor}]]*/ {};
+
+    function abrirEditarBus(id, placa, rutas) {
+        document.getElementById('editarBusId').value = id;
+        document.getElementById('editarBusPlaca').value = placa;
+        document.getElementById('editarBusRutas').value = rutas;
+        document.getElementById('modalEditarBus').classList.add('abierto');
+    }
 
     function actualizarRutas() {
         var conductorId = document.getElementById('selectConductor').value;

@@ -1,11 +1,116 @@
 <!DOCTYPE html>
 <html xmlns:th="http://www.thymeleaf.org">
 <head>
-  <link rel="stylesheet" th:href="@{/css/admin.css}" />
     <meta charset="UTF-8">
     <title>Admin Dashboard - Transcaribe</title>
     <meta name="_csrf" th:content="${_csrf?.token}"/>
     <meta name="_csrf_header" th:content="${_csrf?.headerName}"/>
+    <link rel="stylesheet" th:href="@{/style.css}" />
+    <link rel="stylesheet" href="/Transcaribe_APP/src/main/resources/static/style.css">
+    <style>
+        .center-card { width: 95%; max-width: 1400px !important; }
+        .wide { max-width: 1400px !important; }
+        .card-select {
+            padding: 6px; border-radius: 8px; border: 1px solid #ddd;
+            background-color: #fff; font-family: inherit; cursor: pointer;
+            width: 100%; min-width: 150px;
+        }
+        .saldo-display { font-weight: bold; color: #2e7d32; white-space: nowrap; }
+        .admin-table th { text-align: left; padding: 12px; }
+        .role-badge {
+            font-size: 11px; padding: 2px 6px; border-radius: 4px;
+            background: #eee; color: #666; display: block; margin-top: 4px;
+        }
+        .btn-excel {
+            background-color: #28a745; color: white; padding: 10px 18px;
+            border-radius: 8px; text-decoration: none; font-weight: bold;
+            font-size: 14px; display: flex; align-items: center; gap: 8px;
+            border: none; cursor: pointer; transition: background 0.3s;
+        }
+        .btn-excel:hover { background-color: #218838; }
+        .btn-graficas {
+            background-color: #f09454; color: white; padding: 10px 18px;
+            border-radius: 8px; text-decoration: none; font-weight: bold;
+            font-size: 14px; display: flex; align-items: center; gap: 8px;
+            border: none; cursor: pointer; transition: background 0.3s;
+        }
+        .btn-graficas:hover { background-color: #d67d3e; }
+        .btn-usuario {
+            background: white; color: #f09454; border: 2px solid #f09454;
+            border-radius: 50px; padding: 10px 20px; font-size: 14px;
+            font-weight: bold; text-decoration: none; display: flex;
+            align-items: center; gap: 8px; transition: background 0.2s;
+            cursor: pointer;
+        }
+        .btn-usuario:hover { background: #fff3e0; }
+        .excel-modal-overlay {
+            display: none; position: fixed; inset: 0;
+            background: rgba(0,0,0,0.5); align-items: center;
+            justify-content: center; z-index: 1000;
+        }
+        .excel-modal-box {
+            background: white; padding: 28px; border-radius: 16px;
+            width: 380px; box-shadow: 0 20px 40px rgba(0,0,0,0.2);
+        }
+        .excel-modal-box h3 { color: #f09454; margin: 0 0 6px 0; }
+        .excel-modal-box p { color: #718096; font-size: 0.9rem; margin: 0 0 20px 0; }
+        .filter-group { display: flex; flex-direction: column; gap: 10px; margin-bottom: 20px; }
+        .filter-row { display: flex; flex-direction: column; gap: 4px; }
+        .filter-row label { font-size: 0.85rem; font-weight: 600; color: #4a5568; }
+        .filter-row select, .filter-row input {
+            padding: 10px 12px; border-radius: 10px;
+            border: 1px solid rgba(240,148,84,0.3);
+            background: white; color: #1a1a1a; font-size: 0.95rem;
+        }
+        .filter-row select:focus, .filter-row input:focus {
+            outline: none; border-color: #f09454;
+            box-shadow: 0 0 0 3px rgba(240,148,84,0.15);
+        }
+        .excel-modal-actions { display: flex; gap: 10px; }
+        .btn-descargar {
+            flex: 1; background: #28a745; color: white; border: none;
+            padding: 12px; border-radius: 10px; font-weight: 700;
+            font-size: 0.95rem; cursor: pointer; transition: background 0.2s;
+        }
+        .btn-descargar:hover { background: #218838; }
+        .btn-cancelar {
+            flex: 1; background: transparent; color: #f09454;
+            border: 1px solid #f09454; padding: 12px; border-radius: 10px;
+            font-weight: 600; font-size: 0.95rem; cursor: pointer;
+            transition: all 0.2s;
+        }
+        .btn-cancelar:hover { background: rgba(240,148,84,0.05); }
+        .search-bar { display: flex; gap: 10px; margin-bottom: 16px; }
+        .search-input {
+            flex: 1; padding: 10px 14px; border-radius: 8px;
+            border: 1px solid #ddd; font-size: 14px;
+        }
+        .search-input:focus { outline: none; border-color: #f09454; }
+        .btn-buscar {
+            background-color: #f09454; color: white; border: none;
+            padding: 10px 18px; border-radius: 8px; font-weight: bold;
+            font-size: 14px; cursor: pointer; transition: background 0.2s;
+        }
+        .btn-buscar:hover { background-color: #d67d3e; }
+        .pagination-bar {
+            display: flex; align-items: center; justify-content: center;
+            gap: 18px; margin: 18px 0;
+        }
+        .btn-pagina {
+            background: white; color: #f09454; border: 2px solid #f09454;
+            border-radius: 8px; padding: 8px 16px; font-weight: bold;
+            font-size: 14px; text-decoration: none; cursor: pointer;
+        }
+        .btn-pagina:hover { background: #fff3e0; }
+        .pagina-info { font-size: 14px; color: #555; font-weight: 600; }
+        .granularity-tabs { display: flex; gap: 8px; margin-bottom: 16px; }
+        .tab-btn {
+            flex: 1; padding: 8px; border-radius: 8px; border: 1px solid rgba(240,148,84,0.3);
+            background: white; color: #4a5568; font-weight: 600; cursor: pointer;
+            transition: all 0.2s; font-size: 0.88rem;
+        }
+        .tab-btn.active { background: #f09454; color: white; border-color: #f09454; }
+    </style>
 </head>
 
 <body>
@@ -15,7 +120,7 @@
             <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 20px;">
                 <div>
                     <h2 style="margin: 0;">Panel administrador</h2>
-                    <p style="margin: 0;">Usuarios registrados:</p>
+                    <p style="margin: 0;">Usuarios registrados: <span th:text="${totalUsuarios}"></span></p>
                 </div>
 
                 <div style="display: flex; gap: 12px; align-items: center;">
@@ -38,6 +143,13 @@
                     </button>
                 </div>
             </div>
+
+            <form method="get" th:action="@{/admin/dashboard}" class="search-bar">
+                <input type="text" name="search" th:value="${search}"
+                       placeholder="Buscar por nombre o correo..." class="search-input" />
+                <button type="submit" class="btn-buscar">🔎 Buscar</button>
+                <a th:if="${search != ''}" th:href="@{/admin/dashboard}" class="btn-cancelar" style="flex:0; padding:10px 16px; text-decoration:none; display:inline-block;">Limpiar</a>
+            </form>
 
             <div class="table-wrap">
                 <table class="admin-table">
@@ -81,6 +193,20 @@
                     </tr>
                     </tbody>
                 </table>
+            </div>
+
+            <div class="pagination-bar" th:if="${totalPages > 1}">
+                <a th:if="${currentPage > 0}"
+                   th:href="@{/admin/dashboard(page=${currentPage - 1}, search=${search})}"
+                   class="btn-pagina">⬅ Anterior</a>
+                <span class="btn-pagina" th:unless="${currentPage > 0}" style="opacity:0.4; cursor:default;">⬅ Anterior</span>
+
+                <span class="pagina-info">Página <span th:text="${currentPage + 1}"></span> de <span th:text="${totalPages}"></span></span>
+
+                <a th:if="${currentPage + 1 < totalPages}"
+                   th:href="@{/admin/dashboard(page=${currentPage + 1}, search=${search})}"
+                   class="btn-pagina">Siguiente ➡</a>
+                <span class="btn-pagina" th:unless="${currentPage + 1 < totalPages}" style="opacity:0.4; cursor:default;">Siguiente ➡</span>
             </div>
 
             <button onclick="window.location.href='/'" class="ghost">Cerrar</button>
@@ -178,124 +304,124 @@
 </div>
 
 <script>
-// ===== EXCEL MODAL =====
-let granularidadActual = 'anual';
+    // ===== EXCEL MODAL =====
+    let granularidadActual = 'anual';
 
-function abrirModalExcel() {
-    const select = document.getElementById('filtroAnio');
-    select.innerHTML = '';
-    const anioActual = new Date().getFullYear();
-    for (let y = anioActual; y >= anioActual - 5; y--) {
-        const opt = document.createElement('option');
-        opt.value = y; opt.textContent = y;
-        select.appendChild(opt);
+    function abrirModalExcel() {
+        const select = document.getElementById('filtroAnio');
+        select.innerHTML = '';
+        const anioActual = new Date().getFullYear();
+        for (let y = anioActual; y >= anioActual - 5; y--) {
+            const opt = document.createElement('option');
+            opt.value = y; opt.textContent = y;
+            select.appendChild(opt);
+        }
+        document.getElementById('filtroMes').value = new Date().getMonth() + 1;
+        document.getElementById('filtroDia').value = new Date().getDate();
+        document.getElementById('excelModal').style.display = 'flex';
     }
-    document.getElementById('filtroMes').value = new Date().getMonth() + 1;
-    document.getElementById('filtroDia').value = new Date().getDate();
-    document.getElementById('excelModal').style.display = 'flex';
-}
 
-function cerrarModalExcel() {
-    document.getElementById('excelModal').style.display = 'none';
-}
-
-function setGranularity(tipo, btn) {
-    granularidadActual = tipo;
-    document.querySelectorAll('.tab-btn').forEach(b => b.classList.remove('active'));
-    btn.classList.add('active');
-    document.getElementById('rowAnio').style.display  = tipo === 'todo' ? 'none' : 'flex';
-    document.getElementById('rowMes').style.display   = (tipo === 'mensual' || tipo === 'diario') ? 'flex' : 'none';
-    document.getElementById('rowDia').style.display   = tipo === 'diario' ? 'flex' : 'none';
-}
-
-function descargarExcel() {
-    let url = '/admin/reporte/excel?tipo=' + granularidadActual;
-    if (granularidadActual !== 'todo') url += '&anio=' + document.getElementById('filtroAnio').value;
-    if (granularidadActual === 'mensual' || granularidadActual === 'diario') url += '&mes=' + document.getElementById('filtroMes').value;
-    if (granularidadActual === 'diario') url += '&dia=' + document.getElementById('filtroDia').value;
-    window.location.href = url;
-    cerrarModalExcel();
-}
-
-// ===== TABLA =====
-function updateSaldoDisplay(selectElement) {
-    const selectedOption = selectElement.options[selectElement.selectedIndex];
-    const saldo = selectedOption.getAttribute('data-saldo');
-    const row = selectElement.closest('tr');
-    const saldoCell = row.querySelector('.saldo-display');
-    if (saldo && selectElement.value !== "") {
-        saldoCell.textContent = new Number(saldo).toLocaleString('es-CO', {style:'currency', currency:'COP', minimumFractionDigits:0});
-    } else {
-        saldoCell.textContent = "$0";
+    function cerrarModalExcel() {
+        document.getElementById('excelModal').style.display = 'none';
     }
-}
 
-// ===== MODALES =====
-const modal = document.getElementById('chargeModal');
-const editModal = document.getElementById('editModal');
+    function setGranularity(tipo, btn) {
+        granularidadActual = tipo;
+        document.querySelectorAll('.tab-btn').forEach(b => b.classList.remove('active'));
+        btn.classList.add('active');
+        document.getElementById('rowAnio').style.display  = tipo === 'todo' ? 'none' : 'flex';
+        document.getElementById('rowMes').style.display   = (tipo === 'mensual' || tipo === 'diario') ? 'flex' : 'none';
+        document.getElementById('rowDia').style.display   = tipo === 'diario' ? 'flex' : 'none';
+    }
 
-function openChargeModal(btn) { document.getElementById('modalUserId').value = btn.getAttribute('data-id'); modal.style.display = 'flex'; }
-function closeModal() { modal.style.display = 'none'; }
+    function descargarExcel() {
+        let url = '/admin/reporte/excel?tipo=' + granularidadActual;
+        if (granularidadActual !== 'todo') url += '&anio=' + document.getElementById('filtroAnio').value;
+        if (granularidadActual === 'mensual' || granularidadActual === 'diario') url += '&mes=' + document.getElementById('filtroMes').value;
+        if (granularidadActual === 'diario') url += '&dia=' + document.getElementById('filtroDia').value;
+        window.location.href = url;
+        cerrarModalExcel();
+    }
 
-function submitCharge() {
-    const userId = document.getElementById('modalUserId').value;
-    const token = document.querySelector('meta[name="_csrf"]')?.getAttribute('content') ?? "";
-    const header = document.querySelector('meta[name="_csrf_header"]')?.getAttribute('content') ?? "";
-    const headers = {'Content-Type':'application/x-www-form-urlencoded'};
-    if (header && token) headers[header] = token;
-    fetch('/admin/charge', {method:'POST', headers, body: new URLSearchParams({userId, amount:3500})})
-        .then(r => r.json()).then(res => { if(res.status==='ok') location.reload(); });
-}
+    // ===== TABLA =====
+    function updateSaldoDisplay(selectElement) {
+        const selectedOption = selectElement.options[selectElement.selectedIndex];
+        const saldo = selectedOption.getAttribute('data-saldo');
+        const row = selectElement.closest('tr');
+        const saldoCell = row.querySelector('.saldo-display');
+        if (saldo && selectElement.value !== "") {
+            saldoCell.textContent = new Number(saldo).toLocaleString('es-CO', {style:'currency', currency:'COP', minimumFractionDigits:0});
+        } else {
+            saldoCell.textContent = "$0";
+        }
+    }
 
-function toggleBusRow() {
-    const esConductor = document.getElementById('editRole').value === 'ROLE_CONDUCTOR';
-    document.getElementById('rowBusAsignado').style.display = esConductor ? 'block' : 'none';
-}
+    // ===== MODALES =====
+    const modal = document.getElementById('chargeModal');
+    const editModal = document.getElementById('editModal');
 
-function openEditModal(btn) {
-    document.getElementById('editUserId').value = btn.getAttribute('data-id');
-    document.getElementById('editNombre').value = btn.getAttribute('data-nombre');
-    document.getElementById('editCorreo').value = btn.getAttribute('data-correo');
-    document.getElementById('editRole').value = btn.getAttribute('data-role');
-    document.getElementById('editBus').value = btn.getAttribute('data-bus') || '';
-    document.getElementById('editPassword').value = '';
-    document.getElementById('editMsg').textContent = '';
-    toggleBusRow();
-    editModal.style.display = 'flex';
-}
-function closeEditModal() { editModal.style.display = 'none'; }
+    function openChargeModal(btn) { document.getElementById('modalUserId').value = btn.getAttribute('data-id'); modal.style.display = 'flex'; }
+    function closeModal() { modal.style.display = 'none'; }
 
-function submitEdit() {
-    const userId = document.getElementById('editUserId').value;
-    const nombre = document.getElementById('editNombre').value;
-    const correo = document.getElementById('editCorreo').value;
-    const role = document.getElementById('editRole').value;
-    const password = document.getElementById('editPassword').value;
-    const busAsignado = document.getElementById('editBus').value;
-    const token = document.querySelector('meta[name="_csrf"]')?.getAttribute('content') ?? "";
-    const header = document.querySelector('meta[name="_csrf_header"]')?.getAttribute('content') ?? "";
-    const headers = {'Content-Type':'application/x-www-form-urlencoded'};
-    if (header && token) headers[header] = token;
-    fetch('/admin/editUser', {method:'POST', headers, body: new URLSearchParams({userId, nombre, correo, role, password, busAsignado})})
-        .then(r => r.json()).then(res => {
+    function submitCharge() {
+        const userId = document.getElementById('modalUserId').value;
+        const token = document.querySelector('meta[name="_csrf"]')?.getAttribute('content') ?? "";
+        const header = document.querySelector('meta[name="_csrf_header"]')?.getAttribute('content') ?? "";
+        const headers = {'Content-Type':'application/x-www-form-urlencoded'};
+        if (header && token) headers[header] = token;
+        fetch('/admin/charge', {method:'POST', headers, body: new URLSearchParams({userId, amount:3500})})
+            .then(r => r.json()).then(res => { if(res.status==='ok') location.reload(); });
+    }
+
+    function toggleBusRow() {
+        const esConductor = document.getElementById('editRole').value === 'ROLE_CONDUCTOR';
+        document.getElementById('rowBusAsignado').style.display = esConductor ? 'block' : 'none';
+    }
+
+    function openEditModal(btn) {
+        document.getElementById('editUserId').value = btn.getAttribute('data-id');
+        document.getElementById('editNombre').value = btn.getAttribute('data-nombre');
+        document.getElementById('editCorreo').value = btn.getAttribute('data-correo');
+        document.getElementById('editRole').value = btn.getAttribute('data-role');
+        document.getElementById('editBus').value = btn.getAttribute('data-bus') || '';
+        document.getElementById('editPassword').value = '';
+        document.getElementById('editMsg').textContent = '';
+        toggleBusRow();
+        editModal.style.display = 'flex';
+    }
+    function closeEditModal() { editModal.style.display = 'none'; }
+
+    function submitEdit() {
+        const userId = document.getElementById('editUserId').value;
+        const nombre = document.getElementById('editNombre').value;
+        const correo = document.getElementById('editCorreo').value;
+        const role = document.getElementById('editRole').value;
+        const password = document.getElementById('editPassword').value;
+        const busAsignado = document.getElementById('editBus').value;
+        const token = document.querySelector('meta[name="_csrf"]')?.getAttribute('content') ?? "";
+        const header = document.querySelector('meta[name="_csrf_header"]')?.getAttribute('content') ?? "";
+        const headers = {'Content-Type':'application/x-www-form-urlencoded'};
+        if (header && token) headers[header] = token;
+        fetch('/admin/editUser', {method:'POST', headers, body: new URLSearchParams({userId, nombre, correo, role, password, busAsignado})})
+            .then(r => r.json()).then(res => {
             if(res.status==='ok') {
                 document.getElementById('editMsg').style.color = "green";
                 document.getElementById('editMsg').textContent = "Usuario actualizado ✅";
                 setTimeout(() => location.reload(), 1000);
             }
         });
-}
+    }
 
-function deleteUser(btn) {
-    if(!confirm("¿Está seguro de que desea eliminar este usuario?")) return;
-    const userId = btn.getAttribute('data-id');
-    const token = document.querySelector('meta[name="_csrf"]')?.getAttribute('content') ?? "";
-    const header = document.querySelector('meta[name="_csrf_header"]')?.getAttribute('content') ?? "";
-    const headers = {'Content-Type':'application/x-www-form-urlencoded'};
-    if (header && token) headers[header] = token;
-    fetch('/admin/deleteUser', {method:'POST', headers, body: new URLSearchParams({userId})})
-        .then(r => r.json()).then(res => { if(res.status==='ok') location.reload(); });
-}
+    function deleteUser(btn) {
+        if(!confirm("¿Está seguro de que desea eliminar este usuario?")) return;
+        const userId = btn.getAttribute('data-id');
+        const token = document.querySelector('meta[name="_csrf"]')?.getAttribute('content') ?? "";
+        const header = document.querySelector('meta[name="_csrf_header"]')?.getAttribute('content') ?? "";
+        const headers = {'Content-Type':'application/x-www-form-urlencoded'};
+        if (header && token) headers[header] = token;
+        fetch('/admin/deleteUser', {method:'POST', headers, body: new URLSearchParams({userId})})
+            .then(r => r.json()).then(res => { if(res.status==='ok') location.reload(); });
+    }
 </script>
 </body>
 </html>
