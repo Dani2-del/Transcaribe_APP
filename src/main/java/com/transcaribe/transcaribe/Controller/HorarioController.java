@@ -65,6 +65,69 @@ public class HorarioController {
  
         return "admin/horarios";
     }
+
+    @GetMapping("/historial")
+    public String verHistorial(@RequestParam(required = false) String conductorId,
+                               @RequestParam(required = false) String ruta,
+                               @RequestParam(required = false) String fechaDesde,
+                               @RequestParam(required = false) String fechaHasta,
+                               Model model) {
+        List<Usuario> conductores = usuarioRepository.findByRoleAndActivoTrue(Usuario.ROLE_CONDUCTOR);
+        List<HorarioConductor> historial = horarioRepository.findAllByOrderByFechaAscHoraInicioAsc();
+        LocalDate desde = parseFecha(fechaDesde);
+        LocalDate hasta = parseFecha(fechaHasta);
+
+        if (fechaDesde != null && !fechaDesde.isBlank() && desde == null) {
+            model.addAttribute("error", "La fecha inicial no tiene un formato válido.");
+        }
+        if (fechaHasta != null && !fechaHasta.isBlank() && hasta == null) {
+            model.addAttribute("error", "La fecha final no tiene un formato válido.");
+        }
+        if (desde != null && hasta != null && desde.isAfter(hasta)) {
+            model.addAttribute("error", "La fecha inicial no puede ser posterior a la fecha final.");
+        }
+
+        String rutaFiltro = ruta == null ? "" : ruta.trim().toLowerCase();
+        List<HorarioConductor> horariosFiltrados = historial.stream()
+                .filter(h -> conductorId == null || conductorId.isBlank() || conductorId.equals(h.getConductorId()))
+                .filter(h -> rutaFiltro.isEmpty() || (h.getRuta() != null && h.getRuta().toLowerCase().contains(rutaFiltro)))
+                .filter(h -> desde == null || (h.getFecha() != null && !h.getFecha().isBefore(desde)))
+                .filter(h -> hasta == null || (h.getFecha() != null && !h.getFecha().isAfter(hasta)))
+                .toList();
+
+        Map<String, String> nombreConductor = new HashMap<>();
+        Map<String, String> busConductor = new HashMap<>();
+        for (Usuario conductor : conductores) {
+            nombreConductor.put(conductor.getId(),
+                    conductor.getNombre() != null ? conductor.getNombre() : conductor.getCorreo());
+            String busId = conductor.getBusAsignado();
+            if (busId != null && !busId.isBlank()) {
+                busRepository.findById(busId).ifPresent(bus -> busConductor.put(conductor.getId(), bus.getPlaca()));
+            }
+        }
+
+        model.addAttribute("conductores", conductores);
+        model.addAttribute("historial", horariosFiltrados);
+        model.addAttribute("nombreConductor", nombreConductor);
+        model.addAttribute("busConductor", busConductor);
+        model.addAttribute("conductorIdSeleccionado", conductorId == null ? "" : conductorId);
+        model.addAttribute("rutaSeleccionada", ruta == null ? "" : ruta);
+        model.addAttribute("fechaDesde", fechaDesde == null ? "" : fechaDesde);
+        model.addAttribute("fechaHasta", fechaHasta == null ? "" : fechaHasta);
+        model.addAttribute("totalHistorial", horariosFiltrados.size());
+        return "admin/historial-horarios";
+    }
+
+    private LocalDate parseFecha(String fecha) {
+        if (fecha == null || fecha.isBlank()) {
+            return null;
+        }
+        try {
+            return LocalDate.parse(fecha);
+        } catch (java.time.format.DateTimeParseException e) {
+            return null;
+        }
+    }
  
     @PostMapping("/crear")
     public String crearHorario(@RequestParam String conductorId,
@@ -91,9 +154,16 @@ public class HorarioController {
         return "redirect:/admin/horarios";
     }
  
+    @GetMapping("/buses/nuevo")
+    public String formularioNuevoBus(Model model) {
+        model.addAttribute("tiposBus", List.of(Bus.TIPO_TRONCAL, Bus.TIPO_PETRONCAL, Bus.TIPO_ALIMENTADOR));
+        return "admin/bus-nuevo";
+    }
+
     @PostMapping("/buses/crear")
     public String crearBus(@RequestParam String placa,
-                            @RequestParam String rutas,
+                            @RequestParam(required = false) String rutas,
+                            @RequestParam(defaultValue = "TRONCAL", required = false) String tipo,
                             RedirectAttributes redirectAttributes) {
  
         String placaLimpia = placa.trim().toUpperCase();
@@ -103,17 +173,13 @@ public class HorarioController {
             return "redirect:/admin/horarios";
         }
  
-        List<String> listaRutas = Arrays.stream(rutas.split(","))
+        String rutasTexto = rutas == null ? "" : rutas;
+        List<String> listaRutas = Arrays.stream(rutasTexto.split(","))
                 .map(String::trim)
                 .filter(r -> !r.isEmpty())
                 .collect(Collectors.toList());
- 
-        if (listaRutas.isEmpty()) {
-            redirectAttributes.addFlashAttribute("error", "Debes indicar al menos una ruta para el bus ❌");
-            return "redirect:/admin/horarios";
-        }
- 
-        Bus nuevoBus = new Bus(placaLimpia, listaRutas);
+
+        Bus nuevoBus = new Bus(placaLimpia, listaRutas, tipo);
         busRepository.save(nuevoBus);
  
         redirectAttributes.addFlashAttribute("mensaje", "Bus " + placaLimpia + " registrado correctamente ✅");
@@ -139,7 +205,8 @@ public class HorarioController {
     @PostMapping("/buses/editar")
     public String editarBus(@RequestParam String id,
                              @RequestParam String placa,
-                             @RequestParam String rutas,
+                             @RequestParam(required = false) String rutas,
+                             @RequestParam(defaultValue = "TRONCAL", required = false) String tipo,
                              RedirectAttributes redirectAttributes) {
  
         Bus bus = busRepository.findById(id).orElse(null);
@@ -156,18 +223,15 @@ public class HorarioController {
             return "redirect:/admin/horarios";
         }
  
-        List<String> listaRutas = Arrays.stream(rutas.split(","))
+        String rutasTexto = rutas == null ? "" : rutas;
+        List<String> listaRutas = Arrays.stream(rutasTexto.split(","))
                 .map(String::trim)
                 .filter(r -> !r.isEmpty())
                 .collect(Collectors.toList());
- 
-        if (listaRutas.isEmpty()) {
-            redirectAttributes.addFlashAttribute("error", "Debes indicar al menos una ruta para el bus ❌");
-            return "redirect:/admin/horarios";
-        }
- 
+
         bus.setPlaca(placaLimpia);
         bus.setRutas(listaRutas);
+        bus.setTipo(tipo);
         busRepository.save(bus);
  
         redirectAttributes.addFlashAttribute("mensaje", "Bus " + placaLimpia + " actualizado correctamente ✅");

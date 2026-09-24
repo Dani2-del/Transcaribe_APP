@@ -1,7 +1,7 @@
 <!DOCTYPE html>
 <html xmlns:th="http://www.thymeleaf.org">
 <head>
-  <link rel="stylesheet" th:href="@{/css/admin.css}" />
+    <link rel="stylesheet" th:href="@{/css/admin.css}" />
     <meta charset="UTF-8">
     <title>Horarios de Conductores - Transcaribe</title>
     <style>
@@ -15,6 +15,11 @@
         .bus-row {
             display: flex; justify-content: space-between; align-items: center;
             padding: 10px 14px; border: 1px solid #eee; border-radius: 8px; margin-bottom: 8px;
+        }
+        .bus-badge {
+            display: inline-block; margin-left: 8px; padding: 4px 8px;
+            border-radius: 999px; background: #e6f4ff; color: #1d4ed8;
+            font-size: 11px; font-weight: 700; text-transform: uppercase;
         }
         .bus-rutas { color: #718096; font-size: 13px; }
         .modal-overlay {
@@ -39,9 +44,14 @@
                     <h2 style="margin-bottom: 5px;">📅 Horarios de Conductores</h2>
                     <p style="margin-top: 0; color: #718096;">Programa la ruta, fecha y horario de cada conductor.</p>
                 </div>
-                <button type="button" class="btn-secundario" onclick="document.getElementById('modalBus').classList.add('abierto')">
-                    🚌 Registrar bus
-                </button>
+                <div style="display: flex; gap: 10px; flex-wrap: wrap;">
+                    <button type="button" class="btn-secundario" onclick="window.location.href='/admin/horarios/buses/nuevo'">
+                        🚌 Registrar bus
+                    </button>
+                    <button type="button" class="btn-secundario" style="background-color:#2a9d8f;" onclick="window.location.href='/admin/horarios/historial'">
+                        📚 Historial de horarios
+                    </button>
+                </div>
             </div>
 
             <div th:if="${mensaje}" class="flash-ok" th:text="${mensaje}"></div>
@@ -97,12 +107,13 @@
             <div th:each="b : ${buses}" class="bus-row">
                 <div>
                     🚌 <strong th:text="${b.placa}"></strong>
+                    <span class="bus-badge" th:text="${b.tipo != null ? b.tipo : 'TRONCAL'}"></span>
                     &nbsp;·&nbsp;
                     <span class="bus-rutas" th:text="${#lists.size(b.rutas)} + ' rutas: ' + ${#strings.listJoin(b.rutas, ', ')}"></span>
                 </div>
                 <div style="display:flex; gap:8px;">
                     <button type="button" class="btn-secundario" style="padding:6px 12px;"
-                            th:attr="onclick=|abrirEditarBus('${b.id}', '${b.placa}', '${#strings.listJoin(b.rutas, ', ')}')|">✏️ Editar</button>
+                            th:attr="onclick=|abrirEditarBus('${b.id}', '${b.placa}', '${#strings.listJoin(b.rutas, ', ')}', '${b.tipo != null ? b.tipo : 'TRONCAL'}')|">✏️ Editar</button>
                     <form th:action="@{/admin/horarios/buses/eliminar}" method="post">
                         <input type="hidden" name="id" th:value="${b.id}" />
                         <button type="submit" class="btn-eliminar-horario" title="Eliminar bus"
@@ -138,39 +149,26 @@
     </div>
 </div>
 
-<div class="modal-overlay" id="modalBus">
-    <div class="modal-box">
-        <h3 style="margin-top: 0;">Registrar nuevo bus</h3>
-        <form th:action="@{/admin/horarios/buses/crear}" method="post">
-            <div class="form-row">
-                <label>Placa</label>
-                <input type="text" name="placa" placeholder="Ej: B-211" required />
-            </div>
-            <div class="form-row" style="margin-top: 10px;">
-                <label>Rutas (separadas por coma)</label>
-                <input type="text" name="rutas" placeholder="Ej: T100E, X101, A104" required />
-            </div>
-            <div style="display: flex; gap: 10px; margin-top: 16px;">
-                <button type="submit" class="primary" style="flex:1;">Guardar bus</button>
-                <button type="button" class="ghost" style="flex:1;"
-                        onclick="document.getElementById('modalBus').classList.remove('abierto')">Cancelar</button>
-            </div>
-        </form>
-    </div>
-</div>
-
 <div class="modal-overlay" id="modalEditarBus">
     <div class="modal-box">
         <h3 style="margin-top: 0;">Editar bus</h3>
         <form th:action="@{/admin/horarios/buses/editar}" method="post">
             <input type="hidden" name="id" id="editarBusId" />
             <div class="form-row">
-                <label>Placa</label>
+                <label>Número del bus</label>
                 <input type="text" name="placa" id="editarBusPlaca" required />
             </div>
             <div class="form-row" style="margin-top: 10px;">
+                <label>Tipo de servicio</label>
+                <select name="tipo" id="editarBusTipo" required>
+                    <option value="TRONCAL">Troncal</option>
+                    <option value="PETRONCAL">Petroncal</option>
+                    <option value="ALIMENTADOR">Alimentador</option>
+                </select>
+            </div>
+            <div class="form-row" style="margin-top: 10px;">
                 <label>Rutas (separadas por coma)</label>
-                <input type="text" name="rutas" id="editarBusRutas" required />
+                <input type="text" name="rutas" id="editarBusRutas" />
             </div>
             <div style="display: flex; gap: 10px; margin-top: 16px;">
                 <button type="submit" class="primary" style="flex:1;">Guardar cambios</button>
@@ -185,10 +183,14 @@
     var busRutasPorId   = /*[[${busRutasPorId}]]*/ {};
     var busPorConductor = /*[[${busPorConductor}]]*/ {};
 
-    function abrirEditarBus(id, placa, rutas) {
+    function abrirEditarBus(id, placa, rutas, tipo) {
         document.getElementById('editarBusId').value = id;
         document.getElementById('editarBusPlaca').value = placa;
         document.getElementById('editarBusRutas').value = rutas;
+        var selectTipo = document.getElementById('editarBusTipo');
+        if (selectTipo) {
+            selectTipo.value = tipo || 'TRONCAL';
+        }
         document.getElementById('modalEditarBus').classList.add('abierto');
     }
 
@@ -224,4 +226,4 @@
     }
 </script>
 </body>
-</html>
+</html>>
