@@ -19,6 +19,7 @@
       <a th:href="@{/conductor/panel}" th:classappend="${!verHistorial} ? ' active' : ''">Mis rutas</a>
       <a th:href="@{/conductor/panel(historial=true)}"
          th:classappend="${verHistorial} ? ' active' : ''">Historial</a>
+      <a th:href="@{/menu}" class="conductor-view-switch">Vista usuario</a>
       <form th:action="@{/logout}" method="post">
         <button type="submit">Cerrar sesión</button>
       </form>
@@ -93,6 +94,18 @@
                 <span class="badge-estado badge-pendiente">Completada</span>
             </div>
         </div>
+
+        <nav th:if="${verHistorial and totalPaginasHistorial > 1}" class="pagination-bar"
+             aria-label="Paginación del historial">
+            <a th:if="${paginaHistorial > 0}"
+               th:href="@{/conductor/panel(historial=true, page=${paginaHistorial - 1})}"
+               class="btn-pagina">Anterior</a>
+            <span class="pagina-info"
+                  th:text="|Página ${paginaHistorial + 1} de ${totalPaginasHistorial}|"></span>
+            <a th:if="${paginaHistorial + 1 < totalPaginasHistorial}"
+               th:href="@{/conductor/panel(historial=true, page=${paginaHistorial + 1})}"
+               class="btn-pagina">Siguiente</a>
+        </nav>
 
         <section class="reporte-panel">
             <h4>🛠️ Reportar una novedad</h4>

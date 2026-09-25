@@ -69,6 +69,7 @@ public class ConductorController {
                          @RequestParam(required = false) String error,
                          @RequestParam(required = false) Integer notificados,
                          @RequestParam(defaultValue = "false") boolean historial,
+                         @RequestParam(defaultValue = "0") int page,
                          Model model) {
         Usuario conductor = obtenerUsuarioLogueado();
 
@@ -90,9 +91,16 @@ public class ConductorController {
                 .filter(h -> HorarioConductor.ESTADO_PENDIENTE.equals(h.getEstado())
                         || HorarioConductor.ESTADO_EN_CURSO.equals(h.getEstado()))
                 .toList());
-        model.addAttribute("historialHorarios", horariosConductor.stream()
+        List<HorarioConductor> historialCompleto = horariosConductor.stream()
                 .filter(h -> HorarioConductor.ESTADO_FINALIZADA.equals(h.getEstado()))
-                .toList());
+                .toList();
+        int totalPaginasHistorial = Math.max(1, (int) Math.ceil(historialCompleto.size() / 5.0));
+        int paginaHistorial = Math.min(Math.max(page, 0), totalPaginasHistorial - 1);
+        int inicioHistorial = paginaHistorial * 5;
+        int finHistorial = Math.min(inicioHistorial + 5, historialCompleto.size());
+        model.addAttribute("historialHorarios", historialCompleto.subList(inicioHistorial, finHistorial));
+        model.addAttribute("paginaHistorial", paginaHistorial);
+        model.addAttribute("totalPaginasHistorial", totalPaginasHistorial);
         model.addAttribute("verHistorial", historial);
         Map<String, String> busPorHorario = new HashMap<>();
         horariosConductor

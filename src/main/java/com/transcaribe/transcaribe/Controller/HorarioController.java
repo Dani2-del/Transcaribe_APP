@@ -98,10 +98,10 @@ public class HorarioController {
                 .filter(h -> conductorId.isBlank() || conductorId.equals(h.getConductorId()))
                 .filter(h -> coincidePeriodo(h.getFecha(), periodo, fechaReferencia))
                 .toList();
-        int totalPages = Math.max(1, (int) Math.ceil(horariosFiltrados.size() / 10.0));
+        int totalPages = Math.max(1, (int) Math.ceil(horariosFiltrados.size() / 5.0));
         int paginaSegura = Math.min(Math.max(page, 0), totalPages - 1);
-        int desde = paginaSegura * 10;
-        int hasta = Math.min(desde + 10, horariosFiltrados.size());
+        int desde = paginaSegura * 5;
+        int hasta = Math.min(desde + 5, horariosFiltrados.size());
         model.addAttribute("horarios", horariosFiltrados.subList(desde, hasta));
         model.addAttribute("buscarRuta", buscarRuta);
         model.addAttribute("conductorSeleccionado", conductorId);

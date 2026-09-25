@@ -172,6 +172,12 @@ body.login-page .center-card {
   border-bottom: 3px solid var(--caribe);
 }
 
+.menu-page .page > .navbar {
+  width: 100%;
+  padding-inline: clamp(16px, 4vw, 40px);
+  border-radius: 0;
+}
+
 .navbar .brand h1,
 .navbar-right .nav-link,
 .sub-links a { color: white; }

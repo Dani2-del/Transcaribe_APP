@@ -8,7 +8,7 @@ import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
 
 import java.util.List;
-import java.util.Objects;
+import java.util.regex.Pattern;
 
 @Service
 public class RutaNotificacionService {
@@ -29,13 +29,18 @@ public class RutaNotificacionService {
             return 0;
         }
 
-        String ruta = horario.getRuta();
-        List<Usuario> interesados = usuarioRepository.findByRutasFavoritasContaining(ruta);
+        String ruta = horario.getRuta().trim();
+        if (ruta.isEmpty()) {
+            return 0;
+        }
+        String rutaRegex = "^\\s*" + Pattern.quote(ruta) + "\\s*$";
+        List<Usuario> interesados = usuarioRepository.findByRutaFavoritaIgnoreCase(rutaRegex);
         int notificados = 0;
 
         for (Usuario usuario : interesados) {
             PreferenciaRutaNotificacion preferencia = usuario.getPreferenciasNotificacionRutas().stream()
-                    .filter(item -> Objects.equals(ruta, item.getRuta()))
+                    .filter(item -> item != null && item.getRuta() != null
+                            && ruta.equalsIgnoreCase(item.getRuta().trim()))
                     .findFirst()
                     .orElse(null);
             if (preferencia == null || !preferencia.incluyeHora(horario.getHoraInicio())) {

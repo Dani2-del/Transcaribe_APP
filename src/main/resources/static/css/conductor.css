@@ -715,6 +715,36 @@ table.mod-table .card-btn { margin: 2px 4px; padding: 8px 12px; font-size: 0.9re
   color: white;
 }
 
+.pagination-bar {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  flex-wrap: wrap;
+  gap: 14px;
+  margin: 18px 0;
+}
+
+.btn-pagina {
+  padding: 8px 14px;
+  border: 1px solid var(--linea);
+  border-radius: 8px;
+  background: white;
+  color: var(--coral);
+  font-size: 0.85rem;
+  font-weight: 700;
+  text-decoration: none;
+}
+
+.btn-pagina:hover {
+  background: var(--caribe-soft);
+}
+
+.pagina-info {
+  color: var(--piedra);
+  font-size: 0.85rem;
+  font-weight: 600;
+}
+
 .conductor-navbar {
   width: min(100% - 36px, 600px);
   max-width: 600px;
@@ -752,6 +782,15 @@ table.mod-table .card-btn { margin: 2px 4px; padding: 8px 12px; font-size: 0.9re
 .conductor-navbar-actions a.active {
   background: rgba(255,255,255,0.12);
   color: white;
+}
+
+.conductor-navbar-actions a.conductor-view-switch {
+  background: rgba(255,255,255,0.18);
+  color: white;
+}
+
+.conductor-navbar-actions a.conductor-view-switch:hover {
+  background: rgba(255,255,255,0.28);
 }
 
 @media (max-width: 560px) {

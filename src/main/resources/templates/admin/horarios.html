@@ -204,17 +204,6 @@
                     &nbsp;·&nbsp; 🕐 <span th:text="${h.horaInicio} + ' - ' + ${h.horaFin}"></span>
                 </div>
 
-                <div th:if="${totalPages > 1}" style="display:flex; justify-content:center; gap:12px; margin-top:18px;">
-                    <a th:if="${currentPage > 0}"
-                       th:href="@{/admin/horarios(page=${currentPage - 1}, buscarRuta=${buscarRuta}, conductorId=${conductorSeleccionado}, periodo=${periodoSeleccionado}, fechaFiltro=${fechaFiltro})}">
-                        Anterior
-                    </a>
-                    <span th:text="'Página ' + ${currentPage + 1} + ' de ' + ${totalPages}"></span>
-                    <a th:if="${currentPage + 1 < totalPages}"
-                       th:href="@{/admin/horarios(page=${currentPage + 1}, buscarRuta=${buscarRuta}, conductorId=${conductorSeleccionado}, periodo=${periodoSeleccionado}, fechaFiltro=${fechaFiltro})}">
-                        Siguiente
-                    </a>
-                </div>
                 <div style="display:flex; gap:8px; align-items:center;">
                     <button type="button" class="btn-secundario" style="padding:6px 12px;"
                             th:onclick="|window.location.href='@{/admin/horarios/editar/{id}(id=${h.id})}'|">✏️ Editar</button>
@@ -225,6 +214,16 @@
                     </form>
                 </div>
             </div>
+
+            <nav th:if="${totalPages > 1}" class="pagination-bar" aria-label="Paginación de horarios">
+                <a th:if="${currentPage > 0}"
+                   th:href="@{/admin/horarios(page=${currentPage - 1}, buscarRuta=${buscarRuta}, conductorId=${conductorSeleccionado}, periodo=${periodoSeleccionado}, fechaFiltro=${fechaFiltro})}"
+                   class="btn-pagina">Anterior</a>
+                <span class="pagina-info" th:text="|Página ${currentPage + 1} de ${totalPages}|"></span>
+                <a th:if="${currentPage + 1 < totalPages}"
+                   th:href="@{/admin/horarios(page=${currentPage + 1}, buscarRuta=${buscarRuta}, conductorId=${conductorSeleccionado}, periodo=${periodoSeleccionado}, fechaFiltro=${fechaFiltro})}"
+                   class="btn-pagina">Siguiente</a>
+            </nav>
 
             <button onclick="window.location.href='/admin/dashboard'" class="ghost" style="margin-top: 20px;">Volver al panel</button>
         </div>

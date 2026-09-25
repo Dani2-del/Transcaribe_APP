@@ -206,6 +206,12 @@
       Panel administrador
     </a>
 
+    <a th:if="${usuario.role == 'ROLE_CONDUCTOR'}"
+       th:href="@{/conductor/panel}"
+       class="admin-switch-btn conductor-switch-btn">
+      Cambiar a vista conductor
+    </a>
+
     <div th:replace="~{fragments/footer :: footer}"></div>
   </div>
 </body>

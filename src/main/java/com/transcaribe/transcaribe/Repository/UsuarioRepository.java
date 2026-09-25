@@ -25,7 +25,8 @@ public interface UsuarioRepository extends MongoRepository<Usuario, String> {
 
     Optional<Usuario> findByIdAndActivoTrue(String id);
 
-    List<Usuario> findByRutasFavoritasContaining(String ruta);
+    @Query("{ 'rutas_favoritas': { $regex: ?0, $options: 'i' } }")
+    List<Usuario> findByRutaFavoritaIgnoreCase(String rutaRegex);
 
     @Query("{ 'tarjetas.numeroTarjeta': ?0 }")
     Optional<Usuario> findByNumeroTarjetaEnLista(String numeroTarjeta);
