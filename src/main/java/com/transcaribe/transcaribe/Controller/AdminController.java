@@ -114,8 +114,7 @@ public class AdminController {
             @RequestParam String nombre,
             @RequestParam String correo,
             @RequestParam String role,
-            @RequestParam(required = false) String password,
-            @RequestParam(required = false) String busAsignado) {
+            @RequestParam(required = false) String password) {
         Map<String, Object> response = new HashMap<>();
         try {
             Optional<Usuario> opt = usuarioRepository.findById(userId);
@@ -125,12 +124,6 @@ public class AdminController {
                 u.setCorreo(correo);
                 u.setRole(role);
                 if (password != null && !password.trim().isEmpty()) u.setPasswordHash(password);
-
-                if (Usuario.ROLE_CONDUCTOR.equals(role)) {
-                    u.setBusAsignado(busAsignado != null && !busAsignado.isBlank() ? busAsignado : null);
-                } else {
-                    u.setBusAsignado(null);
-                }
 
                 usuarioRepository.save(u);
                 response.put("status", "ok");

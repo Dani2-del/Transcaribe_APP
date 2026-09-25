@@ -13,4 +13,6 @@ public interface HorarioConductorRepository extends MongoRepository<HorarioCondu
     List<HorarioConductor> findAllByOrderByFechaAscHoraInicioAsc();
 
     Optional<HorarioConductor> findByIdAndConductorId(String id, String conductorId);
+
+    List<HorarioConductor> findByBusIdAndFecha(String busId, java.time.LocalDate fecha);
 }

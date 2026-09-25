@@ -6,6 +6,10 @@ import org.springframework.mail.javamail.MimeMessageHelper;
 import org.springframework.scheduling.annotation.Async;
 import org.springframework.stereotype.Service;
 import org.springframework.beans.factory.annotation.Value;
+import org.springframework.web.util.HtmlUtils;
+import java.time.LocalDate;
+import java.time.LocalTime;
+import java.util.List;
 
 @Service
 public class EmailService {
@@ -17,6 +21,93 @@ public class EmailService {
 
     public EmailService(JavaMailSender mailSender) {
         this.mailSender = mailSender;
+    }
+
+    @Async
+    public void enviarNotificacionHorarioAsignado(String destinatario, String nombre, String ruta,
+                                                   LocalDate fecha, LocalTime horaInicio, LocalTime horaFin) {
+        enviarNotificacionHorario(destinatario, nombre, ruta, fecha, horaInicio, horaFin,
+                "📅 Nueva ruta asignada - Transcaribe",
+                "Se te ha asignado una nueva ruta.");
+    }
+
+    @Async
+    public void enviarNotificacionHorarioActualizado(String destinatario, String nombre, String ruta,
+                                                     LocalDate fecha, LocalTime horaInicio, LocalTime horaFin) {
+        enviarNotificacionHorario(destinatario, nombre, ruta, fecha, horaInicio, horaFin,
+                "✏️ Ruta actualizada - Transcaribe",
+                "El administrador ha actualizado uno de tus horarios.");
+    }
+
+    public void enviarReporteConductor(List<String> destinatarios, String nombreConductor,
+                                       String correoConductor, String asunto, String detalle) {
+        if (destinatarios == null || destinatarios.isEmpty()) {
+            throw new IllegalStateException("No hay administradores activos para recibir el reporte.");
+        }
+        if (asunto == null || asunto.isBlank() || detalle == null || detalle.isBlank()) {
+            throw new IllegalArgumentException("El asunto y el detalle del reporte son obligatorios.");
+        }
+
+        try {
+            MimeMessage message = mailSender.createMimeMessage();
+            MimeMessageHelper helper = new MimeMessageHelper(message, false, "UTF-8");
+            helper.setTo(destinatarios.toArray(new String[0]));
+            helper.setSubject("[Reporte de conductor] " + asunto.trim());
+            helper.setFrom(remitente);
+
+            String contenidoHtml =
+                    "<div style='font-family: Arial, sans-serif; border: 1px solid #ddd; border-radius: 10px; padding: 20px; max-width: 620px;'>" +
+                    "<h2 style='color: #0f3948;'>Reporte de conductor - Transcaribe</h2>" +
+                    "<p><strong>Conductor:</strong> " + HtmlUtils.htmlEscape(nombreConductor) + "</p>" +
+                    "<p><strong>Correo:</strong> " + HtmlUtils.htmlEscape(correoConductor) + "</p>" +
+                    "<p><strong>Asunto:</strong> " + HtmlUtils.htmlEscape(asunto.trim()) + "</p>" +
+                    "<div style='background-color: #f8f9fa; padding: 15px; border-radius: 6px; white-space: pre-wrap;'>" +
+                    HtmlUtils.htmlEscape(detalle.trim()) +
+                    "</div>" +
+                    "<p style='font-size: 12px; color: #888; margin-top: 20px;'>Reporte enviado desde el panel del conductor.</p>" +
+                    "</div>";
+
+            helper.setText(contenidoHtml, true);
+            mailSender.send(message);
+        } catch (Exception e) {
+            throw new IllegalStateException("No se pudo enviar el reporte a los administradores.", e);
+        }
+    }
+
+    private void enviarNotificacionHorario(String destinatario, String nombre, String ruta,
+                                           LocalDate fecha, LocalTime horaInicio, LocalTime horaFin,
+                                           String asunto, String mensaje) {
+        if (destinatario == null || destinatario.isBlank()) {
+            System.err.println("No se envió la notificación de horario: el conductor no tiene correo.");
+            return;
+        }
+        try {
+            MimeMessage message = mailSender.createMimeMessage();
+            MimeMessageHelper helper = new MimeMessageHelper(message, false, "UTF-8");
+            helper.setTo(destinatario);
+            helper.setSubject(asunto);
+            helper.setFrom(remitente);
+
+            String contenidoHtml =
+                    "<div style='font-family: Arial, sans-serif; border: 1px solid #ddd; border-radius: 10px; padding: 20px; max-width: 560px;'>" +
+                    "<h2 style='color: #2a9d8f; text-align: center;'>🚍 Transcaribe</h2>" +
+                    "<p>Hola <strong>" + nombre + "</strong>,</p>" +
+                    "<p>" + mensaje + "</p>" +
+                    "<div style='background-color: #f1f8f9; padding: 15px; border-radius: 6px; border-left: 5px solid #2a9d8f;'>" +
+                    "<p style='margin: 0 0 8px 0;'><strong>Detalles del horario:</strong></p>" +
+                    "<p style='margin: 4px 0;'>🚌 <strong>Ruta:</strong> " + ruta + "</p>" +
+                    "<p style='margin: 4px 0;'>📆 <strong>Fecha:</strong> " + fecha + "</p>" +
+                    "<p style='margin: 4px 0;'>🕐 <strong>Horario:</strong> " + horaInicio + " - " + horaFin + "</p>" +
+                    "</div>" +
+                    "<p style='font-size: 12px; color: #888; margin-top: 20px;'>Este es un correo automático de Transcaribe.</p>" +
+                    "</div>";
+
+            helper.setText(contenidoHtml, true);
+            mailSender.send(message);
+            System.out.println("Notificación de horario enviada a: " + destinatario);
+        } catch (Exception e) {
+            System.err.println("Error al enviar notificación de horario a " + destinatario + ": " + e.getMessage());
+        }
     }
 
     @Async

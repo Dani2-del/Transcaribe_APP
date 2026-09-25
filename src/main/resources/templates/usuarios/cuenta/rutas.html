@@ -12,6 +12,11 @@
     <main class="center-card">
       <div class="card" style="max-width: 600px;">
         <h2 style="margin-bottom: 20px;">Rutas Favoritas</h2>
+        <form method="get" th:action="@{/rutas}" style="display:flex; gap:8px; margin-bottom:16px;">
+            <input type="search" name="buscar" th:value="${buscar}" placeholder="Buscar ruta..."
+                   style="flex:1; padding:10px; border:1px solid #ccd6d9; border-radius:8px;">
+            <button class="primary" type="submit">Buscar</button>
+        </form>
 
         <div th:if="${not #lists.isEmpty(usuario.rutasFavoritas)}">
             <div th:each="ruta : ${usuario.rutasFavoritas}" class="ruta-slim">
@@ -41,6 +46,11 @@
                 </select>
                 <button type="submit" class="primary" style="padding: 8px 20px; white-space: nowrap;">Agregar</button>
             </form>
+        </div>
+        <div th:if="${totalPages > 1}" style="display:flex; justify-content:center; gap:12px; margin-top:18px;">
+            <a th:if="${currentPage > 0}" th:href="@{/rutas(page=${currentPage - 1}, buscar=${buscar})}">Anterior</a>
+            <span th:text="'Página ' + ${currentPage + 1} + ' de ' + ${totalPages}"></span>
+            <a th:if="${currentPage + 1 < totalPages}" th:href="@{/rutas(page=${currentPage + 1}, buscar=${buscar})}">Siguiente</a>
         </div>
 
         <div class="row" style="margin-top: 30px;">

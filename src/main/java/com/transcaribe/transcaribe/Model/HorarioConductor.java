@@ -16,6 +16,9 @@ public class HorarioConductor {
     @Field("conductor_id")
     private String conductorId;
 
+    @Field("bus_id")
+    private String busId;
+
     @Field("ruta")
     private String ruta;
 
@@ -31,6 +34,7 @@ public class HorarioConductor {
     public static final String ESTADO_PENDIENTE = "PENDIENTE";
     public static final String ESTADO_EN_CURSO = "EN_CURSO";
     public static final String ESTADO_FINALIZADA = "FINALIZADA";
+    public static final String ESTADO_DESACTIVADA = "DESACTIVADA";
 
     @Field("estado")
     private String estado = ESTADO_PENDIENTE;
@@ -47,11 +51,20 @@ public class HorarioConductor {
         this.estado = ESTADO_PENDIENTE;
     }
 
+    public HorarioConductor(String conductorId, String busId, String ruta, LocalDate fecha,
+                            LocalTime horaInicio, LocalTime horaFin) {
+        this(conductorId, ruta, fecha, horaInicio, horaFin);
+        this.busId = busId;
+    }
+
     public String getId() { return id; }
     public void setId(String id) { this.id = id; }
 
     public String getConductorId() { return conductorId; }
     public void setConductorId(String conductorId) { this.conductorId = conductorId; }
+
+    public String getBusId() { return busId; }
+    public void setBusId(String busId) { this.busId = busId; }
 
     public String getRuta() { return ruta; }
     public void setRuta(String ruta) { this.ruta = ruta; }

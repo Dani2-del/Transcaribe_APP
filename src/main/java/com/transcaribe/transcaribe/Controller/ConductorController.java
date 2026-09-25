@@ -7,11 +7,16 @@ import com.transcaribe.transcaribe.Repository.BusRepository;
 import com.transcaribe.transcaribe.Repository.HorarioConductorRepository;
 import com.transcaribe.transcaribe.Repository.UsuarioRepository;
 import com.transcaribe.transcaribe.service.RutaNotificacionService;
+import com.transcaribe.transcaribe.service.EmailService;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.security.core.context.SecurityContextHolder;
 import org.springframework.stereotype.Controller;
 import org.springframework.ui.Model;
 import org.springframework.web.bind.annotation.*;
+import java.util.HashMap;
+import java.util.List;
+import java.util.Map;
+import java.util.stream.Collectors;
 
 @Controller
 public class ConductorController {
@@ -24,6 +29,9 @@ public class ConductorController {
 
     @Autowired
     private RutaNotificacionService rutaNotificacionService;
+
+    @Autowired
+    private EmailService emailService;
 
     @Autowired
     private HorarioConductorRepository horarioRepository;
@@ -60,6 +68,7 @@ public class ConductorController {
     public String panel(@RequestParam(required = false) String mensaje,
                          @RequestParam(required = false) String error,
                          @RequestParam(required = false) Integer notificados,
+                         @RequestParam(defaultValue = "false") boolean historial,
                          Model model) {
         Usuario conductor = obtenerUsuarioLogueado();
 
@@ -75,8 +84,25 @@ public class ConductorController {
         }
         model.addAttribute("bus", bus);
 
-        model.addAttribute("horarios",
-                horarioRepository.findByConductorIdOrderByFechaAscHoraInicioAsc(conductor.getId()));
+        List<HorarioConductor> horariosConductor =
+                horarioRepository.findByConductorIdOrderByFechaAscHoraInicioAsc(conductor.getId());
+        model.addAttribute("horarios", horariosConductor.stream()
+                .filter(h -> HorarioConductor.ESTADO_PENDIENTE.equals(h.getEstado())
+                        || HorarioConductor.ESTADO_EN_CURSO.equals(h.getEstado()))
+                .toList());
+        model.addAttribute("historialHorarios", horariosConductor.stream()
+                .filter(h -> HorarioConductor.ESTADO_FINALIZADA.equals(h.getEstado()))
+                .toList());
+        model.addAttribute("verHistorial", historial);
+        Map<String, String> busPorHorario = new HashMap<>();
+        horariosConductor
+                .forEach(horario -> {
+                    String busId = obtenerBusId(horario, conductor);
+                    if (busId != null) {
+                        busRepository.findById(busId).ifPresent(b -> busPorHorario.put(horario.getId(), b.getPlaca()));
+                    }
+                });
+        model.addAttribute("busPorHorario", busPorHorario);
 
         if ("ok".equals(mensaje)) {
             model.addAttribute("mensaje", "¡Ruta iniciada! Se notificó a " + notificados + " usuario(s).");
@@ -93,20 +119,57 @@ public class ConductorController {
         if ("estadoinvalido".equals(error)) {
             model.addAttribute("error", "Esa ruta no está en un estado válido para esa acción.");
         }
+        if ("busocupado".equals(error)) {
+            model.addAttribute("error", "No puedes iniciar la ruta: el bus todavía está siendo utilizado en otra ruta.");
+        }
 
         return "conductor/panel";
     }
 
-    @PostMapping("/conductor/iniciar-ruta")
-    public String iniciarRuta(@RequestParam String horarioId) {
+    @PostMapping("/conductor/reportar")
+    public String reportarIncidencia(@RequestParam String asunto,
+                                     @RequestParam String detalle,
+                                     org.springframework.web.servlet.mvc.support.RedirectAttributes redirectAttributes) {
         Usuario conductor = obtenerUsuarioLogueado();
-
         if (conductor == null) {
             return "redirect:/login";
         }
 
-        if (conductor.getBusAsignado() == null) {
-            return "redirect:/conductor/panel?error=sinbus";
+        if (asunto.isBlank() || detalle.isBlank()) {
+            redirectAttributes.addFlashAttribute("errorReporte",
+                    "El asunto y el detalle del reporte son obligatorios.");
+            return "redirect:/conductor/panel";
+        }
+
+        List<String> administradores = usuarioRepository
+                .findByRoleAndActivoTrue(Usuario.ROLE_ADMIN)
+                .stream()
+                .map(Usuario::getCorreo)
+                .filter(correo -> correo != null && !correo.isBlank())
+                .collect(Collectors.toList());
+        try {
+            emailService.enviarReporteConductor(
+                    administradores,
+                    conductor.getNombre() == null || conductor.getNombre().isBlank()
+                            ? conductor.getCorreo() : conductor.getNombre(),
+                    conductor.getCorreo(),
+                    asunto,
+                    detalle
+            );
+            redirectAttributes.addFlashAttribute("mensajeReporte",
+                    "Reporte enviado correctamente a los administradores.");
+        } catch (IllegalArgumentException | IllegalStateException e) {
+            redirectAttributes.addFlashAttribute("errorReporte", e.getMessage());
+        }
+        return "redirect:/conductor/panel";
+    }
+
+    @PostMapping("/conductor/iniciar-ruta")
+    public synchronized String iniciarRuta(@RequestParam String horarioId) {
+        Usuario conductor = obtenerUsuarioLogueado();
+
+        if (conductor == null) {
+            return "redirect:/login";
         }
 
         HorarioConductor horario = horarioRepository.findByIdAndConductorId(horarioId, conductor.getId()).orElse(null);
@@ -119,9 +182,22 @@ public class ConductorController {
             return "redirect:/conductor/panel?error=estadoinvalido";
         }
 
-        Bus bus = busRepository.findById(conductor.getBusAsignado()).orElse(null);
+        String busId = obtenerBusId(horario, conductor);
+        if (busId == null || busId.isBlank()) {
+            return "redirect:/conductor/panel?error=sinbus";
+        }
+
+        Bus bus = busRepository.findById(busId).orElse(null);
         if (bus == null) {
             return "redirect:/conductor/panel?error=sinbus";
+        }
+
+        boolean busOcupado = horarioRepository.findAll().stream()
+                .anyMatch(otro -> !horario.getId().equals(otro.getId())
+                        && busId.equals(obtenerBusId(otro, null))
+                        && HorarioConductor.ESTADO_EN_CURSO.equals(otro.getEstado()));
+        if (busOcupado) {
+            return "redirect:/conductor/panel?error=busocupado";
         }
 
         horario.setEstado(HorarioConductor.ESTADO_EN_CURSO);
@@ -150,8 +226,16 @@ public class ConductorController {
             return "redirect:/conductor/panel?error=estadoinvalido";
         }
 
-        horarioRepository.deleteById(horario.getId());
+        horario.setEstado(HorarioConductor.ESTADO_FINALIZADA);
+        horarioRepository.save(horario);
 
         return "redirect:/conductor/panel?mensaje=fin";
+    }
+
+    private String obtenerBusId(HorarioConductor horario, Usuario conductor) {
+        if (horario.getBusId() != null && !horario.getBusId().isBlank()) {
+            return horario.getBusId();
+        }
+        return conductor == null ? null : conductor.getBusAsignado();
     }
 }

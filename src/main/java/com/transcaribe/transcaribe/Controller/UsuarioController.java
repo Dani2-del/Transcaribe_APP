@@ -10,6 +10,8 @@ import org.springframework.security.core.context.SecurityContextHolder;
 import org.springframework.stereotype.Controller;
 import org.springframework.ui.Model;
 import org.springframework.web.bind.annotation.*;
+import java.util.List;
+import java.util.Locale;
 
 @Controller
 public class UsuarioController {
@@ -87,7 +89,10 @@ public class UsuarioController {
     }
 
     @GetMapping("/historial")
-    public String historial(Model model) {
+    public String historial(@RequestParam(defaultValue = "") String buscar,
+                            @RequestParam(defaultValue = "") String tipo,
+                            @RequestParam(defaultValue = "0") int page,
+                            Model model) {
         Usuario usuario = obtenerUsuarioLogueado();
         
         if (usuario == null) {
@@ -95,12 +100,41 @@ public class UsuarioController {
         }
 
         model.addAttribute("usuario", usuario);
-        model.addAttribute("transacciones", transaccionService.obtenerTransaccionesPorUsuario(usuario));
+        List<com.transcaribe.transcaribe.Model.Transaccion> filtradas =
+                transaccionService.obtenerTransaccionesPorUsuario(usuario).stream()
+                        .filter(t -> buscar.isBlank()
+                                || (t.getTipo() != null && t.getTipo().toLowerCase(Locale.ROOT)
+                                .contains(buscar.trim().toLowerCase(Locale.ROOT))))
+                        .filter(t -> tipo.isBlank() || coincideTipo(t.getTipo(), tipo))
+                        .toList();
+        int totalPages = Math.max(1, (int) Math.ceil(filtradas.size() / 10.0));
+        int paginaSegura = Math.min(Math.max(page, 0), totalPages - 1);
+        int desde = paginaSegura * 10;
+        int hasta = Math.min(desde + 10, filtradas.size());
+        model.addAttribute("transacciones", filtradas.subList(desde, hasta));
+        model.addAttribute("buscar", buscar);
+        model.addAttribute("tipoSeleccionado", tipo);
+        model.addAttribute("currentPage", paginaSegura);
+        model.addAttribute("totalPages", totalPages);
         return "usuarios/cuenta/historial";
     }
 
+    private boolean coincideTipo(String tipoTransaccion, String filtro) {
+        if (tipoTransaccion == null) {
+            return false;
+        }
+        String tipoNormalizado = tipoTransaccion.toLowerCase(Locale.ROOT);
+        return switch (filtro.toLowerCase(Locale.ROOT)) {
+            case "recarga" -> tipoNormalizado.contains("recarga");
+            case "pasaje" -> tipoNormalizado.contains("pasaje");
+            default -> true;
+        };
+    }
+
     @GetMapping("/rutas")
-    public String rutas(Model model) {
+    public String rutas(@RequestParam(defaultValue = "") String buscar,
+                        @RequestParam(defaultValue = "0") int page,
+                        Model model) {
         Usuario usuario = obtenerUsuarioLogueado();
 
         if (usuario == null) {
@@ -108,7 +142,18 @@ public class UsuarioController {
         }
 
         model.addAttribute("usuario", usuario);
-        model.addAttribute("rutasDisponibles", busService.obtenerTodasLasRutas());
+        List<String> rutas = busService.obtenerTodasLasRutas().stream()
+                .filter(r -> buscar.isBlank() || r.toLowerCase(Locale.ROOT)
+                        .contains(buscar.trim().toLowerCase(Locale.ROOT)))
+                .toList();
+        int totalPages = Math.max(1, (int) Math.ceil(rutas.size() / 20.0));
+        int paginaSegura = Math.min(Math.max(page, 0), totalPages - 1);
+        int desde = paginaSegura * 20;
+        int hasta = Math.min(desde + 20, rutas.size());
+        model.addAttribute("rutasDisponibles", rutas.subList(desde, hasta));
+        model.addAttribute("buscar", buscar);
+        model.addAttribute("currentPage", paginaSegura);
+        model.addAttribute("totalPages", totalPages);
         return "usuarios/cuenta/rutas";
     }
 

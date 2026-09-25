@@ -698,3 +698,53 @@ table.mod-table .card-btn { margin: 2px 4px; padding: 8px 12px; font-size: 0.9re
 
 /* --- utilidades menores --- */
 .row { display: flex; align-items: center; gap: 8px; }
+.btn-historial {
+  display: inline-block;
+  padding: 8px 12px;
+  border-radius: 8px;
+  background: var(--caribe-soft);
+  color: var(--tinta);
+  text-decoration: none;
+  font-size: 12px;
+  font-weight: 700;
+  white-space: nowrap;
+}
+
+.btn-historial:hover {
+  background: var(--caribe);
+  color: white;
+}
+
+.reporte-panel {
+  margin-top: 28px;
+  padding: 18px;
+  border: 1px solid var(--linea);
+  border-radius: var(--radius-sm);
+  background: #f8fbfc;
+}
+
+.reporte-panel h4 { margin-bottom: 4px; }
+.reporte-panel p { color: var(--piedra); font-size: 13px; }
+.reporte-panel form { display: flex; flex-direction: column; gap: 7px; }
+.reporte-panel label { font-size: 13px; font-weight: 700; }
+.reporte-panel input, .reporte-panel textarea {
+  width: 100%;
+  padding: 10px;
+  border: 1px solid var(--linea);
+  border-radius: 8px;
+  font: inherit;
+  resize: vertical;
+}
+.btn-reportar {
+  border: 0;
+  border-radius: 8px;
+  padding: 11px;
+  background: var(--coral);
+  color: white;
+  font-weight: 700;
+  cursor: pointer;
+}
+.btn-reportar:hover { background: var(--coral-2); }
+.reporte-error, .reporte-ok { margin: 12px 0 0; font-weight: 600; }
+.reporte-error { color: #b42318 !important; }
+.reporte-ok { color: #087443 !important; }

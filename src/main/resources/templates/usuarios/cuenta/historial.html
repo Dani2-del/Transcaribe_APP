@@ -18,6 +18,16 @@
 
         <h2>Historial de transacciones</h2>
         <p>Usuario: <strong th:text="${usuario.correo}"></strong></p>
+        <form method="get" th:action="@{/historial}" style="display:flex; gap:8px; margin:16px 0; flex-wrap:wrap;">
+          <input type="search" name="buscar" th:value="${buscar}" placeholder="Buscar por tipo de transacción"
+                 style="flex:1; min-width:220px; padding:10px; border:1px solid #ccd6d9; border-radius:8px;">
+          <select name="tipo" style="padding:10px; border:1px solid #ccd6d9; border-radius:8px;">
+            <option value="" th:selected="${tipoSeleccionado == ''}">Todas</option>
+            <option value="recarga" th:selected="${tipoSeleccionado == 'recarga'}">Recargas</option>
+            <option value="pasaje" th:selected="${tipoSeleccionado == 'pasaje'}">Pasajes</option>
+          </select>
+          <button class="primary" type="submit">Buscar</button>
+        </form>
 
         <!-- 🔹 TABLA -->
         <div class="table-wrap">
@@ -47,6 +57,11 @@
               </tr>
             </tbody>
           </table>
+        </div>
+        <div th:if="${totalPages > 1}" style="display:flex; justify-content:center; gap:12px; margin-top:18px;">
+          <a th:if="${currentPage > 0}" th:href="@{/historial(page=${currentPage - 1}, buscar=${buscar}, tipo=${tipoSeleccionado})}">Anterior</a>
+          <span th:text="'Página ' + ${currentPage + 1} + ' de ' + ${totalPages}"></span>
+          <a th:if="${currentPage + 1 < totalPages}" th:href="@{/historial(page=${currentPage + 1}, buscar=${buscar}, tipo=${tipoSeleccionado})}">Siguiente</a>
         </div>
 
       </div>
