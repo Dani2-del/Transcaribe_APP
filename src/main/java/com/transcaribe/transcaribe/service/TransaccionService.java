@@ -2,6 +2,7 @@ package com.transcaribe.transcaribe.service;
 
 import java.time.LocalDateTime;
 import java.util.List;
+import java.util.Optional;
 
 import org.springframework.stereotype.Service;
 
@@ -18,12 +19,36 @@ public class TransaccionService {
         this.repositorioTransacciones = repositorioTransacciones;
     }
 
-    public void registrarTransaccion(Usuario usuario, String tipo, double monto) {
+    public Transaccion registrarTransaccion(Usuario usuario, String tipo, double monto) {
+        return registrarTransaccion(usuario, tipo, monto, null, null, null);
+    }
+
+    public Transaccion registrarTransaccion(Usuario usuario, String tipo, double monto,
+            String metodoPago, String cuentaPse, String tarjetaTranscaribe) {
+        return registrarTransaccion(usuario, tipo, monto, metodoPago, cuentaPse, tarjetaTranscaribe, null);
+    }
+
+    public Transaccion registrarTransaccion(Usuario usuario, String tipo, double monto,
+            String metodoPago, String cuentaPse, String tarjetaTranscaribe, Integer cantidadPasajes) {
         Transaccion transaccion = new Transaccion(monto, LocalDateTime.now(), tipo, usuario);
-        repositorioTransacciones.save(transaccion);
+        transaccion.setMetodoPago(metodoPago);
+        transaccion.setCuentaPse(cuentaPse);
+        transaccion.setTarjetaTranscaribe(tarjetaTranscaribe);
+        transaccion.setCantidadPasajes(cantidadPasajes);
+        return repositorioTransacciones.save(transaccion);
     }
 
     public List<Transaccion> obtenerTransaccionesPorUsuario(Usuario usuario) {
         return repositorioTransacciones.findByUsuario(usuario);
+    }
+
+    public Optional<Transaccion> obtenerTransaccionDeUsuario(String id, Usuario usuario) {
+        if (usuario == null || usuario.getId() == null) {
+            return Optional.empty();
+        }
+
+        return repositorioTransacciones.findById(id)
+                .filter(transaccion -> transaccion.getUsuario() != null
+                        && usuario.getId().equals(transaccion.getUsuario().getId()));
     }
 }

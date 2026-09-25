@@ -203,7 +203,7 @@ public class ConductorController {
         horario.setEstado(HorarioConductor.ESTADO_EN_CURSO);
         horarioRepository.save(horario);
 
-        int notificados = rutaNotificacionService.notificarInicioRuta(horario.getRuta(), bus.getPlaca());
+        int notificados = rutaNotificacionService.notificarInicioRuta(horario, bus.getPlaca());
 
         return "redirect:/conductor/panel?mensaje=ok&notificados=" + notificados;
     }

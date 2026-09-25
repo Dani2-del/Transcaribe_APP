@@ -1,11 +1,13 @@
 package com.transcaribe.transcaribe.Controller;
 
 import com.transcaribe.transcaribe.Model.Tarjeta;
+import com.transcaribe.transcaribe.Model.Transaccion;
 import com.transcaribe.transcaribe.Model.Usuario;
 import com.transcaribe.transcaribe.Repository.UsuarioRepository;
 import com.transcaribe.transcaribe.service.ServiceTranscaribe;
 import com.transcaribe.transcaribe.service.TransaccionService;
 import com.transcaribe.transcaribe.service.EmailService;
+import com.transcaribe.transcaribe.Util.TarifaTranscaribe;
 
 import java.util.Optional;
 import java.math.BigDecimal;
@@ -61,6 +63,8 @@ public class TarjetaController {
             model.addAttribute("usuario", usuario);
             model.addAttribute("tarjetas", usuario.getTarjetas());
         }
+        model.addAttribute("valorPasaje", TarifaTranscaribe.VALOR_PASAJE_COP);
+        model.addAttribute("cantidadPasajes", 1);
         return "usuarios/tarjetas/recarga";
     }
 
@@ -69,7 +73,9 @@ public class TarjetaController {
      */
     @PostMapping("/recargar")
     public String recargar(
-            @RequestParam double monto,
+            @RequestParam(defaultValue = "RAPIDA") String modoRecarga,
+            @RequestParam(required = false) Integer cantidadPasajes,
+            @RequestParam(required = false) Long monto,
             @RequestParam String numeroTarjeta,
             @RequestParam String metodoPago,
             @RequestParam(required = false) String correoPSE,
@@ -81,14 +87,34 @@ public class TarjetaController {
 
         Usuario usuario = obtenerUsuarioLogueado();
 
+        boolean recargaRapida = "RAPIDA".equalsIgnoreCase(modoRecarga);
+        if (!recargaRapida && !"NORMAL".equalsIgnoreCase(modoRecarga)) {
+            model.addAttribute("error", "Selecciona un tipo de recarga válido.");
+            prepararFormularioRecarga(model, usuario, modoRecarga, cantidadPasajes, monto);
+            return "usuarios/tarjetas/recarga";
+        }
+        if (recargaRapida && (cantidadPasajes == null || cantidadPasajes <= 0)) {
+            model.addAttribute("error", "La cantidad de pasajes debe ser al menos 1.");
+            prepararFormularioRecarga(model, usuario, modoRecarga, cantidadPasajes, monto);
+            return "usuarios/tarjetas/recarga";
+        }
+        if (!recargaRapida && (monto == null || monto <= 0)) {
+            model.addAttribute("error", "El monto de la recarga debe ser mayor que cero.");
+            prepararFormularioRecarga(model, usuario, modoRecarga, cantidadPasajes, monto);
+            return "usuarios/tarjetas/recarga";
+        }
+
+        if (!"pse".equalsIgnoreCase(metodoPago) && !"tarjetaCredito".equalsIgnoreCase(metodoPago)) {
+            model.addAttribute("error", "Selecciona un método de pago válido.");
+            prepararFormularioRecarga(model, usuario, modoRecarga, cantidadPasajes, monto);
+            return "usuarios/tarjetas/recarga";
+        }
+
         // Validación de datos requeridos por pasarela
         if ("pse".equalsIgnoreCase(metodoPago)) {
             if (correoPSE == null || correoPSE.isBlank() || contrasenaPSE == null || contrasenaPSE.isBlank()) {
                 model.addAttribute("error", "Por favor completa los datos de PSE.");
-                if (usuario != null) {
-                    model.addAttribute("usuario", usuario);
-                    model.addAttribute("tarjetas", usuario.getTarjetas());
-                }
+                prepararFormularioRecarga(model, usuario, modoRecarga, cantidadPasajes, monto);
                 return "usuarios/tarjetas/recarga";
             }
         } else if ("tarjetaCredito".equalsIgnoreCase(metodoPago)) {
@@ -96,23 +122,24 @@ public class TarjetaController {
                 fechaVencimientoPago == null || fechaVencimientoPago.isBlank() || 
                 cvvPago == null || cvvPago.isBlank()) {
                 model.addAttribute("error", "Por favor completa los datos de la tarjeta de crédito.");
-                if (usuario != null) {
-                    model.addAttribute("usuario", usuario);
-                    model.addAttribute("tarjetas", usuario.getTarjetas());
-                }
+                prepararFormularioRecarga(model, usuario, modoRecarga, cantidadPasajes, monto);
                 return "usuarios/tarjetas/recarga";
             }
         }
 
         // Ejecución del servicio de recarga
-        boolean ok = service.recargarEnTarjeta(usuario, numeroTarjeta, monto);
+        boolean pagoPse = "pse".equalsIgnoreCase(metodoPago);
+        String cuentaPse = pagoPse ? correoPSE.trim() : null;
+        String metodoPagoRegistro = pagoPse ? "PSE" : "Tarjeta de crédito/débito";
+        Optional<Transaccion> transaccion = recargaRapida
+                ? service.recargarPasajesEnTarjetaConRecibo(
+                        usuario, numeroTarjeta, cantidadPasajes, metodoPagoRegistro, cuentaPse)
+                : service.recargarEnTarjetaConRecibo(
+                        usuario, numeroTarjeta, monto.doubleValue(), metodoPagoRegistro, cuentaPse);
 
-        if (!ok) {
+        if (transaccion.isEmpty()) {
             model.addAttribute("error", "Error en la recarga. Verifique los datos e intente de nuevo.");
-            if (usuario != null) {
-                model.addAttribute("usuario", usuario);
-                model.addAttribute("tarjetas", usuario.getTarjetas());
-            }
+            prepararFormularioRecarga(model, usuario, modoRecarga, cantidadPasajes, monto);
             return "usuarios/tarjetas/recarga";
         }
 
@@ -128,14 +155,28 @@ public class TarjetaController {
             emailService.enviarNotificacionRecarga(
                     usuario.getCorreo(),
                     usuario.getNombre(),
-                    monto,
+                    transaccion.get().getMonto(),
                     saldoActual
             );
         } catch (Exception e) {
             System.err.println("Error al enviar notificación de recarga: " + e.getMessage());
         }
 
+        model.addAttribute("transaccion", transaccion.get());
+        model.addAttribute("usuario", usuario);
         return "usuarios/tarjetas/Recarga-exitosa";
+    }
+
+    private void prepararFormularioRecarga(Model model, Usuario usuario, String modoRecarga,
+            Integer cantidadPasajes, Long monto) {
+        if (usuario != null) {
+            model.addAttribute("usuario", usuario);
+            model.addAttribute("tarjetas", usuario.getTarjetas());
+        }
+        model.addAttribute("valorPasaje", TarifaTranscaribe.VALOR_PASAJE_COP);
+        model.addAttribute("modoRecarga", modoRecarga);
+        model.addAttribute("cantidadPasajes", cantidadPasajes == null ? 1 : cantidadPasajes);
+        model.addAttribute("monto", monto);
     }
 
     /**

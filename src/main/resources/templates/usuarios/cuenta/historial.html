@@ -36,7 +36,9 @@
               <tr>
                 <th>Fecha</th>
                 <th>Tipo</th>
+                <th>Pasajes</th>
                 <th>Monto</th>
+                <th>Recibo</th>
               </tr>
             </thead>
 
@@ -46,13 +48,19 @@
                   01/01/2025
                 </td>
                 <td th:text="${t.tipo}">Recarga</td>
+                <td th:text="${t.cantidadPasajes != null ? t.cantidadPasajes : '—'}">—</td>
                 <td th:text="${#numbers.formatDecimal(t.monto, 0, 'COMMA', 2, 'POINT')}">
                   $0.00
+                </td>
+                <td>
+                  <a class="receipt-link"
+                     th:href="@{/historial/{id}/recibo(id=${t.id})}"
+                     aria-label="Descargar recibo PDF">Descargar PDF</a>
                 </td>
               </tr>
 
               <tr th:if="${#lists.isEmpty(transacciones)}">
-                <td colspan="3" style="text-align:center;">
+                <td colspan="5" style="text-align:center;">
                 </td>
               </tr>
             </tbody>

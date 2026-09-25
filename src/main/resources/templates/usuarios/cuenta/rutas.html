@@ -18,19 +18,42 @@
             <button class="primary" type="submit">Buscar</button>
         </form>
 
-        <div th:if="${not #lists.isEmpty(usuario.rutasFavoritas)}">
-            <div th:each="ruta : ${usuario.rutasFavoritas}" class="ruta-slim">
-                <span class="ruta-nombre" th:text="'🚌 ' + ${ruta}"></span>
-
-                <form th:action="@{/rutas/favorito/eliminar}" method="post" style="display:inline;">
-                    <input type="hidden" name="ruta" th:value="${ruta}" />
-                    <button type="submit" class="btn-icon" title="Quitar de favoritos"
-                            onclick="return confirm('¿Quitar esta ruta de tus favoritas?')">🗑️</button>
+        <div th:if="${not #lists.isEmpty(rutasFavoritasConPreferencia)}">
+            <div th:each="preferencia : ${rutasFavoritasConPreferencia}" class="ruta-slim">
+                <div class="ruta-favorite-heading">
+                    <span class="ruta-nombre" th:text="'🚌 ' + ${preferencia.ruta}"></span>
+                    <form th:action="@{/rutas/favorito/eliminar}" method="post" style="display:inline;">
+                        <input type="hidden" name="ruta" th:value="${preferencia.ruta}" />
+                        <button type="submit" class="btn-icon" title="Quitar de favoritos"
+                                onclick="return confirm('¿Quitar esta ruta de tus favoritas?')">🗑️</button>
+                    </form>
+                </div>
+                <form th:action="@{/rutas/favorito/notificaciones}" method="post" class="route-notification-form">
+                    <input type="hidden" name="ruta" th:value="${preferencia.ruta}" />
+                    <label class="route-notification-toggle">
+                        <input type="checkbox" name="notificacionesActivas" value="true"
+                               th:checked="${preferencia.notificacionesActivas}" />
+                        Notificarme cuando inicie un bus de esta ruta
+                    </label>
+                    <div class="route-notification-hours">
+                        <label>
+                            Desde
+                            <input type="time" name="horaDesde" required
+                                   th:value="${preferencia.horaDesde}" />
+                        </label>
+                        <label>
+                            Hasta
+                            <input type="time" name="horaHasta" required
+                                   th:value="${preferencia.horaHasta}" />
+                        </label>
+                        <button type="submit" class="primary">Guardar horario</button>
+                    </div>
+                    <small>Solo recibirás correos si el horario programado del bus inicia dentro de esta franja.</small>
                 </form>
             </div>
         </div>
 
-        <div th:if="${#lists.isEmpty(usuario.rutasFavoritas)}" class="error-message">
+        <div th:if="${#lists.isEmpty(rutasFavoritasConPreferencia)}" class="error-message">
           <p>Aún no tienes rutas favoritas.</p>
         </div>
 

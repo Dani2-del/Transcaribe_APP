@@ -7,6 +7,7 @@ import org.springframework.data.mongodb.core.mapping.Field;
 
 import java.math.BigDecimal;
 import java.time.LocalDateTime;
+import java.time.LocalTime;
 import java.util.ArrayList;
 import java.util.List;
 
@@ -53,6 +54,9 @@ public class Usuario {
 
     @Field("rutas_favoritas")
     private List<String> rutasFavoritas = new ArrayList<>();
+
+    @Field("preferencias_notificacion_rutas")
+    private List<PreferenciaRutaNotificacion> preferenciasNotificacionRutas = new ArrayList<>();
 
     @Field("bus_asignado")
     private String busAsignado;
@@ -162,6 +166,32 @@ public class Usuario {
         if (this.rutasFavoritas != null) {
             this.rutasFavoritas.remove(ruta);
         }
+        getPreferenciasNotificacionRutas().removeIf(preferencia -> ruta.equals(preferencia.getRuta()));
+    }
+
+    public List<PreferenciaRutaNotificacion> getPreferenciasNotificacionRutas() {
+        if (preferenciasNotificacionRutas == null) {
+            preferenciasNotificacionRutas = new ArrayList<>();
+        }
+        return preferenciasNotificacionRutas;
+    }
+
+    public void setPreferenciasNotificacionRutas(
+            List<PreferenciaRutaNotificacion> preferenciasNotificacionRutas) {
+        this.preferenciasNotificacionRutas = preferenciasNotificacionRutas;
+    }
+
+    public PreferenciaRutaNotificacion obtenerPreferenciaNotificacionRuta(String ruta) {
+        return getPreferenciasNotificacionRutas().stream()
+                .filter(preferencia -> ruta.equals(preferencia.getRuta()))
+                .findFirst()
+                .orElseGet(() -> new PreferenciaRutaNotificacion(
+                        ruta, false, LocalTime.of(6, 0), LocalTime.of(8, 0)));
+    }
+
+    public void guardarPreferenciaNotificacionRuta(PreferenciaRutaNotificacion preferencia) {
+        getPreferenciasNotificacionRutas().removeIf(actual -> actual.getRuta().equals(preferencia.getRuta()));
+        getPreferenciasNotificacionRutas().add(preferencia);
     }
 
     public String getBusAsignado() { return busAsignado; }

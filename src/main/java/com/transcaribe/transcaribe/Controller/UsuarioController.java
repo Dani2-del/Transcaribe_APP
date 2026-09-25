@@ -1,17 +1,30 @@
 package com.transcaribe.transcaribe.Controller;
 
 import com.transcaribe.transcaribe.Model.Usuario;
+import com.transcaribe.transcaribe.Model.Transaccion;
+import com.transcaribe.transcaribe.Model.PreferenciaRutaNotificacion;
 import com.transcaribe.transcaribe.Repository.UsuarioRepository;
+import com.transcaribe.transcaribe.service.ReciboPdfService;
 import com.transcaribe.transcaribe.service.ServiceTranscaribe;
 import com.transcaribe.transcaribe.service.TransaccionService;
 import com.transcaribe.transcaribe.service.BusService;
+import java.io.IOException;
+import java.nio.charset.StandardCharsets;
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.http.ContentDisposition;
+import org.springframework.http.HttpHeaders;
+import org.springframework.http.HttpStatus;
+import org.springframework.http.MediaType;
+import org.springframework.http.ResponseEntity;
 import org.springframework.security.core.context.SecurityContextHolder;
 import org.springframework.stereotype.Controller;
 import org.springframework.ui.Model;
 import org.springframework.web.bind.annotation.*;
+import org.springframework.web.server.ResponseStatusException;
 import java.util.List;
 import java.util.Locale;
+import java.time.LocalTime;
+import java.time.format.DateTimeParseException;
 
 @Controller
 public class UsuarioController {
@@ -27,6 +40,9 @@ public class UsuarioController {
 
     @Autowired
     private BusService busService;
+
+    @Autowired
+    private ReciboPdfService reciboPdfService;
 
     private Usuario obtenerUsuarioLogueado() {
         String correo = SecurityContextHolder.getContext().getAuthentication().getName();
@@ -119,6 +135,27 @@ public class UsuarioController {
         return "usuarios/cuenta/historial";
     }
 
+    @GetMapping("/historial/{id}/recibo")
+    public ResponseEntity<byte[]> descargarRecibo(@PathVariable String id) throws IOException {
+        Usuario usuario = obtenerUsuarioLogueado();
+        if (usuario == null) {
+            throw new ResponseStatusException(HttpStatus.NOT_FOUND);
+        }
+
+        Transaccion transaccion = transaccionService.obtenerTransaccionDeUsuario(id, usuario)
+                .orElseThrow(() -> new ResponseStatusException(HttpStatus.NOT_FOUND));
+        byte[] pdf = reciboPdfService.generarRecibo(transaccion);
+
+        HttpHeaders headers = new HttpHeaders();
+        headers.setContentType(MediaType.APPLICATION_PDF);
+        headers.setContentDisposition(ContentDisposition.attachment()
+                .filename("recibo-" + transaccion.getId() + ".pdf", StandardCharsets.UTF_8)
+                .build());
+        headers.setContentLength(pdf.length);
+        headers.setCacheControl("no-store");
+        return new ResponseEntity<>(pdf, headers, HttpStatus.OK);
+    }
+
     private boolean coincideTipo(String tipoTransaccion, String filtro) {
         if (tipoTransaccion == null) {
             return false;
@@ -142,6 +179,10 @@ public class UsuarioController {
         }
 
         model.addAttribute("usuario", usuario);
+        List<PreferenciaRutaNotificacion> rutasFavoritasConPreferencia = usuario.getRutasFavoritas().stream()
+                .map(usuario::obtenerPreferenciaNotificacionRuta)
+                .toList();
+        model.addAttribute("rutasFavoritasConPreferencia", rutasFavoritasConPreferencia);
         List<String> rutas = busService.obtenerTodasLasRutas().stream()
                 .filter(r -> buscar.isBlank() || r.toLowerCase(Locale.ROOT)
                         .contains(buscar.trim().toLowerCase(Locale.ROOT)))
@@ -182,6 +223,44 @@ public class UsuarioController {
         usuario.eliminarRutaFavorita(ruta);
         usuarioRepository.save(usuario);
 
+        return "redirect:/rutas";
+    }
+
+    @PostMapping("/rutas/favorito/notificaciones")
+    public String guardarPreferenciaNotificacion(
+            @RequestParam String ruta,
+            @RequestParam(defaultValue = "false") boolean notificacionesActivas,
+            @RequestParam String horaDesde,
+            @RequestParam String horaHasta,
+            org.springframework.web.servlet.mvc.support.RedirectAttributes redirectAttributes) {
+        Usuario usuario = obtenerUsuarioLogueado();
+        if (usuario == null) {
+            return "redirect:/login";
+        }
+        if (!usuario.getRutasFavoritas().contains(ruta)) {
+            redirectAttributes.addFlashAttribute("error", "Solo puedes configurar notificaciones para rutas favoritas.");
+            return "redirect:/rutas";
+        }
+
+        try {
+            LocalTime desde = LocalTime.parse(horaDesde);
+            LocalTime hasta = LocalTime.parse(horaHasta);
+            if (!desde.isBefore(hasta)) {
+                redirectAttributes.addFlashAttribute("error",
+                        "La hora inicial debe ser anterior a la hora final.");
+                return "redirect:/rutas";
+            }
+
+            usuario.guardarPreferenciaNotificacionRuta(
+                    new PreferenciaRutaNotificacion(ruta, notificacionesActivas, desde, hasta));
+            usuarioRepository.save(usuario);
+            redirectAttributes.addFlashAttribute("mensaje",
+                    notificacionesActivas
+                            ? "Horario de notificaciones guardado para " + ruta + "."
+                            : "Notificaciones desactivadas para " + ruta + ".");
+        } catch (DateTimeParseException e) {
+            redirectAttributes.addFlashAttribute("error", "Selecciona un rango horario válido.");
+        }
         return "redirect:/rutas";
     }
 }

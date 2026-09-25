@@ -468,6 +468,77 @@ button {
 /* ===== TABLAS ===== */
 .table-wrap { overflow: auto; }
 
+.receipt-link {
+  display: inline-block;
+  padding: 8px 12px;
+  border-radius: 8px;
+  background: var(--caribe);
+  color: white;
+  font-weight: 600;
+  text-decoration: none;
+  white-space: nowrap;
+}
+
+.receipt-link:hover {
+  background: var(--tinta);
+}
+
+.quick-recharge-options {
+  display: flex;
+  justify-content: center;
+  flex-wrap: wrap;
+  gap: 10px;
+  margin: 10px 0 18px;
+}
+
+.recharge-mode-options {
+  display: flex;
+  justify-content: center;
+  flex-wrap: wrap;
+  gap: 12px;
+  margin: 10px 0 18px;
+}
+
+.recharge-mode-option {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  padding: 12px 18px;
+  border: 1px solid var(--linea);
+  border-radius: 10px;
+  background: white;
+  color: var(--tinta);
+  cursor: pointer;
+  font-weight: 600;
+}
+
+.recharge-mode-option:has(input:checked) {
+  border-color: var(--caribe);
+  background: var(--caribe-soft);
+}
+
+.quick-recharge-option {
+  border: 1px solid var(--caribe) !important;
+  background: white !important;
+  color: var(--tinta) !important;
+}
+
+.quick-recharge-option[aria-pressed="true"],
+.quick-recharge-option:hover {
+  background: var(--caribe) !important;
+  color: white !important;
+}
+
+.recharge-total {
+  margin: 12px 0 0;
+  color: var(--piedra);
+  line-height: 1.8;
+}
+
+.recharge-total strong {
+  color: var(--coral-2);
+}
+
 table { width: 100%; border-collapse: collapse; background: transparent; }
 
 thead th {
@@ -709,11 +780,55 @@ table.mod-table .card-btn { margin: 2px 4px; padding: 8px 12px; font-size: 0.9re
   border-radius: 12px;
   padding: 12px 20px;
   margin-bottom: 12px;
+  box-shadow: 0 2px 8px rgba(15,57,72,0.06);
+  border-left: 5px solid var(--mango);
+}
+
+.ruta-favorite-heading {
   display: flex;
   justify-content: space-between;
   align-items: center;
-  box-shadow: 0 2px 8px rgba(15,57,72,0.06);
-  border-left: 5px solid var(--mango);
+}
+
+.route-notification-form {
+  display: grid;
+  gap: 10px;
+  margin-top: 12px;
+  padding-top: 12px;
+  border-top: 1px solid var(--linea);
+  text-align: left;
+}
+
+.route-notification-toggle,
+.route-notification-hours,
+.route-notification-hours label {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+}
+
+.route-notification-hours {
+  flex-wrap: wrap;
+}
+
+.route-notification-hours label {
+  color: var(--piedra);
+  font-size: 0.9rem;
+}
+
+.route-notification-hours input {
+  padding: 7px;
+  border: 1px solid var(--linea);
+  border-radius: 8px;
+  color: var(--tinta);
+}
+
+.route-notification-hours .primary {
+  padding: 8px 12px;
+}
+
+.route-notification-form small {
+  color: var(--piedra);
 }
 
 .ruta-nombre {

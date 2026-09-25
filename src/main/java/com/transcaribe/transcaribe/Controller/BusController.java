@@ -6,6 +6,7 @@ import com.transcaribe.transcaribe.Repository.BusRepository;
 import com.transcaribe.transcaribe.service.BusService;
 import com.transcaribe.transcaribe.service.ServiceTranscaribe;
 import com.transcaribe.transcaribe.service.EmailService;
+import com.transcaribe.transcaribe.Util.TarifaTranscaribe;
 
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.http.ResponseEntity;
@@ -43,7 +44,7 @@ public class BusController {
             try {
                 Usuario usuarioDestino = service.buscarPorId(usuarioId);
                 if (usuarioDestino != null) {
-                    double costoPasaje = 3900.0; 
+                    double costoPasaje = (double) TarifaTranscaribe.VALOR_PASAJE_COP;
                     String saldoRestante = resultado.split("\\$")[1]; 
                     emailService.enviarNotificacionGasto(
                         usuarioDestino.getCorreo(),
@@ -98,7 +99,7 @@ public class BusController {
                         emailService.enviarNotificacionGasto(
                             u.getCorreo(), 
                             u.getNombre(), 
-                            3900.0, 
+                            (double) TarifaTranscaribe.VALOR_PASAJE_COP,
                             saldoRestante
                         );
 

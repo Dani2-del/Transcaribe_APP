@@ -8,8 +8,10 @@ import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.stereotype.Service;
 
 import com.transcaribe.transcaribe.Model.Tarjeta;
+import com.transcaribe.transcaribe.Model.Transaccion;
 import com.transcaribe.transcaribe.Model.Usuario;
 import com.transcaribe.transcaribe.Repository.UsuarioRepository;
+import com.transcaribe.transcaribe.Util.TarifaTranscaribe;
 
 /**
  * Servicio principal del sistema Transcaribe para gestión de usuarios,
@@ -111,7 +113,33 @@ public class ServiceTranscaribe {
      * Realiza una recarga de saldo filtrando por el número de tarjeta específico.
      */
     public boolean recargarEnTarjeta(Usuario usuario, String numeroTarjeta, double monto) {
-        if (usuario == null || !usuario.isActivo() || monto <= 0) return false;
+        return recargarEnTarjetaConRecibo(usuario, numeroTarjeta, monto).isPresent();
+    }
+
+    public Optional<Transaccion> recargarEnTarjetaConRecibo(
+            Usuario usuario, String numeroTarjeta, double monto) {
+        return recargarEnTarjetaConRecibo(usuario, numeroTarjeta, monto, null, null);
+    }
+
+    public Optional<Transaccion> recargarEnTarjetaConRecibo(
+            Usuario usuario, String numeroTarjeta, double monto, String metodoPago, String cuentaPse) {
+        return recargarEnTarjetaConRecibo(usuario, numeroTarjeta, monto, metodoPago, cuentaPse, null);
+    }
+
+    public Optional<Transaccion> recargarPasajesEnTarjetaConRecibo(
+            Usuario usuario, String numeroTarjeta, int cantidadPasajes, String metodoPago, String cuentaPse) {
+        if (cantidadPasajes <= 0) {
+            return Optional.empty();
+        }
+        long monto = Math.multiplyExact((long) cantidadPasajes, TarifaTranscaribe.VALOR_PASAJE_COP);
+        return recargarEnTarjetaConRecibo(
+                usuario, numeroTarjeta, (double) monto, metodoPago, cuentaPse, cantidadPasajes);
+    }
+
+    private Optional<Transaccion> recargarEnTarjetaConRecibo(
+            Usuario usuario, String numeroTarjeta, double monto, String metodoPago,
+            String cuentaPse, Integer cantidadPasajes) {
+        if (usuario == null || !usuario.isActivo() || monto <= 0) return Optional.empty();
 
         return usuario.getTarjetas().stream()
                 .filter(t -> t.getNumeroTarjeta().equals(numeroTarjeta))
@@ -119,9 +147,15 @@ public class ServiceTranscaribe {
                 .map(t -> {
                     t.setSaldo(t.getSaldo().add(BigDecimal.valueOf(monto)));
                     repositorioUsuarios.save(usuario);
-                    servicioTransacciones.registrarTransaccion(usuario, "Recarga Tarjeta: " + ocultarNumeroTarjeta(numeroTarjeta), monto);
-                    return true;
-                }).orElse(false);
+                    return servicioTransacciones.registrarTransaccion(
+                            usuario,
+                            "Recarga Tarjeta: " + ocultarNumeroTarjeta(numeroTarjeta),
+                            monto,
+                            metodoPago,
+                            cuentaPse,
+                            ocultarNumeroTarjeta(numeroTarjeta),
+                            cantidadPasajes);
+                });
     }
 
     /**

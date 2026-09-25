@@ -7,6 +7,7 @@ import com.transcaribe.transcaribe.Model.Usuario;
 import com.transcaribe.transcaribe.Repository.BusRepository;
 import com.transcaribe.transcaribe.Repository.TransaccionRepository;
 import com.transcaribe.transcaribe.Repository.UsuarioRepository;
+import com.transcaribe.transcaribe.Util.TarifaTranscaribe;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
 import java.util.stream.Collectors;
@@ -52,7 +53,7 @@ public class BusService {
     Random rand = new Random();
     String rutaSeleccionada = bus.getRutas().get(rand.nextInt(bus.getRutas().size()));
 
-    BigDecimal costo = new BigDecimal("3900.00");
+    BigDecimal costo = BigDecimal.valueOf(TarifaTranscaribe.VALOR_PASAJE_COP);
 
     Tarjeta tarjetaSeleccionada = usuario.getTarjetas().stream()
             .filter(t -> t.getNumeroTarjeta().equals(numeroTarjeta))
@@ -95,5 +96,4 @@ public class BusService {
                 .collect(Collectors.toList());
     }
 }
-
 

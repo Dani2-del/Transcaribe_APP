@@ -24,6 +24,18 @@ public class Transaccion {
     @Field("tipo")
     private String tipo;
 
+    @Field("metodo_pago")
+    private String metodoPago;
+
+    @Field("cuenta_pse")
+    private String cuentaPse;
+
+    @Field("tarjeta_transcaribe")
+    private String tarjetaTranscaribe;
+
+    @Field("cantidad_pasajes")
+    private Integer cantidadPasajes;
+
     @DBRef
     @Field("usuario")
     private Usuario usuario;
@@ -48,6 +60,18 @@ public class Transaccion {
 
     public String getTipo() { return tipo; }
     public void setTipo(String tipo) { this.tipo = tipo; }
+
+    public String getMetodoPago() { return metodoPago; }
+    public void setMetodoPago(String metodoPago) { this.metodoPago = metodoPago; }
+
+    public String getCuentaPse() { return cuentaPse; }
+    public void setCuentaPse(String cuentaPse) { this.cuentaPse = cuentaPse; }
+
+    public String getTarjetaTranscaribe() { return tarjetaTranscaribe; }
+    public void setTarjetaTranscaribe(String tarjetaTranscaribe) { this.tarjetaTranscaribe = tarjetaTranscaribe; }
+
+    public Integer getCantidadPasajes() { return cantidadPasajes; }
+    public void setCantidadPasajes(Integer cantidadPasajes) { this.cantidadPasajes = cantidadPasajes; }
 
     public Usuario getUsuario() { return usuario; }
     public void setUsuario(Usuario usuario) { this.usuario = usuario; }

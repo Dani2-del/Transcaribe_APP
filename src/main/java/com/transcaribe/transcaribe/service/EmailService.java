@@ -286,7 +286,8 @@ public void enviarNotificacionGasto(String destinatario, String nombre, double m
     }
 
     @Async
-    public void enviarNotificacionRutaIniciada(String destinatario, String nombre, String ruta, String placaBus) {
+    public void enviarNotificacionRutaIniciada(
+            String destinatario, String nombre, String ruta, String placaBus, String horaProgramada) {
         try {
             MimeMessage message = mailSender.createMimeMessage();
             MimeMessageHelper helper = new MimeMessageHelper(message, true, "UTF-8");
@@ -300,6 +301,7 @@ public void enviarNotificacionGasto(String destinatario, String nombre, double m
                     "<h2 style='color: #ff8c00; text-align: center;'>🚌 ¡Tu ruta favorita va en camino!</h2>" +
                     "<p>Hola <strong>" + nombre + "</strong>,</p>" +
                     "<p>El bus de la ruta <strong>" + ruta + "</strong> (placa " + placaBus + ") acaba de iniciar su recorrido.</p>" +
+                    "<p>Hora de salida programada: <strong>" + horaProgramada + "</strong>.</p>" +
                     "<p style='font-size: 13px; color: #555;'>Te avisamos porque tienes esta ruta guardada en tus favoritas.</p>" +
                 "</div>";
 

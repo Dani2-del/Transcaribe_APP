@@ -23,8 +23,42 @@
         <form th:action="@{/recargar}" method="post" class="recarga-form" id="recargaForm">
           
           <div class="form-section full-width">
-            <label for="monto" style="color: #4a5568;">Monto a recargar</label>
-            <input id="monto" type="number" name="monto" min="1" step="1" placeholder="Ej: 5000" required />
+            <label style="color: #4a5568;">Tipo de recarga</label>
+            <div class="recharge-mode-options" role="radiogroup" aria-label="Tipo de recarga">
+              <label class="recharge-mode-option">
+                <input type="radio" name="modoRecarga" value="RAPIDA"
+                       th:checked="${modoRecarga == null || modoRecarga == 'RAPIDA'}" />
+                Recarga rápida
+              </label>
+              <label class="recharge-mode-option">
+                <input type="radio" name="modoRecarga" value="NORMAL"
+                       th:checked="${modoRecarga == 'NORMAL'}" />
+                Recarga normal
+              </label>
+            </div>
+          </div>
+
+          <div id="recargaRapidaFields" class="form-section full-width">
+            <label style="color: #4a5568;">Recarga rápida por pasajes</label>
+            <div class="quick-recharge-options" aria-label="Cantidades rápidas de pasajes">
+              <button type="button" class="quick-recharge-option" data-quantity="1">1 pasaje</button>
+              <button type="button" class="quick-recharge-option" data-quantity="5">5 pasajes</button>
+              <button type="button" class="quick-recharge-option" data-quantity="10">10 pasajes</button>
+            </div>
+            <label for="cantidadPasajes" style="color: #4a5568;">Cantidad de pasajes</label>
+            <input id="cantidadPasajes" name="cantidadPasajes" type="number" min="1" step="1"
+                   th:value="${cantidadPasajes}" required />
+            <p class="recharge-total">
+              Valor por pasaje: <strong th:text="${'$' + #numbers.formatInteger(valorPasaje, 1, 'COMMA')}"></strong>
+              <br />
+              Total de la recarga: <strong id="totalRecarga" aria-live="polite"></strong>
+            </p>
+          </div>
+
+          <div id="recargaNormalFields" class="form-section full-width" style="display:none;">
+            <label for="monto" style="color: #4a5568;">Monto a recargar (COP)</label>
+            <input id="monto" name="monto" type="number" min="1" step="1"
+                   th:value="${monto}" placeholder="Ej: 50000" disabled required />
           </div>
 
           <div class="form-section full-width">
@@ -90,7 +124,38 @@
     <div th:replace="fragments/footer :: footer"></div>
   </div>
 
-  <script>
+  <script th:inline="javascript">
+    const valorPasaje = Number([[${valorPasaje}]]);
+
+    function actualizarModoRecarga() {
+      const modo = document.querySelector('input[name="modoRecarga"]:checked').value;
+      const rapida = document.getElementById('recargaRapidaFields');
+      const normal = document.getElementById('recargaNormalFields');
+      const esRapida = modo === 'RAPIDA';
+
+      rapida.style.display = esRapida ? 'block' : 'none';
+      rapida.querySelectorAll('input').forEach(input => {
+        input.disabled = !esRapida;
+      });
+      normal.style.display = esRapida ? 'none' : 'block';
+      normal.querySelectorAll('input').forEach(input => {
+        input.disabled = esRapida;
+      });
+    }
+
+    function actualizarTotalRecarga() {
+      const cantidad = Number(document.getElementById('cantidadPasajes').value);
+      const total = Number.isSafeInteger(cantidad) && cantidad > 0 ? cantidad * valorPasaje : 0;
+      document.getElementById('totalRecarga').textContent = new Intl.NumberFormat('es-CO', {
+        style: 'currency',
+        currency: 'COP',
+        maximumFractionDigits: 0
+      }).format(total);
+      document.querySelectorAll('.quick-recharge-option').forEach(button => {
+        button.setAttribute('aria-pressed', String(Number(button.dataset.quantity) === cantidad));
+      });
+    }
+
     function togglePaymentFields() {
       const method = document.querySelector('input[name="metodoPago"]:checked').value;
       const pse = document.getElementById('pseFields');
@@ -111,7 +176,21 @@
       }
     }
 
-    document.addEventListener('DOMContentLoaded', togglePaymentFields);
+    document.addEventListener('DOMContentLoaded', () => {
+      togglePaymentFields();
+      actualizarModoRecarga();
+      actualizarTotalRecarga();
+      document.querySelectorAll('input[name="modoRecarga"]').forEach(input => {
+        input.addEventListener('change', actualizarModoRecarga);
+      });
+      document.getElementById('cantidadPasajes').addEventListener('input', actualizarTotalRecarga);
+      document.querySelectorAll('.quick-recharge-option').forEach(button => {
+        button.addEventListener('click', () => {
+          document.getElementById('cantidadPasajes').value = button.dataset.quantity;
+          actualizarTotalRecarga();
+        });
+      });
+    });
 
     document.addEventListener('input', (e) => {
       if (e.target.id === 'numeroTarjetaPago') {
