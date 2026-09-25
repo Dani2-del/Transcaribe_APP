@@ -716,11 +716,14 @@ table.mod-table .card-btn { margin: 2px 4px; padding: 8px 12px; font-size: 0.9re
 }
 
 .conductor-navbar {
-  width: min(100% - 36px, 1100px);
-  margin: 22px auto 0;
+  width: min(100% - 36px, 600px);
+  max-width: 600px;
+  margin: 0 auto;
   padding: 10px 22px;
   border-radius: 0 0 16px 16px;
 }
+.conductor-page { gap: 0; }
+.conductor-page > .center-card { padding-top: 0; }
 .conductor-navbar-brand {
   display: flex;
   align-items: center;
@@ -754,6 +757,7 @@ table.mod-table .card-btn { margin: 2px 4px; padding: 8px 12px; font-size: 0.9re
 @media (max-width: 560px) {
   .conductor-navbar {
     width: calc(100% - 24px);
+    max-width: 600px;
     padding: 10px 14px;
     gap: 8px;
     flex-wrap: wrap;
