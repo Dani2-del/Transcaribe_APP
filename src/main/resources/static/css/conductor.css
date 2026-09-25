@@ -715,6 +715,54 @@ table.mod-table .card-btn { margin: 2px 4px; padding: 8px 12px; font-size: 0.9re
   color: white;
 }
 
+.conductor-navbar {
+  width: min(100% - 36px, 1100px);
+  margin: 22px auto 0;
+  padding: 10px 22px;
+  border-radius: 0 0 16px 16px;
+}
+.conductor-navbar-brand {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+}
+.conductor-navbar-brand .logo { width: 38px; height: 38px; }
+.conductor-brand-title,
+.conductor-brand-subtitle { display: block; color: white; }
+.conductor-brand-title { font-family: var(--font-display); font-size: 1.08rem; font-weight: 700; }
+.conductor-brand-subtitle { color: rgba(255,255,255,0.72); font-size: 0.75rem; }
+.conductor-navbar-actions { display: flex; align-items: center; gap: 8px; }
+.conductor-navbar-actions a,
+.conductor-navbar-actions button {
+  padding: 8px 12px;
+  border: 0;
+  border-radius: 8px;
+  background: transparent;
+  color: rgba(255,255,255,0.82);
+  font: 600 0.85rem var(--font-body);
+  text-decoration: none;
+  cursor: pointer;
+  transition: background 0.18s ease, color 0.18s ease;
+}
+.conductor-navbar-actions a:hover,
+.conductor-navbar-actions button:hover,
+.conductor-navbar-actions a.active {
+  background: rgba(255,255,255,0.12);
+  color: white;
+}
+
+@media (max-width: 560px) {
+  .conductor-navbar {
+    width: calc(100% - 24px);
+    padding: 10px 14px;
+    gap: 8px;
+    flex-wrap: wrap;
+  }
+  .conductor-navbar-actions { gap: 2px; }
+  .conductor-navbar-actions a,
+  .conductor-navbar-actions button { padding: 8px; font-size: 0.78rem; }
+}
+
 .reporte-panel {
   margin-top: 28px;
   padding: 18px;

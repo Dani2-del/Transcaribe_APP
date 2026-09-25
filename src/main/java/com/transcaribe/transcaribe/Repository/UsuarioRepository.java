@@ -18,6 +18,9 @@ public interface UsuarioRepository extends MongoRepository<Usuario, String> {
     Page<Usuario> findByNombreContainingIgnoreCaseOrCorreoContainingIgnoreCase(
             String nombre, String correo, Pageable pageable);
 
+    List<Usuario> findByNombreContainingIgnoreCaseOrCorreoContainingIgnoreCase(
+            String nombre, String correo);
+
     List<Usuario> findByRoleAndActivoTrue(String role);
 
     Optional<Usuario> findByIdAndActivoTrue(String id);

@@ -7,7 +7,23 @@
 </head>
 <body>
   <div class="page">
-    <div th:replace="fragments/header :: header"></div>
+  <header class="navbar conductor-navbar">
+    <div class="conductor-navbar-brand">
+      <img src="/images/logo.png" alt="" class="logo">
+      <div>
+        <span class="conductor-brand-title">Transcaribe</span>
+        <span class="conductor-brand-subtitle">Panel de conductor</span>
+      </div>
+    </div>
+    <nav class="conductor-navbar-actions" aria-label="Navegación del conductor">
+      <a th:href="@{/conductor/panel}" th:classappend="${!verHistorial} ? ' active' : ''">Mis rutas</a>
+      <a th:href="@{/conductor/panel(historial=true)}"
+         th:classappend="${verHistorial} ? ' active' : ''">Historial</a>
+      <form th:action="@{/logout}" method="post">
+        <button type="submit">Cerrar sesión</button>
+      </form>
+    </nav>
+  </header>
 
     <main class="center-card">
       <div class="card" style="max-width: 600px;">
@@ -93,12 +109,6 @@
             <p class="reporte-error" th:if="${errorReporte}" th:text="${errorReporte}"></p>
             <p class="reporte-ok" th:if="${mensajeReporte}" th:text="${mensajeReporte}"></p>
         </section>
-
-        <div class="row" style="margin-top: 30px;">
-          <form th:action="@{/logout}" method="post" style="width: 100%;">
-              <button class="ghost" type="submit" style="width: 100%; cursor: pointer;">Cerrar sesión</button>
-          </form>
-        </div>
 
         <p class="error" th:if="${error}" th:text="${error}"></p>
         <p class="success" th:if="${mensaje}" th:text="${mensaje}"></p>
