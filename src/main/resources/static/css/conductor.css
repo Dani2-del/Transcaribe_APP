@@ -839,3 +839,63 @@ table.mod-table .card-btn { margin: 2px 4px; padding: 8px 12px; font-size: 0.9re
 .reporte-error, .reporte-ok { margin: 12px 0 0; font-weight: 600; }
 .reporte-error { color: #b42318 !important; }
 .reporte-ok { color: #087443 !important; }
+
+@keyframes conductor-fade-in {
+  from { opacity: 0; }
+  to { opacity: 1; }
+}
+
+@keyframes conductor-slide-in {
+  from { opacity: 0; transform: translateY(-10px); }
+  to { opacity: 1; transform: translateY(0); }
+}
+
+.conductor-navbar {
+  animation: conductor-slide-in 0.45s cubic-bezier(0.22, 1, 0.36, 1) both;
+}
+
+.conductor-page > .center-card,
+.conductor-page .center-card > .card,
+.reporte-panel,
+.pagination-bar,
+.conductor-page .success,
+.conductor-page .error {
+  animation: conductor-fade-in 0.5s ease both;
+}
+
+.horario-item {
+  animation: conductor-fade-in 0.45s ease both;
+}
+
+.horario-item:nth-of-type(2) { animation-delay: 0.06s; }
+.horario-item:nth-of-type(3) { animation-delay: 0.12s; }
+.horario-item:nth-of-type(4) { animation-delay: 0.18s; }
+.horario-item:nth-of-type(n+5) { animation-delay: 0.22s; }
+
+.btn-historial,
+.btn-iniciar,
+.btn-terminar,
+.btn-reportar,
+.btn-pagina {
+  transition: transform 0.2s ease, box-shadow 0.2s ease, background-color 0.2s ease,
+              border-color 0.2s ease, color 0.2s ease;
+}
+
+.btn-historial:hover,
+.btn-iniciar:hover,
+.btn-terminar:hover,
+.btn-reportar:hover,
+.btn-pagina:hover {
+  transform: translateY(-2px);
+}
+
+@media (prefers-reduced-motion: reduce) {
+  *,
+  *::before,
+  *::after {
+    animation-duration: 0.001ms !important;
+    animation-iteration-count: 1 !important;
+    scroll-behavior: auto !important;
+    transition-duration: 0.001ms !important;
+  }
+}

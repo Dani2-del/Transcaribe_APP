@@ -883,6 +883,82 @@ table.mod-table .card-btn { margin: 2px 4px; padding: 8px 12px; font-size: 0.9re
 .admin-module-title { font-family: var(--font-display); font-size: 1.1rem; font-weight: 700; }
 .admin-module-description { margin-top: 7px; color: var(--piedra); font-size: 0.9rem; }
 .admin-module-link { margin-top: auto; padding-top: 18px; color: var(--caribe); font-weight: 700; font-size: 0.88rem; }
+
+@keyframes admin-fade-in {
+  from { opacity: 0; }
+  to { opacity: 1; }
+}
+
+@keyframes admin-slide-in {
+  from { opacity: 0; transform: translateY(-10px); }
+  to { opacity: 1; transform: translateY(0); }
+}
+
+.navbar {
+  animation: admin-slide-in 0.45s cubic-bezier(0.22, 1, 0.36, 1) both;
+}
+
+.page > .card,
+.page > .center-card,
+.center-card > .card,
+.admin-section-header {
+  animation: admin-fade-in 0.55s ease both;
+}
+
+.admin-module-card,
+.horario-row,
+.bus-row,
+.admin-table tbody tr {
+  animation: admin-fade-in 0.45s ease both;
+}
+
+.admin-module-card:nth-child(2),
+.horario-row:nth-of-type(2),
+.bus-row:nth-of-type(2),
+.admin-table tbody tr:nth-child(2) { animation-delay: 0.06s; }
+
+.admin-module-card:nth-child(3),
+.horario-row:nth-of-type(3),
+.bus-row:nth-of-type(3),
+.admin-table tbody tr:nth-child(3) { animation-delay: 0.12s; }
+
+.admin-module-card:nth-child(4),
+.horario-row:nth-of-type(4),
+.bus-row:nth-of-type(4),
+.admin-table tbody tr:nth-child(4) { animation-delay: 0.18s; }
+
+.admin-module-card:nth-child(n+5),
+.horario-row:nth-of-type(n+5),
+.bus-row:nth-of-type(n+5),
+.admin-table tbody tr:nth-child(n+5) { animation-delay: 0.22s; }
+
+.admin-module-card,
+.horario-row,
+.bus-row,
+.btn-pagina,
+.primary,
+.ghost,
+.btn-secundario,
+.btn-eliminar-horario {
+  transition: transform 0.2s ease, box-shadow 0.2s ease, background-color 0.2s ease;
+}
+
+.admin-module-card:hover,
+.horario-row:hover,
+.bus-row:hover {
+  transform: translateY(-2px);
+}
+
+@media (prefers-reduced-motion: reduce) {
+  *,
+  *::before,
+  *::after {
+    animation-duration: 0.001ms !important;
+    animation-iteration-count: 1 !important;
+    scroll-behavior: auto !important;
+    transition-duration: 0.001ms !important;
+  }
+}
 .admin-empty-state { padding: 30px 12px; text-align: center; color: var(--piedra); }
 .transaction-filters {
   display: grid;
