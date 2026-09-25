@@ -5,11 +5,11 @@
   --bg-1: #ffffff;
   --card-bg: rgba(255, 255, 255, 0.9);
   --glass: rgba(255, 255, 255, 0.8);
-  --accent: #f09454;
-  --accent-2: #e38342;
-  --accent-3: #ff7a59;
+  --accent: #FF5600;
+  --accent-2: #E3600F;
+  --accent-3: #B75C16;
   --text: #4a5568;
-  --text-light: #f09454;
+  --text-light: #FF5600;
   --muted: #a0aec0;
   --radius: 14px;
 }

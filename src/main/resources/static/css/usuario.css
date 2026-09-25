@@ -7,18 +7,18 @@
 @import url('https://fonts.googleapis.com/css2?family=Space+Grotesk:wght@500;600;700&family=Inter:wght@400;500;600;700&family=IBM+Plex+Mono:wght@500;600&display=swap');
 
 :root {
-  --tinta: #0F3948;
-  --tinta-2: #0B2C38;
-  --caribe: #0EA7C2;
-  --caribe-soft: #E4F6F9;
-  --coral: #FF6A52;
-  --coral-2: #E85539;
-  --mango: #F7A93B;
+  --tinta: #B75C16;
+  --tinta-2: #8B4611;
+  --caribe: #FF5600;
+  --caribe-soft: #FFECE3;
+  --coral: #FF5600;
+  --coral-2: #E3600F;
+  --mango: #B75C16;
   --mango-soft: #FFF3DE;
   --arena: #FBF7EE;
   --piedra: #5B6E75;
   --piedra-soft: #98A7AC;
-  --linea: rgba(15, 57, 72, 0.12);
+  --linea: rgba(183, 92, 22, 0.12);
 
   --card-bg: #ffffff;
   --radius: 16px;
@@ -140,7 +140,7 @@ body.login-page .center-card {
   padding: 10px 18px;
   border-radius: 12px;
   background: var(--tinta);
-  box-shadow: 0 8px 22px rgba(15, 57, 72, 0.22);
+  box-shadow: 0 8px 22px rgba(183, 92, 22, 0.22);
   border: none;
 }
 
@@ -165,9 +165,9 @@ body.login-page .center-card {
   justify-content: space-between;
   align-items: center;
   background: var(--tinta);
-  background-image: linear-gradient(120deg, var(--tinta) 0%, var(--tinta-2) 100%);
+  background-image: linear-gradient(120deg, var(--tinta) 0%, #FF7A1A 100%);
   padding: 12px 40px;
-  box-shadow: 0 6px 18px rgba(15, 57, 72, 0.25);
+  box-shadow: 0 6px 18px rgba(183, 92, 22, 0.25);
   border-radius: 0 0 16px 16px;
   border-bottom: 3px solid var(--caribe);
 }
@@ -250,7 +250,7 @@ body.login-page .center-card {
   background: var(--card-bg);
   border-radius: var(--radius);
   padding: 28px;
-  box-shadow: 0 14px 30px rgba(15, 57, 72, 0.08);
+  box-shadow: 0 14px 30px rgba(183, 92, 22, 0.08);
   border: 1px solid var(--linea);
   color: var(--text);
   position: relative;
@@ -279,7 +279,7 @@ body.login-page .center-card {
   color: var(--text);
   margin: 0 0 15px 0;
   padding: 10px;
-  background: rgba(15, 57, 72, 0.04);
+  background: rgba(183, 92, 22, 0.04);
   border-radius: 8px;
   text-align: center;
   border: 1px solid var(--linea);
@@ -291,7 +291,7 @@ body.login-page .center-card {
   text-align: center;
   margin: 20px 0;
   padding: 15px;
-  background: #E85539;
+  background: #E3600F;
   border-radius: 10px;
 }
 
@@ -372,7 +372,7 @@ button {
 }
 
 .ghost:hover {
-  background: rgba(15, 57, 72, 0.04) !important;
+  background: rgba(183, 92, 22, 0.04) !important;
   border-color: var(--tinta) !important;
   transform: translateY(-2px);
 }
@@ -410,7 +410,7 @@ button {
   border-radius: 12px;
   background: white;
   color: var(--tinta) !important;
-  box-shadow: 0 4px 12px rgba(15, 57, 72, 0.08);
+  box-shadow: 0 4px 12px rgba(183, 92, 22, 0.08);
   cursor: pointer;
   border: 1px solid var(--linea);
   font-weight: 600;
@@ -575,7 +575,7 @@ table.mod-table .card-btn { margin: 2px 4px; padding: 8px 12px; font-size: 0.9re
   margin: 50px auto 80px;
   padding: 36px 32px;
   border-radius: 24px;
-  box-shadow: 0 18px 40px rgba(15, 57, 72, 0.22);
+  box-shadow: 0 18px 40px rgba(183, 92, 22, 0.22);
   text-align: center;
   position: relative;
 }
@@ -698,7 +698,7 @@ table.mod-table .card-btn { margin: 2px 4px; padding: 8px 12px; font-size: 0.9re
   width: 100%;
   box-sizing: border-box;
 }
-.button-google:hover { background-color: #f7f7f7; box-shadow: 0 2px 8px rgba(15,57,72,0.08); border-color: #ccc; }
+.button-google:hover { background-color: #f7f7f7; box-shadow: 0 2px 8px rgba(183,92,22,0.08); border-color: #ccc; }
 .google-icon { width: 18px; height: 18px; margin-right: 12px; display: block; }
 
 .forgot-password {
@@ -750,7 +750,7 @@ table.mod-table .card-btn { margin: 2px 4px; padding: 8px 12px; font-size: 0.9re
   display: flex;
   justify-content: space-between;
   align-items: center;
-  box-shadow: 0 2px 8px rgba(15,57,72,0.06);
+  box-shadow: 0 2px 8px rgba(183,92,22,0.06);
   border-left: 5px solid var(--mango);
 }
 
@@ -780,7 +780,7 @@ table.mod-table .card-btn { margin: 2px 4px; padding: 8px 12px; font-size: 0.9re
   border-radius: 12px;
   padding: 12px 20px;
   margin-bottom: 12px;
-  box-shadow: 0 2px 8px rgba(15,57,72,0.06);
+  box-shadow: 0 2px 8px rgba(183,92,22,0.06);
   border-left: 5px solid var(--mango);
 }
 
@@ -858,7 +858,7 @@ table.mod-table .card-btn { margin: 2px 4px; padding: 8px 12px; font-size: 0.9re
   padding: 30px;
   border-radius: 15px;
   background: white;
-  box-shadow: 0 10px 25px rgba(15,57,72,0.1);
+  box-shadow: 0 10px 25px rgba(183,92,22,0.1);
   text-align: center;
   width: 200px;
   transition: transform 0.2s;
@@ -1015,7 +1015,7 @@ body::after {
 .tarjeta-slim:hover,
 .ruta-slim:hover {
   transform: translateY(-3px);
-  box-shadow: 0 10px 24px rgba(15, 57, 72, 0.12);
+  box-shadow: 0 10px 24px rgba(183, 92, 22, 0.12);
   border-left-color: var(--coral);
 }
 
@@ -1146,8 +1146,8 @@ body::after {
   padding: 34px 42px;
   border-radius: 24px;
   color: white;
-  background: linear-gradient(118deg, var(--tinta-2), var(--tinta) 62%, #12677a);
-  box-shadow: 0 18px 42px rgba(15, 57, 72, 0.2);
+  background: linear-gradient(118deg, var(--tinta), #FF7A1A);
+  box-shadow: 0 18px 42px rgba(183, 92, 22, 0.2);
   animation: dashboard-in 0.65s cubic-bezier(0.22, 1, 0.36, 1) both;
 }
 
@@ -1188,7 +1188,7 @@ body::after {
 }
 
 .dashboard-welcome .dashboard-eyebrow {
-  color: #76d6e4;
+  color: #FFDFA6;
 }
 
 .dashboard-welcome h1 {
@@ -1209,7 +1209,7 @@ body::after {
   z-index: 1;
   width: 112px;
   height: 112px;
-  color: #7fe0ea;
+  color: #FFDFA6;
   animation: dashboard-float 5s ease-in-out infinite;
 }
 
@@ -1231,7 +1231,7 @@ body::after {
   border: 1px solid rgba(14, 167, 194, 0.18);
   border-radius: 18px;
   background: linear-gradient(105deg, white 40%, #f2fbfc);
-  box-shadow: 0 10px 28px rgba(15, 57, 72, 0.07);
+  box-shadow: 0 10px 28px rgba(183, 92, 22, 0.07);
   animation: dashboard-in 0.62s 0.08s cubic-bezier(0.22, 1, 0.36, 1) both;
 }
 
@@ -1365,7 +1365,7 @@ body::after {
   border: 1px solid var(--linea);
   border-radius: 17px;
   background: white;
-  box-shadow: 0 5px 18px rgba(15, 57, 72, 0.045);
+  box-shadow: 0 5px 18px rgba(183, 92, 22, 0.045);
   color: var(--tinta);
   text-decoration: none;
   transition: transform 0.25s cubic-bezier(0.22, 1, 0.36, 1),
@@ -1383,7 +1383,7 @@ body::after {
 .dashboard-action:hover {
   transform: translateY(-5px);
   border-color: color-mix(in srgb, var(--action-color) 42%, white);
-  box-shadow: 0 16px 30px rgba(15, 57, 72, 0.11);
+  box-shadow: 0 16px 30px rgba(183, 92, 22, 0.11);
 }
 
 .dashboard-action:focus-visible {
@@ -1444,7 +1444,7 @@ body::after {
   border: 1px solid rgba(232, 90, 11, 0.3);
   border-radius: 20px;
   background: linear-gradient(115deg, #fff0e6, #fff 68%);
-  box-shadow: 0 8px 24px rgba(15, 57, 72, 0.055);
+  box-shadow: 0 8px 24px rgba(183, 92, 22, 0.055);
   animation: dashboard-in 0.65s 0.3s both;
 }
 

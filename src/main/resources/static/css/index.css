@@ -9,18 +9,18 @@
 @import url('https://fonts.googleapis.com/css2?family=Space+Grotesk:wght@500;600;700&family=Inter:wght@400;500;600;700&family=IBM+Plex+Mono:wght@500;600&display=swap');
 
 :root {
-  --tinta: #0F3948;
-  --tinta-2: #0B2C38;
-  --caribe: #0EA7C2;
-  --caribe-soft: #E4F6F9;
-  --coral: #FF6A52;
-  --coral-2: #E85539;
-  --mango: #F7A93B;
+  --tinta: #B75C16;
+  --tinta-2: #8B4611;
+  --caribe: #FF5600;
+  --caribe-soft: #FFECE3;
+  --coral: #FF5600;
+  --coral-2: #E3600F;
+  --mango: #B75C16;
   --mango-soft: #FFF3DE;
   --arena: #FBF7EE;
   --piedra: #5B6E75;
   --piedra-soft: #98A7AC;
-  --linea: rgba(15, 57, 72, 0.12);
+  --linea: rgba(183, 92, 22, 0.12);
   --indigo: #5B63A8;
   --verde: #3FA34D;
 
@@ -180,8 +180,8 @@ img { max-width: 100%; display: block; }
   content: "";
   position: absolute;
   inset: 0;
-  background: linear-gradient(90deg, var(--tinta) 0%, rgba(15, 57, 72, 0.55) 30%, rgba(15, 57, 72, 0) 60%),
-              linear-gradient(0deg, var(--tinta) 0%, rgba(15, 57, 72, 0) 30%);
+  background: linear-gradient(90deg, var(--tinta) 0%, rgba(183, 92, 22, 0.55) 30%, rgba(183, 92, 22, 0) 60%),
+              linear-gradient(0deg, var(--tinta) 0%, rgba(183, 92, 22, 0) 30%);
 }
 
 .hero-content {
@@ -392,7 +392,7 @@ img { max-width: 100%; display: block; }
   font-family: var(--font-display);
   font-weight: 700;
   font-size: 1.05rem;
-  box-shadow: 0 6px 14px rgba(15, 57, 72, 0.12);
+  box-shadow: 0 6px 14px rgba(183, 92, 22, 0.12);
 }
 
 .stop:first-child .stop-dot { background: var(--coral); border-color: var(--coral); color: #fff; }
@@ -413,7 +413,7 @@ img { max-width: 100%; display: block; }
   border-radius: var(--radius);
   overflow: hidden;
   border: 1px solid var(--linea);
-  box-shadow: 0 16px 34px rgba(15, 57, 72, 0.1);
+  box-shadow: 0 16px 34px rgba(183, 92, 22, 0.1);
   margin-bottom: 28px;
 }
 
@@ -482,7 +482,7 @@ img { max-width: 100%; display: block; }
   border-radius: var(--radius-sm);
   border-top: 4px solid var(--role-color, var(--caribe));
   padding: 26px 24px;
-  box-shadow: 0 10px 24px rgba(15, 57, 72, 0.06);
+  box-shadow: 0 10px 24px rgba(183, 92, 22, 0.06);
 }
 
 .role-card .role-kicker {
@@ -558,7 +558,7 @@ img { max-width: 100%; display: block; }
 @media (max-width: 860px) {
   .hero-illustration { width: 100%; right: 0; opacity: 0.22; }
   .hero-illustration::after {
-    background: linear-gradient(180deg, var(--tinta) 30%, rgba(15,57,72,0.65) 100%);
+    background: linear-gradient(180deg, var(--tinta) 30%, rgba(183,92,22,0.65) 100%);
   }
   .hero-content { max-width: 100%; padding-bottom: 60px; }
   .about-grid { grid-template-columns: 1fr; }
