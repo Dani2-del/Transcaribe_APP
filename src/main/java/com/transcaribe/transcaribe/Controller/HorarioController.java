@@ -87,7 +87,7 @@ public class HorarioController {
         model.addAttribute("tipoBusSeleccionado", tipoBus);
         model.addAttribute("currentBusPage", paginaBusesSegura);
         model.addAttribute("totalBusPages", totalBusPages);
-        List<HorarioConductor> horariosActivos = horarioRepository.findAllByOrderByFechaAscHoraInicioAsc()
+        List<HorarioConductor> horariosActivos = horarioRepository.findAllByOrderByFechaDescHoraInicioDesc()
                 .stream()
                 .filter(h -> !HorarioConductor.ESTADO_DESACTIVADA.equals(h.getEstado()))
                 .toList();

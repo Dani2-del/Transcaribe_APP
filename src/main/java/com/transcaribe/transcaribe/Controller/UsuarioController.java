@@ -107,6 +107,8 @@ public class UsuarioController {
     @GetMapping("/historial")
     public String historial(@RequestParam(defaultValue = "") String buscar,
                             @RequestParam(defaultValue = "") String tipo,
+                            @RequestParam(defaultValue = "false") boolean buscarPorTarjeta,
+                            @RequestParam(required = false) Integer tarjetaSeleccionada,
                             @RequestParam(defaultValue = "0") int page,
                             Model model) {
         Usuario usuario = obtenerUsuarioLogueado();
@@ -115,12 +117,19 @@ public class UsuarioController {
             return "redirect:/login";
         }
 
+        boolean filtrarPorTarjeta = buscarPorTarjeta || tarjetaSeleccionada != null;
         model.addAttribute("usuario", usuario);
         List<com.transcaribe.transcaribe.Model.Transaccion> filtradas =
                 transaccionService.obtenerTransaccionesPorUsuario(usuario).stream()
                         .filter(t -> buscar.isBlank()
                                 || (t.getTipo() != null && t.getTipo().toLowerCase(Locale.ROOT)
-                                .contains(buscar.trim().toLowerCase(Locale.ROOT))))
+                                        .contains(buscar.trim().toLowerCase(Locale.ROOT))))
+                        .filter(t -> !filtrarPorTarjeta
+                                || (tarjetaSeleccionada != null
+                                        && tarjetaSeleccionada >= 0
+                                        && tarjetaSeleccionada < usuario.getTarjetas().size()
+                                        && coincideTarjeta(
+                                                t, usuario.getTarjetas().get(tarjetaSeleccionada).getNumeroTarjeta())))
                         .filter(t -> tipo.isBlank() || coincideTipo(t.getTipo(), tipo))
                         .toList();
         int totalPages = Math.max(1, (int) Math.ceil(filtradas.size() / 10.0));
@@ -130,9 +139,55 @@ public class UsuarioController {
         model.addAttribute("transacciones", filtradas.subList(desde, hasta));
         model.addAttribute("buscar", buscar);
         model.addAttribute("tipoSeleccionado", tipo);
+        model.addAttribute("buscarPorTarjeta", filtrarPorTarjeta);
+        model.addAttribute("tarjetaSeleccionada", tarjetaSeleccionada);
         model.addAttribute("currentPage", paginaSegura);
         model.addAttribute("totalPages", totalPages);
         return "usuarios/cuenta/historial";
+    }
+
+    private boolean coincideTarjeta(Transaccion transaccion, String numeroTarjeta) {
+        if (coincideNumeroTarjeta(transaccion.getTarjetaTranscaribe(), numeroTarjeta)) {
+            return true;
+        }
+
+        String tipoTransaccion = transaccion.getTipo();
+        if (tipoTransaccion == null) {
+            return false;
+        }
+
+        int inicioNumero = tipoTransaccion.indexOf('[');
+        int finNumero = tipoTransaccion.indexOf(']', inicioNumero + 1);
+        if (inicioNumero >= 0 && finNumero > inicioNumero) {
+            return coincideNumeroTarjeta(
+                    tipoTransaccion.substring(inicioNumero + 1, finNumero), numeroTarjeta);
+        }
+
+        int inicioTarjeta = tipoTransaccion.toLowerCase(Locale.ROOT).indexOf("tarjeta:");
+        if (inicioTarjeta >= 0) {
+            return coincideNumeroTarjeta(
+                    tipoTransaccion.substring(inicioTarjeta + "tarjeta:".length()), numeroTarjeta);
+        }
+
+        int inicioPasaje = tipoTransaccion.toLowerCase(Locale.ROOT).indexOf("pasaje:");
+        return inicioPasaje >= 0 && coincideNumeroTarjeta(
+                tipoTransaccion.substring(inicioPasaje + "pasaje:".length()), numeroTarjeta);
+    }
+
+    private boolean coincideNumeroTarjeta(String numeroGuardado, String numeroTarjeta) {
+        if (numeroGuardado == null || numeroTarjeta == null) {
+            return false;
+        }
+
+        String numeroGuardadoNormalizado = numeroGuardado.replaceAll("\\D", "");
+        String numeroTarjetaNormalizado = numeroTarjeta.replaceAll("\\D", "");
+        if (numeroGuardadoNormalizado.isEmpty() || numeroTarjetaNormalizado.isEmpty()) {
+            return false;
+        }
+
+        return numeroGuardado.contains("*")
+                ? numeroTarjetaNormalizado.endsWith(numeroGuardadoNormalizado)
+                : numeroGuardadoNormalizado.equals(numeroTarjetaNormalizado);
     }
 
     @GetMapping("/historial/{id}/recibo")

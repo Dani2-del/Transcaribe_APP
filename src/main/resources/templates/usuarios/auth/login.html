@@ -1,59 +1,61 @@
 <!DOCTYPE html>
 <html xmlns:th="http://www.thymeleaf.org">
 <head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
   <link rel="stylesheet" th:href="@{/css/usuario.css}" />
-    <meta charset="UTF-8">
-    <title>Login - Transcaribe</title>
+  <title>Iniciar sesión - Transcaribe</title>
 </head>
 <body class="login-page">
-  <div class="page">
-
-    <main class="center-card">
-      <div class="card login-card">
-        <h1 class="title">Bienvenido</h1>
-        <p class="subtitle">Ingresa a tu cuenta de Transcaribe</p>
-
-        <form th:action="@{/login}" method="post" class="form">
-          <input type="text" name="correo" placeholder="Correo electrónico" required />
-          <input type="password" name="password" placeholder="Contraseña" required />
-          
-          <!-- AGREGADO: Enlace de recuperación -->
-          <a th:href="@{/olvido-password}" class="forgot-password">¿Olvidaste tu contraseña?</a>
-
-          <button class="primary" type="submit">Ingresar</button>
-        </form>
-
-        <div class="oauth-section">
-          <div class="separator">o</div>
-          <a th:href="@{/oauth2/authorization/google}" class="button-google">
-            <img src="https://fonts.gstatic.com/s/i/productlogos/googleg/v6/24px.svg" 
-                 alt="Google Logo" 
-                 class="google-icon">
-            Continuar con Google
-          </a>
+  <div class="page registration-page-shell login-page-shell">
+    <main class="registration-layout login-layout">
+      <aside class="registration-art">
+        <a class="registration-brand" th:href="@{/}" aria-label="Volver al inicio de Transcaribe">
+          <img th:src="@{/images/logo.png}" alt="">
+          <span>Transcaribe</span>
+        </a>
+        <div class="registration-art-copy">
+          <span>TRANSCARIBE · CARTAGENA</span>
+          <h2>Qué bueno tenerte de vuelta.</h2>
+          <p>Inicia sesión para consultar tu tarjeta, tus recargas y tus rutas favoritas.</p>
         </div>
+      </aside>
 
-        <div class="row small register-row" style="margin-top: 25px;">
-          <span>¿No tienes cuenta?</span>
-          <a th:href="@{/registro}" class="button-link register-button">Regístrate</a>
+      <section class="registration-panel" aria-labelledby="loginTitle">
+        <div class="registration-card login-card">
+          <span class="registration-kicker">TU CIUDAD, A TU ALCANCE</span>
+          <h1 id="loginTitle">Bienvenido</h1>
+          <p class="registration-intro">Ingresa a tu cuenta de Transcaribe.</p>
+
+          <form th:action="@{/login}" method="post" class="form">
+            <input type="text" name="correo" placeholder="Correo electrónico" autocomplete="username" required />
+            <input type="password" name="password" placeholder="Contraseña" autocomplete="current-password" required />
+            <a th:href="@{/olvido-password}" class="forgot-password">¿Olvidaste tu contraseña?</a>
+            <button class="primary" type="submit">Ingresar</button>
+          </form>
+
+          <div class="oauth-section">
+            <div class="separator">o</div>
+            <a th:href="@{/oauth2/authorization/google}" class="button-google">
+              <img src="https://fonts.gstatic.com/s/i/productlogos/googleg/v6/24px.svg"
+                   alt="Google"
+                   class="google-icon">
+              Continuar con Google
+            </a>
+          </div>
+
+          <div class="register-row">
+            <span>¿No tienes cuenta?</span>
+            <a th:href="@{/registro}" class="registration-login-link">Regístrate</a>
+          </div>
+
+          <div class="registration-feedback messages">
+            <p class="error" th:if="${param.error}">Credenciales incorrectas. Intenta de nuevo.</p>
+            <p class="success" th:if="${mensaje}" th:text="${mensaje}"></p>
+            <p class="error" th:if="${param.sessionExpired}">Tu sesión ha expirado. Por favor, inicia sesión nuevamente.</p>
+          </div>
         </div>
-
-        <div class="messages" style="margin-top: 15px;">
-          <!-- Errores de login -->
-          <p class="error" th:if="${param.error}" style="color: #d93025; font-size: 0.9em;">
-            Credenciales incorrectas. Intenta de nuevo.
-          </p>
-          
-          <!-- Mensajes de éxito (Como el de contraseña restablecida) -->
-          <p class="success" th:if="${mensaje}" th:text="${mensaje}" 
-             style="color: #188038; font-size: 0.9em; background: #e6f4ea; padding: 10px; border-radius: 5px; text-align: center;">
-          </p>
-
-          <p class="error" th:if="${param.sessionExpired}" style="color: #d93025; font-size: 0.9em;">
-            Tu sesión ha expirado. Por favor, inicia sesión nuevamente.
-          </p>
-        </div>
-      </div>
+      </section>
     </main>
 
     <div th:replace="~{fragments/footer :: footer}"></div>
