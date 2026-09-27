@@ -7,8 +7,6 @@
 </head>
 <body>
     <div class="page">
-        <div th:replace="~{fragments/header :: header}"></div>
-
         <main class="center-card">
             <div class="card">
                 <h1 class="title">Verifica tu correo</h1>
@@ -41,9 +39,25 @@
 
                 <div class="row small">
                     <span>¿No te llegó?</span>
-                    <a th:href="@{/registro}">Volver a intentar</a>
                 </div>
 
+                <form th:action="@{/verificar-otp/reenviar}" method="post" class="form resend-code-form">
+                    <input type="hidden"
+                           th:if="${_csrf}"
+                           th:name="${_csrf.parameterName}"
+                           th:value="${_csrf.token}" />
+                    <input type="hidden" name="correoActual" th:value="${correo}" />
+                    <label for="correoNuevo">Corrige tu correo si es necesario y te enviaremos otro código:</label>
+                    <input type="email"
+                           id="correoNuevo"
+                           name="correoNuevo"
+                           th:value="${correoNuevo != null ? correoNuevo : correo}"
+                           autocomplete="email"
+                           required />
+                    <button type="submit" class="link-button">Volver a intentar y reenviar código</button>
+                </form>
+
+                <p class="success" th:if="${mensaje}" th:text="${mensaje}" style="margin-top: 15px;"></p>
                 <p class="error" th:if="${error}" th:text="${error}" style="margin-top: 15px;"></p>
             </div>
         </main>

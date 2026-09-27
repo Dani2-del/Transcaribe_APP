@@ -1,6 +1,7 @@
 package com.transcaribe.transcaribe.service;
 
 import jakarta.mail.internet.MimeMessage; // Importante: usamos Jakarta para Spring Boot 3
+import org.springframework.mail.MailSendException;
 import org.springframework.mail.javamail.JavaMailSender;
 import org.springframework.mail.javamail.MimeMessageHelper;
 import org.springframework.scheduling.annotation.Async;
@@ -146,32 +147,56 @@ public class EmailService {
         }
     }
 
-            @Async
-        public void enviarCodigoVerificacion(String destinatario, String nombre, String codigo) {
-            try {
-                MimeMessage message = mailSender.createMimeMessage();
-                MimeMessageHelper helper = new MimeMessageHelper(message, true, "UTF-8");
+    public void enviarCodigoVerificacion(String destinatario, String nombre, String codigo) {
+        try {
+            MimeMessage message = mailSender.createMimeMessage();
+            MimeMessageHelper helper = new MimeMessageHelper(message, true, "UTF-8");
 
-                helper.setTo(destinatario);
-                helper.setSubject(codigo + " es tu código de verificación de Transcaribe");
-                helper.setFrom(remitente);
+            helper.setTo(destinatario);
+            helper.setSubject("Código de verificación de Transcaribe");
+            helper.setFrom(remitente);
 
-                String contenidoHtml = 
+            String contenidoHtml =
                     "<div style='font-family: Arial, sans-serif; border: 1px solid #ddd; border-radius: 10px; padding: 20px; max-width: 500px; text-align: center;'>" +
-                        "<h2 style='color: #e63946;'>Verificación de Cuenta</h2>" +
-                        "<p>Hola <strong>" + nombre + "</strong>, usa el siguiente código para completar tu registro:</p>" +
-                        "<div style='background-color: #f4f4f4; border: 1px dashed #e63946; padding: 20px; margin: 20px 0;'>" +
-                            "<span style='font-size: 32px; font-weight: bold; letter-spacing: 5px; color: #333;'>" + codigo + "</span>" +
-                        "</div>" +
-                        "<p style='font-size: 12px; color: #888;'>Este código es privado. Si no solicitaste este registro, ignora este correo.</p>" +
+                    "<h2 style='color: #e63946;'>Verificación de Cuenta</h2>" +
+                    "<p>Hola <strong>" + HtmlUtils.htmlEscape(nombre) + "</strong>, usa el siguiente código para completar tu registro:</p>" +
+                    "<div style='background-color: #f4f4f4; border: 1px dashed #e63946; padding: 20px; margin: 20px 0;'>" +
+                    "<span style='font-size: 32px; font-weight: bold; letter-spacing: 5px; color: #333;'>" + HtmlUtils.htmlEscape(codigo) + "</span>" +
+                    "</div>" +
+                    "<p style='font-size: 12px; color: #888;'>Este código es privado. Si no solicitaste este registro, ignora este correo.</p>" +
                     "</div>";
 
-                helper.setText(contenidoHtml, true);
-                mailSender.send(message);
-            } catch (Exception e) {
-                System.err.println("Error al enviar código: " + e.getMessage());
-            }
+            helper.setText(contenidoHtml, true);
+            mailSender.send(message);
+        } catch (Exception e) {
+            throw new MailSendException("No se pudo enviar el código de verificación.", e);
         }
+    }
+
+    public void enviarCodigoVerificacionCambioCredenciales(String destinatario, String nombre, String codigo) {
+        try {
+            MimeMessage message = mailSender.createMimeMessage();
+            MimeMessageHelper helper = new MimeMessageHelper(message, true, "UTF-8");
+            helper.setTo(destinatario);
+            helper.setSubject("Confirma los cambios de tu cuenta Transcaribe");
+            helper.setFrom(remitente);
+
+            String contenidoHtml =
+                    "<div style='font-family: Arial, sans-serif; border: 1px solid #ddd; border-radius: 10px; padding: 20px; max-width: 500px; text-align: center;'>" +
+                    "<h2 style='color: #B75C16;'>Confirmación de cambios</h2>" +
+                    "<p>Hola <strong>" + HtmlUtils.htmlEscape(nombre) + "</strong>, usa este código para confirmar los cambios solicitados en tu perfil:</p>" +
+                    "<div style='background-color: #f4f4f4; border: 1px dashed #FF5600; padding: 20px; margin: 20px 0;'>" +
+                    "<span style='font-size: 32px; font-weight: bold; letter-spacing: 5px; color: #333;'>" + HtmlUtils.htmlEscape(codigo) + "</span>" +
+                    "</div>" +
+                    "<p style='font-size: 12px; color: #888;'>El código vence en 10 minutos. Si no solicitaste estos cambios, ignora este correo.</p>" +
+                    "</div>";
+
+            helper.setText(contenidoHtml, true);
+            mailSender.send(message);
+        } catch (Exception e) {
+            throw new MailSendException("No se pudo enviar el código de confirmación de cambios.", e);
+        }
+    }
         
 @Async
 public void enviarNotificacionLogin(String destinatario, String nombre) {

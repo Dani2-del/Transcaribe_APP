@@ -1,13 +1,18 @@
 package com.transcaribe.transcaribe.Controller;
 
 import com.transcaribe.transcaribe.service.ServiceTranscaribe;
+import org.springframework.mail.MailException;
 import org.springframework.beans.factory.annotation.Autowired;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 import org.springframework.stereotype.Controller;
 import org.springframework.ui.Model;
 import org.springframework.web.bind.annotation.*;
 
 @Controller
 public class AuthController {
+
+    private static final Logger LOGGER = LoggerFactory.getLogger(AuthController.class);
 
     @Autowired
     private ServiceTranscaribe service;
@@ -33,17 +38,57 @@ public class AuthController {
                             @RequestParam("password") String contrasena,
                             @RequestParam String numeroTarjeta,
                             Model model) {
-        boolean ok = service.registrar(nombre, correo, contrasena, numeroTarjeta);
-        if (ok) {
-            return "redirect:/verificar-otp?correo=" + correo;
+        try {
+            boolean ok = service.registrar(nombre, correo, contrasena, numeroTarjeta);
+            if (ok) {
+                return "redirect:/verificar-otp?correo=" + correo;
+            }
+            model.addAttribute("error", "Error al registrar. El correo ya existe o la tarjeta es inválida.");
+        } catch (MailException e) {
+            LOGGER.error("No se pudo enviar el correo de verificación del registro.", e);
+            model.addAttribute("correo", correo);
+            model.addAttribute("correoNuevo", correo);
+            model.addAttribute("error", "La cuenta se creó, pero no pudimos enviar el código. Intenta reenviarlo.");
+            return "usuarios/auth/verificar-codigo";
         }
-        model.addAttribute("error", "Error al registrar. El correo ya existe o la tarjeta es inválida.");
         return "usuarios/auth/registro";
     }
 
     @GetMapping("/verificar-otp")
     public String mostrarVerificacion(@RequestParam String correo, Model model) {
         model.addAttribute("correo", correo);
+        model.addAttribute("correoNuevo", correo);
+        return "usuarios/auth/verificar-codigo";
+    }
+
+    @PostMapping("/verificar-otp/reenviar")
+    public String reenviarOtp(@RequestParam String correoActual,
+                              @RequestParam String correoNuevo,
+                              Model model) {
+        model.addAttribute("correo", correoActual);
+        model.addAttribute("correoNuevo", correoNuevo);
+        try {
+            ServiceTranscaribe.ResultadoReenvioCodigo resultado =
+                    service.reenviarCodigoVerificacion(correoActual, correoNuevo);
+            switch (resultado) {
+                case ENVIADO -> {
+                    model.addAttribute("correo", correoNuevo.trim());
+                    model.addAttribute("correoNuevo", correoNuevo.trim());
+                    model.addAttribute("mensaje", "Enviamos un nuevo código a " + correoNuevo.trim() + ".");
+                }
+                case CORREO_EN_USO ->
+                        model.addAttribute("error", "Ese correo ya está asociado a otra cuenta. Prueba con otro.");
+                case CORREO_INVALIDO ->
+                        model.addAttribute("error", "Ingresa un correo electrónico válido.");
+                case CUENTA_NO_PENDIENTE ->
+                        model.addAttribute("error", "No encontramos una cuenta pendiente de verificación.");
+            }
+        } catch (MailException e) {
+            LOGGER.error("No se pudo reenviar el código de verificación.", e);
+            model.addAttribute("correo", correoNuevo.trim());
+            model.addAttribute("correoNuevo", correoNuevo.trim());
+            model.addAttribute("error", "No se pudo enviar el correo. Verifica la configuración SMTP e inténtalo de nuevo.");
+        }
         return "usuarios/auth/verificar-codigo";
     }
 
@@ -56,6 +101,7 @@ public class AuthController {
         }
         model.addAttribute("error", "El código ingresado es incorrecto.");
         model.addAttribute("correo", correo);
+        model.addAttribute("correoNuevo", correo);
         return "usuarios/auth/verificar-codigo";
     }
 }

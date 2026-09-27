@@ -1134,6 +1134,17 @@ body::after {
   margin-top: 2px;
 }
 
+.profile-code-actions {
+  display: flex;
+  justify-content: center;
+  gap: 16px;
+  margin-top: 16px;
+}
+
+.profile-code-actions form {
+  margin: 0;
+}
+
 /* --- Dashboard principal del usuario --- */
 .menu-page .user-dashboard {
   width: min(100% - 36px, 1040px);
@@ -1626,7 +1637,11 @@ body.registration-page {
   background: #f7f3eb;
 }
 
-body.registration-page::before,
+body.registration-page::before {
+  display: block;
+  opacity: 0.14;
+}
+
 body.registration-page::after {
   display: none;
 }
@@ -1860,6 +1875,50 @@ body.registration-page::after {
   margin: 18px 0 0;
 }
 
+.link-button {
+  padding: 0;
+  border: 0;
+  background: transparent;
+  color: var(--caribe);
+  font: inherit;
+  text-decoration: underline;
+}
+
+.link-button:hover {
+  color: var(--tinta);
+}
+
+.resend-code-form {
+  margin-top: 18px;
+  padding: 18px;
+  gap: 10px;
+  border: 1px solid var(--linea);
+  border-radius: 12px;
+  background: #fffaf5;
+  text-align: left;
+}
+
+.resend-code-form label {
+  color: var(--piedra);
+  font-size: 0.88rem;
+  line-height: 1.5;
+}
+
+.resend-code-form input[type="email"] {
+  width: 100%;
+  min-width: 0;
+  padding: 11px 13px;
+  border: 1px solid var(--linea);
+  border-radius: 9px;
+  color: var(--tinta);
+  font: inherit;
+}
+
+.resend-code-form .link-button {
+  justify-self: start;
+  font-size: 0.9rem;
+}
+
 .registration-page-shell > footer .footer,
 .login-page-shell > footer .footer {
   justify-content: center;
@@ -1980,7 +2039,11 @@ body.login-page {
   background: #f7f3eb;
 }
 
-body.login-page::before,
+body.login-page::before {
+  display: block;
+  opacity: 0.14;
+}
+
 body.login-page::after {
   display: none;
 }

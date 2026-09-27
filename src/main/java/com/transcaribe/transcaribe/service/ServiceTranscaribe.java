@@ -1,8 +1,10 @@
 package com.transcaribe.transcaribe.service;
 
 import java.math.BigDecimal;
+import java.io.Serializable;
+import java.security.SecureRandom;
+import java.util.Objects;
 import java.util.Optional;
-import java.util.Random;
 
 import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.stereotype.Service;
@@ -19,6 +21,8 @@ import com.transcaribe.transcaribe.Util.TarifaTranscaribe;
  */
 @Service
 public class ServiceTranscaribe {
+
+    private static final SecureRandom GENERADOR_CODIGOS = new SecureRandom();
 
     private final UsuarioRepository repositorioUsuarios;
     private final TransaccionService servicioTransacciones;
@@ -47,7 +51,7 @@ public class ServiceTranscaribe {
             return false;
         }
         
-        String codigoOtp = String.format("%06d", new Random().nextInt(1000000));
+        String codigoOtp = String.format("%06d", GENERADOR_CODIGOS.nextInt(1000000));
 
         Usuario nuevoUsuario = new Usuario(correo, passwordEncoder.encode(contrasena), nombre);
         
@@ -56,13 +60,42 @@ public class ServiceTranscaribe {
         nuevoUsuario.setVerificado(false); 
 
         repositorioUsuarios.save(nuevoUsuario);
-
-        try {
-            emailService.enviarCodigoVerificacion(correo, nombre, codigoOtp);
-        } catch (Exception e) {
-            System.err.println("Error al enviar código OTP: " + e.getMessage());
-        }
+        emailService.enviarCodigoVerificacion(correo, nombre, codigoOtp);
         return true;
+    }
+
+    public ResultadoReenvioCodigo reenviarCodigoVerificacion(String correoActual, String correoNuevo) {
+        String nuevoCorreoNormalizado = correoNuevo == null ? "" : correoNuevo.trim();
+        if (!nuevoCorreoNormalizado.matches("^[^\\s@]+@[^\\s@]+\\.[^\\s@]+$")) {
+            return ResultadoReenvioCodigo.CORREO_INVALIDO;
+        }
+
+        Optional<Usuario> usuarioPendiente = repositorioUsuarios.findByCorreo(correoActual)
+                .filter(usuario -> !usuario.isVerificado());
+        if (usuarioPendiente.isEmpty()) {
+            return ResultadoReenvioCodigo.CUENTA_NO_PENDIENTE;
+        }
+
+        Usuario usuario = usuarioPendiente.get();
+        Optional<Usuario> usuarioConCorreo = repositorioUsuarios.findByCorreo(nuevoCorreoNormalizado);
+        if (usuarioConCorreo.isPresent()
+                && !Objects.equals(usuario.getId(), usuarioConCorreo.get().getId())) {
+            return ResultadoReenvioCodigo.CORREO_EN_USO;
+        }
+
+        String codigoOtp = String.format("%06d", GENERADOR_CODIGOS.nextInt(1000000));
+        usuario.setCorreo(nuevoCorreoNormalizado);
+        usuario.setCodigoVerificacion(codigoOtp);
+        repositorioUsuarios.save(usuario);
+        emailService.enviarCodigoVerificacion(nuevoCorreoNormalizado, usuario.getNombre(), codigoOtp);
+        return ResultadoReenvioCodigo.ENVIADO;
+    }
+
+    public enum ResultadoReenvioCodigo {
+        ENVIADO,
+        CUENTA_NO_PENDIENTE,
+        CORREO_EN_USO,
+        CORREO_INVALIDO
     }
 
     /**
@@ -269,6 +302,70 @@ public class ServiceTranscaribe {
         }
 
         return true;
+    }
+
+    public CambioCredencialesPendiente prepararCambioCredenciales(
+            String idUsuario, String nuevoNombre, String nuevoCorreo, String nuevaPassword) {
+        Usuario usuario = repositorioUsuarios.findById(idUsuario)
+                .filter(Usuario::isActivo)
+                .orElseThrow(() -> new IllegalArgumentException("No se encontró la cuenta activa."));
+        String nombreNormalizado = nuevoNombre == null ? "" : nuevoNombre.trim();
+        String correoNormalizado = nuevoCorreo == null ? "" : nuevoCorreo.trim();
+        if (nombreNormalizado.isBlank()) {
+            throw new IllegalArgumentException("El nombre es obligatorio.");
+        }
+        if (!correoNormalizado.matches("^[^\\s@]+@[^\\s@]+\\.[^\\s@]+$")) {
+            throw new IllegalArgumentException("Ingresa un correo electrónico válido.");
+        }
+
+        repositorioUsuarios.findByCorreo(correoNormalizado)
+                .filter(existente -> !existente.getId().equals(idUsuario))
+                .ifPresent(existente -> {
+                    throw new IllegalArgumentException("Ese correo ya está asociado a otra cuenta.");
+                });
+
+        String passwordHash = nuevaPassword == null || nuevaPassword.isBlank()
+                ? null
+                : passwordEncoder.encode(nuevaPassword);
+        return new CambioCredencialesPendiente(
+                usuario.getId(), nombreNormalizado, correoNormalizado, passwordHash);
+    }
+
+    public boolean aplicarCambioCredenciales(CambioCredencialesPendiente cambio) {
+        Optional<Usuario> usuarioOptional = repositorioUsuarios.findById(cambio.idUsuario())
+                .filter(Usuario::isActivo);
+        if (usuarioOptional.isEmpty()) {
+            return false;
+        }
+
+        Usuario usuario = usuarioOptional.get();
+        String correoAnterior = usuario.getCorreo();
+        boolean huboCambioCritico = cambio.passwordHash() != null
+                || !correoAnterior.equals(cambio.correo());
+        Optional<Usuario> existente = repositorioUsuarios.findByCorreo(cambio.correo());
+        if (existente.isPresent() && !existente.get().getId().equals(usuario.getId())) {
+            return false;
+        }
+
+        usuario.setNombre(cambio.nombre());
+        usuario.setCorreo(cambio.correo());
+        if (cambio.passwordHash() != null) {
+            usuario.setPasswordHash(cambio.passwordHash());
+        }
+        repositorioUsuarios.save(usuario);
+
+        if (huboCambioCritico) {
+            emailService.enviarNotificacionLogin(usuario.getCorreo(), usuario.getNombre());
+            if (!correoAnterior.equals(usuario.getCorreo())) {
+                emailService.enviarNotificacionLogin(correoAnterior, usuario.getNombre());
+            }
+        }
+        return true;
+    }
+
+    public record CambioCredencialesPendiente(
+            String idUsuario, String nombre, String correo, String passwordHash)
+            implements Serializable {
     }
 
     /**
