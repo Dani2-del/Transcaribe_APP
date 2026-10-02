@@ -51,6 +51,11 @@ public class AdminController {
 
     private static final int TAMANO_PAGINA = 20;
 
+    @GetMapping("/mapa-rutas/editar")
+    public String editarGeometriasRuta() {
+        return "admin/editar-rutas-mapa";
+    }
+
     @GetMapping("/dashboard")
     public String mostrarDashboard(Model model) {
         model.addAttribute("totalUsuarios", usuarioRepository.count());

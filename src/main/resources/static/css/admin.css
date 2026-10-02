@@ -877,6 +877,7 @@ table.mod-table .card-btn { margin: 2px 4px; padding: 8px 12px; font-size: 0.9re
   font-size: 1.8rem;
 }
 .schedules-module .admin-module-icon { background: #e5f5f2; }
+.route-map-module .admin-module-icon { background: #e8f7f1; }
 .reports-module .admin-module-icon { background: var(--mango-soft); }
 .charts-module .admin-module-icon { background: #e8efff; }
 .transactions-module .admin-module-icon { background: #fcebe7; }

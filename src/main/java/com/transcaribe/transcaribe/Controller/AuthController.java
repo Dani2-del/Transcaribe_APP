@@ -5,6 +5,8 @@ import org.springframework.mail.MailException;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
+import org.springframework.security.authentication.AnonymousAuthenticationToken;
+import org.springframework.security.core.Authentication;
 import org.springframework.stereotype.Controller;
 import org.springframework.ui.Model;
 import org.springframework.web.bind.annotation.*;
@@ -25,6 +27,25 @@ public class AuthController {
     @GetMapping("/")
     public String index() {
         return "index";
+    }
+
+    @GetMapping("/mapa-rutas")
+    public String mapaRutas(Authentication authentication, Model model) {
+        String menuUrl = "/";
+        String menuLabel = "Volver al inicio";
+        if (authentication != null
+                && authentication.isAuthenticated()
+                && !(authentication instanceof AnonymousAuthenticationToken)) {
+            boolean esAdmin = authentication.getAuthorities().stream()
+                    .anyMatch(authority -> "ROLE_ADMIN".equals(authority.getAuthority()));
+            boolean esConductor = authentication.getAuthorities().stream()
+                    .anyMatch(authority -> "ROLE_CONDUCTOR".equals(authority.getAuthority()));
+            menuUrl = esAdmin ? "/admin/dashboard" : esConductor ? "/conductor/panel" : "/menu";
+            menuLabel = "Volver al menú";
+        }
+        model.addAttribute("menuUrl", menuUrl);
+        model.addAttribute("menuLabel", menuLabel);
+        return "mapa-rutas";
     }
 
     @GetMapping("/registro")
