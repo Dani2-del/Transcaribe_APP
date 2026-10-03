@@ -8,6 +8,7 @@ import com.transcaribe.transcaribe.Repository.HorarioConductorRepository;
 import com.transcaribe.transcaribe.Repository.UsuarioRepository;
 import com.transcaribe.transcaribe.service.RutaNotificacionService;
 import com.transcaribe.transcaribe.service.EmailService;
+import com.transcaribe.transcaribe.service.AvisoAdministrativoService;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.security.core.context.SecurityContextHolder;
 import org.springframework.stereotype.Controller;
@@ -32,6 +33,9 @@ public class ConductorController {
 
     @Autowired
     private EmailService emailService;
+
+    @Autowired
+    private AvisoAdministrativoService avisoAdministrativoService;
 
     @Autowired
     private HorarioConductorRepository horarioRepository;
@@ -59,6 +63,8 @@ public class ConductorController {
 
         model.addAttribute("nombre", usuario.getNombre());
         model.addAttribute("usuario", usuario);
+        model.addAttribute("alertasAdmin", avisoAdministrativoService.obtenerPendientes(usuario.getId()));
+        model.addAttribute("alertaReturnTo", "/choose-view");
         model.addAttribute("esAdmin", esAdmin);
         model.addAttribute("esConductor", esConductor);
         return "choose-view";
@@ -78,6 +84,8 @@ public class ConductorController {
         }
 
         model.addAttribute("usuario", conductor);
+        model.addAttribute("alertasAdmin", avisoAdministrativoService.obtenerPendientes(conductor.getId()));
+        model.addAttribute("alertaReturnTo", "/conductor/panel");
 
         Bus bus = null;
         if (conductor.getBusAsignado() != null) {

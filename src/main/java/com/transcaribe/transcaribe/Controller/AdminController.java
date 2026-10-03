@@ -8,6 +8,7 @@ import org.springframework.data.domain.PageRequest;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.PageImpl;
 import org.springframework.data.domain.Sort;
+import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.http.HttpHeaders;
 import org.springframework.http.MediaType;
 import org.springframework.core.io.InputStreamResource;
@@ -25,6 +26,7 @@ import com.transcaribe.transcaribe.Repository.BusRepository;
 import com.transcaribe.transcaribe.Repository.UsuarioRepository;
 import com.transcaribe.transcaribe.service.ExcelReportService;
 import com.transcaribe.transcaribe.service.ServiceTranscaribe;
+import com.transcaribe.transcaribe.service.AvisoAdministrativoService;
 import org.springframework.http.ContentDisposition;
 
 @Controller
@@ -36,6 +38,9 @@ public class AdminController {
     private final ExcelReportService excelService;
     private final BusRepository busRepository;
     private final MongoTemplate mongoTemplate;
+
+    @Autowired
+    private AvisoAdministrativoService avisoAdministrativoService;
 
     public AdminController(UsuarioRepository usuarioRepository,
                            ServiceTranscaribe serviceTranscaribe,
@@ -57,8 +62,12 @@ public class AdminController {
     }
 
     @GetMapping("/dashboard")
-    public String mostrarDashboard(Model model) {
+    public String mostrarDashboard(Model model,
+                                   org.springframework.security.core.Authentication authentication) {
         model.addAttribute("totalUsuarios", usuarioRepository.count());
+        usuarioRepository.findByCorreo(authentication.getName()).ifPresent(usuario ->
+                model.addAttribute("alertasAdmin", avisoAdministrativoService.obtenerPendientes(usuario.getId())));
+        model.addAttribute("alertaReturnTo", "/admin/dashboard");
         return "admin/inicio";
     }
 

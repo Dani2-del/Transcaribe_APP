@@ -6,6 +6,7 @@
   <meta name="theme-color" content="#0F3948" />
   <title>Mi espacio - Transcaribe</title>
   <link rel="stylesheet" th:href="@{/css/usuario.css}" />
+  <link rel="stylesheet" th:href="@{/css/avisos.css}" />
 </head>
 <body class="menu-page">
   <div class="page">
@@ -230,5 +231,6 @@
 
     <div th:replace="~{fragments/footer :: footer}"></div>
   </div>
+  <div th:replace="~{fragments/aviso-administrativo :: modal}"></div>
 </body>
 </html>

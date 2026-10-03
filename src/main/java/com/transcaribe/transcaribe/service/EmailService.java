@@ -1,6 +1,8 @@
 package com.transcaribe.transcaribe.service;
 
 import jakarta.mail.internet.MimeMessage; // Importante: usamos Jakarta para Spring Boot 3
+import jakarta.mail.MessagingException;
+import org.springframework.mail.MailException;
 import org.springframework.mail.MailSendException;
 import org.springframework.mail.javamail.JavaMailSender;
 import org.springframework.mail.javamail.MimeMessageHelper;
@@ -22,6 +24,30 @@ public class EmailService {
 
     public EmailService(JavaMailSender mailSender) {
         this.mailSender = mailSender;
+    }
+
+    public void enviarAvisoAdministrativo(String destinatario, String nombre,
+                                           String asunto, String mensajeAviso) {
+        try {
+            MimeMessage message = mailSender.createMimeMessage();
+            MimeMessageHelper helper = new MimeMessageHelper(message, false, "UTF-8");
+            helper.setTo(destinatario);
+            helper.setSubject(asunto);
+            helper.setFrom(remitente);
+
+            String mensajeHtml = HtmlUtils.htmlEscape(mensajeAviso).replace("\n", "<br>");
+            String contenidoHtml =
+                    "<div style='font-family: Arial, sans-serif; border: 1px solid #ddd; border-radius: 10px; padding: 24px; max-width: 620px;'>" +
+                    "<h2 style='color: #b75c16;'>Transcaribe · Aviso importante</h2>" +
+                    "<p>Hola <strong>" + HtmlUtils.htmlEscape(nombre) + "</strong>,</p>" +
+                    "<div style='white-space: pre-wrap; line-height: 1.6;'>" + mensajeHtml + "</div>" +
+                    "<p style='font-size: 12px; color: #777; margin-top: 24px;'>Mensaje enviado por la administración de Transcaribe.</p>" +
+                    "</div>";
+            helper.setText(contenidoHtml, true);
+            mailSender.send(message);
+        } catch (MessagingException | MailException exception) {
+            throw new IllegalStateException("No se pudo enviar el aviso al correo " + destinatario + ".", exception);
+        }
     }
 
     @Async

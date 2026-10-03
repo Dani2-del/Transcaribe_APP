@@ -2,6 +2,7 @@
 <html xmlns:th="http://www.thymeleaf.org">
 <head>
   <link rel="stylesheet" th:href="@{/css/conductor.css}" />
+  <link rel="stylesheet" th:href="@{/css/avisos.css}" />
   <meta charset="UTF-8" />
   <title>Panel Conductor - Transcaribe</title>
 </head>
@@ -130,5 +131,6 @@
 
     <div th:replace="fragments/footer :: footer"></div>
   </div>
+  <div th:replace="~{fragments/aviso-administrativo :: modal}"></div>
 </body>
 </html>

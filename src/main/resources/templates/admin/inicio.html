@@ -7,6 +7,7 @@
     <meta name="viewport" content="width=device-width, initial-scale=1">
     <title>Panel administrador - Transcaribe</title>
     <link rel="stylesheet" th:href="@{/css/admin.css}">
+    <link rel="stylesheet" th:href="@{/css/avisos.css}">
 </head>
 <body>
 <div class="page">
@@ -44,6 +45,13 @@
                     <span class="admin-module-link">Abrir sección <span aria-hidden="true">→</span></span>
                 </a>
 
+                <a class="admin-module-card announcements-module" href="/admin/avisos">
+                    <span class="admin-module-icon" aria-hidden="true">📣</span>
+                    <span class="admin-module-title">Avisos y alertas</span>
+                    <span class="admin-module-description">Envía avisos por correo y al iniciar sesión.</span>
+                    <span class="admin-module-link">Crear aviso <span aria-hidden="true">→</span></span>
+                </a>
+
                 <a class="admin-module-card route-map-module" href="/mapa-rutas">
                     <span class="admin-module-icon" aria-hidden="true">🗺️</span>
                     <span class="admin-module-title">Mapa interactivo (BETA)</span>
@@ -77,6 +85,8 @@
         </section>
     </main>
 </div>
+
+<div th:replace="~{fragments/aviso-administrativo :: modal}"></div>
 
 <div id="excelModal" class="excel-modal-overlay" role="dialog" aria-modal="true"
      aria-labelledby="excelModalTitle" aria-describedby="excelModalDescription">

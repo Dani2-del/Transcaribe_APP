@@ -9,6 +9,7 @@ import com.transcaribe.transcaribe.service.ServiceTranscaribe;
 import com.transcaribe.transcaribe.service.TransaccionService;
 import com.transcaribe.transcaribe.service.BusService;
 import com.transcaribe.transcaribe.service.EmailService;
+import com.transcaribe.transcaribe.service.AvisoAdministrativoService;
 import java.io.Serializable;
 import java.io.IOException;
 import java.nio.charset.StandardCharsets;
@@ -74,6 +75,9 @@ public class UsuarioController {
     @Autowired
     private ReciboPdfService reciboPdfService;
 
+    @Autowired
+    private AvisoAdministrativoService avisoAdministrativoService;
+
     private Usuario obtenerUsuarioLogueado() {
         String correo = SecurityContextHolder.getContext().getAuthentication().getName();
         return usuarioRepository.findByCorreo(correo).orElse(null);
@@ -94,6 +98,8 @@ public class UsuarioController {
         service.procesarNotificacionLogin(usuario.getCorreo());
         
         model.addAttribute("usuario", usuario);
+        model.addAttribute("alertasAdmin", avisoAdministrativoService.obtenerPendientes(usuario.getId()));
+        model.addAttribute("alertaReturnTo", "/menu");
         return "usuarios/cuenta/menu";
     }
 
