@@ -19,8 +19,14 @@ public class HorarioConductor {
     @Field("bus_id")
     private String busId;
 
+    @Field("bus_placa")
+    private String busPlaca;
+
     @Field("ruta")
     private String ruta;
+
+    @Field("sentido")
+    private String sentido;
 
     @Field("fecha")
     private LocalDate fecha;
@@ -66,8 +72,14 @@ public class HorarioConductor {
     public String getBusId() { return busId; }
     public void setBusId(String busId) { this.busId = busId; }
 
+    public String getBusPlaca() { return busPlaca; }
+    public void setBusPlaca(String busPlaca) { this.busPlaca = busPlaca; }
+
     public String getRuta() { return ruta; }
     public void setRuta(String ruta) { this.ruta = ruta; }
+
+    public String getSentido() { return sentido; }
+    public void setSentido(String sentido) { this.sentido = sentido; }
 
     public LocalDate getFecha() { return fecha; }
     public void setFecha(LocalDate fecha) { this.fecha = fecha; }

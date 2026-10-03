@@ -123,6 +123,9 @@ public class ConductorController {
         if ("ok".equals(mensaje)) {
             model.addAttribute("mensaje", "¡Ruta iniciada! Se notificó a " + notificados + " usuario(s).");
         }
+        if ("vuelta".equals(mensaje)) {
+            model.addAttribute("mensaje", "La ruta cambió a sentido Vuelta.");
+        }
         if ("fin".equals(mensaje)) {
             model.addAttribute("mensaje", "Ruta finalizada correctamente.");
         }
@@ -134,6 +137,9 @@ public class ConductorController {
         }
         if ("estadoinvalido".equals(error)) {
             model.addAttribute("error", "Esa ruta no está en un estado válido para esa acción.");
+        }
+        if ("sentidoinvalido".equals(error) || "secuencia".equals(error)) {
+            model.addAttribute("error", "La ruta debe iniciar en Ida y luego cambiar a Vuelta antes de terminar.");
         }
         if ("busocupado".equals(error)) {
             model.addAttribute("error", "No puedes iniciar la ruta: el bus todavía está siendo utilizado en otra ruta.");
@@ -181,11 +187,20 @@ public class ConductorController {
     }
 
     @PostMapping("/conductor/iniciar-ruta")
-    public synchronized String iniciarRuta(@RequestParam String horarioId) {
+    public synchronized String iniciarRuta(@RequestParam String horarioId,
+                                           @RequestParam(required = false) String sentido) {
         Usuario conductor = obtenerUsuarioLogueado();
 
         if (conductor == null) {
             return "redirect:/login";
+        }
+
+        if (sentido == null) {
+            return "redirect:/conductor/panel?error=sentidoinvalido";
+        }
+        String sentidoNormalizado = sentido.trim().toUpperCase(java.util.Locale.ROOT);
+        if (!"IDA".equals(sentidoNormalizado) && !"VUELTA".equals(sentidoNormalizado)) {
+            return "redirect:/conductor/panel?error=sentidoinvalido";
         }
 
         HorarioConductor horario = horarioRepository.findByIdAndConductorId(horarioId, conductor.getId()).orElse(null);
@@ -194,7 +209,16 @@ public class ConductorController {
             return "redirect:/conductor/panel?error=horarioinvalido";
         }
 
-        if (!HorarioConductor.ESTADO_PENDIENTE.equals(horario.getEstado())) {
+        if ("VUELTA".equals(sentidoNormalizado)
+                && HorarioConductor.ESTADO_EN_CURSO.equals(horario.getEstado())
+                && ("IDA".equals(horario.getSentido()) || horario.getSentido() == null)) {
+            horario.setSentido("VUELTA");
+            horarioRepository.save(horario);
+            return "redirect:/conductor/panel?mensaje=vuelta";
+        }
+
+        if (!"IDA".equals(sentidoNormalizado)
+                || !HorarioConductor.ESTADO_PENDIENTE.equals(horario.getEstado())) {
             return "redirect:/conductor/panel?error=estadoinvalido";
         }
 
@@ -216,6 +240,7 @@ public class ConductorController {
             return "redirect:/conductor/panel?error=busocupado";
         }
 
+        horario.setSentido("IDA");
         horario.setEstado(HorarioConductor.ESTADO_EN_CURSO);
         horarioRepository.save(horario);
 
@@ -238,7 +263,12 @@ public class ConductorController {
             return "redirect:/conductor/panel?error=horarioinvalido";
         }
 
-        if (!HorarioConductor.ESTADO_EN_CURSO.equals(horario.getEstado())) {
+        if (!HorarioConductor.ESTADO_EN_CURSO.equals(horario.getEstado())
+                || !"VUELTA".equals(horario.getSentido())) {
+            if (HorarioConductor.ESTADO_EN_CURSO.equals(horario.getEstado())
+                    && !"VUELTA".equals(horario.getSentido())) {
+                return "redirect:/conductor/panel?error=secuencia";
+            }
             return "redirect:/conductor/panel?error=estadoinvalido";
         }
 

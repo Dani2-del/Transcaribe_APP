@@ -1,307 +1,53 @@
 <!DOCTYPE html>
 <html xmlns:th="http://www.thymeleaf.org">
 <head>
-    <link rel="stylesheet" th:href="@{/css/admin.css}" />
     <meta charset="UTF-8">
-    <title>Horarios de Conductores - Transcaribe</title>
-    <style>
-        .header-row { display: flex; justify-content: space-between; align-items: flex-start; gap: 12px; flex-wrap: wrap; }
-        .btn-secundario {
-            background-color: #2f855a; color: white; border: none;
-            padding: 10px 16px; border-radius: 8px; font-weight: bold;
-            font-size: 14px; cursor: pointer; white-space: nowrap;
-        }
-        .btn-secundario:hover { background-color: #276749; }
-        .bus-row {
-            display: flex; justify-content: space-between; align-items: center;
-            padding: 10px 14px; border: 1px solid #eee; border-radius: 8px; margin-bottom: 8px;
-        }
-        .bus-badge {
-            display: inline-block; margin-left: 8px; padding: 4px 8px;
-            border-radius: 999px; background: #e6f4ff; color: #1d4ed8;
-            font-size: 11px; font-weight: 700; text-transform: uppercase;
-        }
-        .bus-rutas { color: #718096; font-size: 13px; }
-        .modal-overlay {
-            display: none; position: fixed; inset: 0; background: rgba(0,0,0,0.45);
-            align-items: center; justify-content: center; z-index: 50;
-        }
-        .modal-overlay.abierto { display: flex; }
-        .modal-box {
-            background: white; border-radius: 12px; padding: 24px;
-            width: 100%; max-width: 420px;
-        }
-        .flash-ok { background: #e6fffa; color: #22543d; border: 1px solid #38a169; padding: 10px 14px; border-radius: 8px; margin-bottom: 14px; }
-        .flash-error { background: #fff5f5; color: #822727; border: 1px solid #f56565; padding: 10px 14px; border-radius: 8px; margin-bottom: 14px; }
-    </style>
+    <meta name="viewport" content="width=device-width, initial-scale=1">
+    <title>Gestión de rutas - Transcaribe</title>
+    <link rel="stylesheet" th:href="@{/css/admin.css}">
 </head>
 <body>
 <div class="page">
-    <div class="center-card">
-        <div class="card">
-            <div class="header-row">
+    <main class="center-card wide">
+        <section class="card admin-home">
+            <header class="admin-home-header">
                 <div>
-                    <h2 style="margin-bottom: 5px;">📅 Horarios de Conductores</h2>
-                    <p style="margin-top: 0; color: #718096;">Programa la ruta, fecha y horario de cada conductor.</p>
+                    <p class="admin-eyebrow">TRANSCARIBE · ADMINISTRACIÓN</p>
+                    <h1>Gestión de rutas y buses</h1>
+                    <p class="admin-home-subtitle">Elige qué deseas gestionar.</p>
                 </div>
-                <div style="display: flex; gap: 10px; flex-wrap: wrap;">
-                    <button type="button" class="btn-secundario" onclick="window.location.href='/admin/horarios/buses/nuevo'">
-                        🚌 Registrar bus
-                    </button>
-                    <button type="button" class="btn-secundario" style="background-color:#2a9d8f;" onclick="window.location.href='/admin/horarios/historial'">
-                        📚 Historial de horarios
-                    </button>
-                </div>
-            </div>
-
-            <div th:if="${mensaje}" class="flash-ok" th:text="${mensaje}"></div>
-            <div th:if="${error}" class="flash-error" th:text="${error}"></div>
-
-            <form th:action="@{/admin/horarios/crear}" method="post">
-                <div class="form-grid">
-                    <div class="form-row">
-                        <label>Conductor</label>
-                        <select id="selectConductor" name="conductorId" required>
-                            <option value="" disabled selected>Selecciona un conductor...</option>
-                            <option th:each="c : ${conductores}"
-                                    th:value="${c.id}"
-                                    th:text="${(c.nombre != null ? c.nombre : c.correo)}">
-                            </option>
-                        </select>
-                    </div>
-
-                    <div class="form-row">
-                        <label>Bus</label>
-                        <select id="selectBus" name="busId" required onchange="actualizarRutas()">
-                            <option value="" disabled selected>Selecciona un bus...</option>
-                            <option th:each="b : ${buses}" th:value="${b.id}"
-                                    th:text="${b.placa + ' (' + (b.tipo != null ? b.tipo : 'TRONCAL') + ')'}"></option>
-                        </select>
-                    </div>
-
-                    <div class="form-row">
-                        <label>Ruta</label>
-                        <select id="selectRuta" name="ruta" required>
-                            <option value="" disabled selected>Selecciona un conductor primero...</option>
-                        </select>
-                    </div>
-
-                    <div class="form-row">
-                        <label>Fecha</label>
-                        <input type="date" name="fecha" required />
-                    </div>
-
-                    <div class="form-row">
-                        <label>Hora de inicio</label>
-                        <input type="time" name="horaInicio" required />
-                    </div>
-
-                    <div class="form-row">
-                        <label>Hora de fin</label>
-                        <input type="time" name="horaFin" required />
-                    </div>
-                </div>
-
-                <button type="submit" class="primary" style="width: 100%; padding: 12px;">Programar horario</button>
-            </form>
-
-            <hr style="margin: 25px 0; border: 0; border-top: 1px solid #eee;">
-
-            <div style="display:flex; justify-content:space-between; align-items:center; gap:12px; flex-wrap:wrap;">
-                <h3 style="margin:0;">Buses registrados</h3>
-                <form th:action="@{/admin/horarios}" method="get"
-                      style="display:flex; gap:8px; flex-wrap:wrap;">
-                    <input type="search" name="buscarBus" th:value="${buscarBus}"
-                           placeholder="Buscar por placa..."
-                           style="padding:8px 10px; border:1px solid #cbd5e0; border-radius:7px;">
-                    <select name="tipoBus" style="padding:8px 10px; border:1px solid #cbd5e0; border-radius:7px;">
-                        <option value="">Todos los tipos</option>
-                        <option value="TRONCAL" th:selected="${tipoBusSeleccionado == 'TRONCAL'}">Troncal</option>
-                        <option value="PETRONCAL" th:selected="${tipoBusSeleccionado == 'PETRONCAL'}">Petroncal</option>
-                        <option value="ALIMENTADOR" th:selected="${tipoBusSeleccionado == 'ALIMENTADOR'}">Alimentador</option>
-                    </select>
-                    <button type="submit" class="btn-secundario" style="padding:8px 12px;">Filtrar</button>
-                    <button type="button" class="ghost" style="margin-top:0; padding:8px 12px;"
-                            onclick="window.location.href='/admin/horarios'">Limpiar</button>
-                </form>
-            </div>
-
-            <div th:if="${#lists.isEmpty(busesRegistrados)}" class="error-message">
-                <p>No hay buses que coincidan con los filtros.</p>
-            </div>
-
-            <div th:each="b : ${busesRegistrados}" class="bus-row">
-                <div>
-                    🚌 <strong th:text="${b.placa}"></strong>
-                    <span class="bus-badge" th:text="${b.tipo != null ? b.tipo : 'TRONCAL'}"></span>
-                    &nbsp;·&nbsp;
-                    <span class="bus-rutas" th:text="${#lists.size(b.rutas)} + ' rutas: ' + ${#strings.listJoin(b.rutas, ', ')}"></span>
-                </div>
-
-                <div style="display:flex; gap:8px;">
-                    <button type="button" class="btn-secundario" style="padding:6px 12px;"
-                            th:attr="onclick=|abrirEditarBus('${b.id}', '${b.placa}', '${#strings.listJoin(b.rutas, ', ')}', '${b.tipo != null ? b.tipo : 'TRONCAL'}')|">✏️ Editar</button>
-                    <form th:action="@{/admin/horarios/buses/eliminar}" method="post">
-                        <input type="hidden" name="id" th:value="${b.id}" />
-                        <button type="submit" class="btn-eliminar-horario" title="Eliminar bus"
-                                onclick="return confirm('¿Eliminar este bus? Solo se puede si ningún conductor lo tiene asignado.')">🗑️</button>
+                <div class="admin-home-actions">
+                    <a href="/admin/dashboard" class="btn-pagina">← Panel principal</a>
+                    <form th:action="@{/logout}" method="post">
+                        <button type="submit" class="btn-cerrar-sesion">🚪 Cerrar sesión</button>
                     </form>
                 </div>
-            </div>
+            </header>
 
-            <div th:if="${totalBusPages > 1}" style="display:flex; justify-content:center; gap:12px; margin-top:14px;">
-                <a th:if="${currentBusPage > 0}"
-                   th:href="@{/admin/horarios(busPage=${currentBusPage - 1}, buscarBus=${buscarBus}, tipoBus=${tipoBusSeleccionado})}">
-                    Anterior
+            <nav class="admin-module-grid schedule-actions" aria-label="Gestión de rutas y buses">
+                <a class="admin-module-card schedules-module" th:href="@{/admin/horarios/programar}">
+                    <span class="admin-module-icon" aria-hidden="true">📅</span>
+                    <span class="admin-module-title">Programar ruta</span>
+                    <span class="admin-module-description">Asigna una ruta, un bus, un conductor y su horario.</span>
+                    <span class="admin-module-link">Programar <span aria-hidden="true">→</span></span>
                 </a>
-                <span th:text="'Página ' + ${currentBusPage + 1} + ' de ' + ${totalBusPages}"></span>
-                <a th:if="${currentBusPage + 1 < totalBusPages}"
-                   th:href="@{/admin/horarios(busPage=${currentBusPage + 1}, buscarBus=${buscarBus}, tipoBus=${tipoBusSeleccionado})}">
-                    Siguiente
+
+                <a class="admin-module-card buses-module" th:href="@{/admin/horarios/buses}">
+                    <span class="admin-module-icon" aria-hidden="true">🚌</span>
+                    <span class="admin-module-title">Crear bus</span>
+                    <span class="admin-module-description">Registra y administra los buses y sus rutas.</span>
+                    <span class="admin-module-link">Gestionar buses <span aria-hidden="true">→</span></span>
                 </a>
-            </div>
 
-            <hr style="margin: 25px 0; border: 0; border-top: 1px solid #eee;">
-
-            <h3>Horarios programados</h3>
-
-            <form th:action="@{/admin/horarios}" method="get"
-                  style="display:grid; grid-template-columns:repeat(auto-fit,minmax(150px,1fr)); gap:10px; margin:14px 0 18px; padding:14px; background:#f7fafc; border:1px solid #e2e8f0; border-radius:10px;">
-                <input type="search" name="buscarRuta" th:value="${buscarRuta}"
-                       placeholder="Buscar ruta..."
-                       style="padding:10px; border:1px solid #cbd5e0; border-radius:7px;">
-                <select name="conductorId" style="padding:10px; border:1px solid #cbd5e0; border-radius:7px;">
-                    <option value="">Todos los conductores</option>
-                    <option th:each="c : ${conductores}" th:value="${c.id}"
-                            th:text="${c.nombre != null ? c.nombre : c.correo}"
-                            th:selected="${c.id == conductorSeleccionado}"></option>
-                </select>
-                <select name="periodo" style="padding:10px; border:1px solid #cbd5e0; border-radius:7px;">
-                    <option value="">Cualquier período</option>
-                    <option value="dia" th:selected="${periodoSeleccionado == 'dia'}">Por día</option>
-                    <option value="semana" th:selected="${periodoSeleccionado == 'semana'}">Por semana</option>
-                    <option value="mes" th:selected="${periodoSeleccionado == 'mes'}">Por mes</option>
-                </select>
-                <input type="date" name="fechaFiltro" th:value="${fechaFiltro}"
-                       title="Fecha de referencia para día, semana o mes"
-                       style="padding:10px; border:1px solid #cbd5e0; border-radius:7px;">
-                <div style="display:flex; gap:8px;">
-                    <button type="submit" class="primary" style="padding:10px 14px;">Filtrar</button>
-                    <button type="button" class="ghost" style="margin-top:0; padding:10px 14px;"
-                            onclick="window.location.href='/admin/horarios'">Limpiar</button>
-                </div>
-            </form>
-
-            <div th:if="${#lists.isEmpty(horarios)}" class="error-message">
-                <p>No hay horarios que coincidan con los filtros.</p>
-            </div>
-
-            <div th:each="h : ${horarios}" class="horario-row">
-                <div class="horario-info">
-                    👤 <strong th:text="${nombreConductor[h.conductorId]}"></strong>
-                    &nbsp;·&nbsp; 🚌 <strong th:text="${h.ruta}"></strong>
-                    &nbsp;·&nbsp; 📆 <span th:text="${h.fecha}"></span>
-                    &nbsp;·&nbsp; 🕐 <span th:text="${h.horaInicio} + ' - ' + ${h.horaFin}"></span>
-                </div>
-
-                <div style="display:flex; gap:8px; align-items:center;">
-                    <button type="button" class="btn-secundario" style="padding:6px 12px;"
-                            th:onclick="|window.location.href='@{/admin/horarios/editar/{id}(id=${h.id})}'|">✏️ Editar</button>
-                    <form th:action="@{/admin/horarios/eliminar}" method="post">
-                        <input type="hidden" name="id" th:value="${h.id}" />
-                        <button type="submit" class="btn-eliminar-horario" title="Eliminar"
-                                onclick="return confirm('¿Eliminar este horario?')">🗑️</button>
-                    </form>
-                </div>
-            </div>
-
-            <nav th:if="${totalPages > 1}" class="pagination-bar" aria-label="Paginación de horarios">
-                <a th:if="${currentPage > 0}"
-                   th:href="@{/admin/horarios(page=${currentPage - 1}, buscarRuta=${buscarRuta}, conductorId=${conductorSeleccionado}, periodo=${periodoSeleccionado}, fechaFiltro=${fechaFiltro})}"
-                   class="btn-pagina">Anterior</a>
-                <span class="pagina-info" th:text="|Página ${currentPage + 1} de ${totalPages}|"></span>
-                <a th:if="${currentPage + 1 < totalPages}"
-                   th:href="@{/admin/horarios(page=${currentPage + 1}, buscarRuta=${buscarRuta}, conductorId=${conductorSeleccionado}, periodo=${periodoSeleccionado}, fechaFiltro=${fechaFiltro})}"
-                   class="btn-pagina">Siguiente</a>
+                <a class="admin-module-card history-module" th:href="@{/admin/horarios/historial}">
+                    <span class="admin-module-icon" aria-hidden="true">📚</span>
+                    <span class="admin-module-title">Historial de rutas</span>
+                    <span class="admin-module-description">Consulta recorridos y horarios, con filtros por conductor y fecha.</span>
+                    <span class="admin-module-link">Ver historial <span aria-hidden="true">→</span></span>
+                </a>
             </nav>
-
-            <button onclick="window.location.href='/admin/dashboard'" class="ghost" style="margin-top: 20px;">Volver al panel</button>
-        </div>
-    </div>
+        </section>
+    </main>
 </div>
-
-<div class="modal-overlay" id="modalEditarBus">
-    <div class="modal-box">
-        <h3 style="margin-top: 0;">Editar bus</h3>
-        <form th:action="@{/admin/horarios/buses/editar}" method="post">
-            <input type="hidden" name="id" id="editarBusId" />
-            <div class="form-row">
-                <label>Número del bus</label>
-                <input type="text" name="placa" id="editarBusPlaca" required />
-            </div>
-            <div class="form-row" style="margin-top: 10px;">
-                <label>Tipo de servicio</label>
-                <select name="tipo" id="editarBusTipo" required>
-                    <option value="TRONCAL">Troncal</option>
-                    <option value="PETRONCAL">Petroncal</option>
-                    <option value="ALIMENTADOR">Alimentador</option>
-                </select>
-            </div>
-            <div class="form-row" style="margin-top: 10px;">
-                <label>Rutas (separadas por coma)</label>
-                <input type="text" name="rutas" id="editarBusRutas" />
-            </div>
-            <div style="display: flex; gap: 10px; margin-top: 16px;">
-                <button type="submit" class="primary" style="flex:1;">Guardar cambios</button>
-                <button type="button" class="ghost" style="flex:1;"
-                        onclick="document.getElementById('modalEditarBus').classList.remove('abierto')">Cancelar</button>
-            </div>
-        </form>
-    </div>
-</div>
-
-<script th:inline="javascript">
-    var busRutasPorId   = /*[[${busRutasPorId}]]*/ {};
-    function abrirEditarBus(id, placa, rutas, tipo) {
-        document.getElementById('editarBusId').value = id;
-        document.getElementById('editarBusPlaca').value = placa;
-        document.getElementById('editarBusRutas').value = rutas;
-        var selectTipo = document.getElementById('editarBusTipo');
-        if (selectTipo) {
-            selectTipo.value = tipo || 'TRONCAL';
-        }
-        document.getElementById('modalEditarBus').classList.add('abierto');
-    }
-
-    function actualizarRutas() {
-        var busId = document.getElementById('selectBus').value;
-        var rutas = (busId && busRutasPorId[busId]) ? busRutasPorId[busId] : [];
-
-        var selectRuta = document.getElementById('selectRuta');
-        selectRuta.innerHTML = '';
-
-        if (rutas.length === 0) {
-            var opt = document.createElement('option');
-            opt.value = '';
-            opt.textContent = 'Este bus no tiene rutas registradas';
-            selectRuta.appendChild(opt);
-            return;
-        }
-
-        var placeholder = document.createElement('option');
-        placeholder.value = '';
-        placeholder.disabled = true;
-        placeholder.selected = true;
-        placeholder.textContent = 'Selecciona una ruta...';
-        selectRuta.appendChild(placeholder);
-
-        rutas.forEach(function (r) {
-            var opt = document.createElement('option');
-            opt.value = r;
-            opt.textContent = r;
-            selectRuta.appendChild(opt);
-        });
-    }
-</script>
 </body>
-</html>>
+</html>

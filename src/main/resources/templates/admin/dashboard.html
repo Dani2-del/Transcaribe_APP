@@ -27,12 +27,55 @@
                 </div>
             </header>
 
-            <form method="get" th:action="@{/admin/usuarios}" class="search-bar">
-                <input type="text" name="search" th:value="${search}"
-                       placeholder="Buscar por nombre o correo..." class="search-input" />
-                <button type="submit" class="btn-buscar">🔎 Buscar</button>
-                <a th:if="${search != ''}" th:href="@{/admin/usuarios}" class="btn-cancelar" style="flex:0; padding:10px 16px; text-decoration:none; display:inline-block;">Limpiar</a>
+            <form method="get" th:action="@{/admin/usuarios}" class="user-filters">
+                <label class="user-filter-search">
+                    <span>Buscar</span>
+                    <input type="search" name="search" th:value="${search}"
+                           placeholder="Nombre o correo..." class="search-input" />
+                </label>
+                <label>
+                    <span>Rol</span>
+                    <select name="role">
+                        <option value="" th:selected="${roleSeleccionado == ''}">Todos los roles</option>
+                        <option value="ROLE_USER" th:selected="${roleSeleccionado == 'ROLE_USER'}">Usuario</option>
+                        <option value="ROLE_CONDUCTOR" th:selected="${roleSeleccionado == 'ROLE_CONDUCTOR'}">Conductor</option>
+                        <option value="ROLE_ADMIN" th:selected="${roleSeleccionado == 'ROLE_ADMIN'}">Administrador</option>
+                    </select>
+                </label>
+                <label>
+                    <span>Registrado desde</span>
+                    <input type="date" name="fechaDesde" th:value="${fechaDesde}" />
+                </label>
+                <label>
+                    <span>Registrado hasta</span>
+                    <input type="date" name="fechaHasta" th:value="${fechaHasta}" />
+                </label>
+                <label>
+                    <span>Estado de cuenta</span>
+                    <select name="estado">
+                        <option value="" th:selected="${estadoSeleccionado == ''}">Todos</option>
+                        <option value="activos" th:selected="${estadoSeleccionado == 'activos'}">Activos</option>
+                        <option value="inactivos" th:selected="${estadoSeleccionado == 'inactivos'}">Inactivos</option>
+                    </select>
+                </label>
+                <label>
+                    <span>Verificación</span>
+                    <select name="verificacion">
+                        <option value="" th:selected="${verificacionSeleccionada == ''}">Todos</option>
+                        <option value="verificados" th:selected="${verificacionSeleccionada == 'verificados'}">Verificados</option>
+                        <option value="pendientes" th:selected="${verificacionSeleccionada == 'pendientes'}">Pendientes</option>
+                    </select>
+                </label>
+                <div class="user-filter-actions">
+                    <button type="submit" class="btn-buscar">🔎 Filtrar</button>
+                    <a th:href="@{/admin/usuarios}" class="btn-cancelar">Limpiar</a>
+                </div>
             </form>
+            <p class="user-filter-error" th:if="${errorFiltro}" th:text="${errorFiltro}" role="alert"></p>
+            <p class="user-filter-summary">
+                Mostrando <strong th:text="${totalFiltrado}">0</strong>
+                de <strong th:text="${totalUsuarios}">0</strong> usuarios registrados.
+            </p>
 
             <div class="table-wrap">
                 <table class="admin-table">
@@ -74,20 +117,23 @@
                                     th:attr="data-id=${u.id}" onclick="deleteUser(this)">Eliminar</button>
                         </td>
                     </tr>
+                    <tr th:if="${#lists.isEmpty(usuarios)}">
+                        <td colspan="6" class="user-empty-result">No hay usuarios que coincidan con los filtros seleccionados.</td>
+                    </tr>
                     </tbody>
                 </table>
             </div>
 
             <div class="pagination-bar" th:if="${totalPages > 1}">
                 <a th:if="${currentPage > 0}"
-                   th:href="@{/admin/usuarios(page=${currentPage - 1}, search=${search})}"
+                   th:href="@{/admin/usuarios(page=${currentPage - 1}, search=${search}, role=${roleSeleccionado}, fechaDesde=${fechaDesde}, fechaHasta=${fechaHasta}, estado=${estadoSeleccionado}, verificacion=${verificacionSeleccionada})}"
                    class="btn-pagina">⬅ Anterior</a>
                 <span class="btn-pagina" th:unless="${currentPage > 0}" style="opacity:0.4; cursor:default;">⬅ Anterior</span>
 
                 <span class="pagina-info">Página <span th:text="${currentPage + 1}"></span> de <span th:text="${totalPages}"></span></span>
 
                 <a th:if="${currentPage + 1 < totalPages}"
-                   th:href="@{/admin/usuarios(page=${currentPage + 1}, search=${search})}"
+                   th:href="@{/admin/usuarios(page=${currentPage + 1}, search=${search}, role=${roleSeleccionado}, fechaDesde=${fechaDesde}, fechaHasta=${fechaHasta}, estado=${estadoSeleccionado}, verificacion=${verificacionSeleccionada})}"
                    class="btn-pagina">Siguiente ➡</a>
                 <span class="btn-pagina" th:unless="${currentPage + 1 < totalPages}" style="opacity:0.4; cursor:default;">Siguiente ➡</span>
             </div>

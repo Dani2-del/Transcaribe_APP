@@ -47,8 +47,10 @@
         <div th:if="${!verHistorial}" th:each="h : ${horarios}" class="horario-item">
             <div class="horario-info">
                 <div class="ruta">🚌 <span th:text="${h.ruta}"></span>
-                    <span th:if="${busPorHorario[h.id] != null}"
-                          th:text="| · Bus ${busPorHorario[h.id]}|"></span>
+                    <span th:if="${busPorHorario[h.id] != null or h.busPlaca != null}"
+                          th:text="| · Bus ${busPorHorario[h.id] != null ? busPorHorario[h.id] : h.busPlaca}|"></span>
+                    <span th:if="${h.sentido != null}" class="badge-sentido"
+                          th:text="${h.sentido == 'IDA' ? 'Ida' : 'Vuelta'}"></span>
                 </div>
                 <div class="detalle">
                     📆 <span th:text="${h.fecha}"></span>
@@ -59,15 +61,24 @@
                 <span class="badge-estado badge-pendiente" th:if="${h.estado == 'FINALIZADA'}">Finalizada</span>
             </div>
 
-            <form th:if="${h.estado == 'PENDIENTE'}" th:action="@{/conductor/iniciar-ruta}" method="post" style="display:inline;">
+            <form th:if="${h.estado == 'PENDIENTE'}"
+                  th:action="@{/conductor/iniciar-ruta}" method="post"
+                  class="start-route-form" data-direction="Ida">
                 <input type="hidden" name="horarioId" th:value="${h.id}" />
-                <button type="submit" class="btn-iniciar"
-                        onclick="return confirm('¿Está seguro de iniciar esta ruta? Se notificará a los usuarios interesados.')">
-                    Iniciar
-                </button>
+                <input type="hidden" name="sentido" value="IDA" />
+                <button type="submit" class="btn-iniciar">Iniciar</button>
             </form>
 
-            <form th:if="${h.estado == 'EN_CURSO'}" th:action="@{/conductor/terminar-ruta}" method="post" style="display:inline;">
+            <form th:if="${h.estado == 'EN_CURSO' and h.sentido != 'VUELTA'}"
+                  th:action="@{/conductor/iniciar-ruta}" method="post"
+                  class="start-route-form" data-direction="Vuelta">
+                <input type="hidden" name="horarioId" th:value="${h.id}" />
+                <input type="hidden" name="sentido" value="VUELTA" />
+                <button type="submit" class="btn-iniciar">Iniciar vuelta</button>
+            </form>
+
+            <form th:if="${h.estado == 'EN_CURSO' and h.sentido == 'VUELTA'}"
+                  th:action="@{/conductor/terminar-ruta}" method="post" style="display:inline;">
                 <input type="hidden" name="horarioId" th:value="${h.id}" />
                 <button type="submit" class="btn-terminar"
                         onclick="return confirm('¿Está seguro de terminar esta ruta?')">
@@ -83,8 +94,10 @@
         <div th:if="${verHistorial}" th:each="h : ${historialHorarios}" class="horario-item">
             <div class="horario-info">
                 <div class="ruta">🚌 <span th:text="${h.ruta}"></span>
-                    <span th:if="${busPorHorario[h.id] != null}"
-                          th:text="| · Bus ${busPorHorario[h.id]}|"></span>
+                    <span th:if="${busPorHorario[h.id] != null or h.busPlaca != null}"
+                          th:text="| · Bus ${busPorHorario[h.id] != null ? busPorHorario[h.id] : h.busPlaca}|"></span>
+                    <span th:if="${h.sentido != null}" class="badge-sentido"
+                          th:text="${h.sentido == 'IDA' ? 'Ida' : 'Vuelta'}"></span>
                 </div>
                 <div class="detalle">
                     📆 <span th:text="${h.fecha}"></span>
@@ -129,8 +142,59 @@
       </div>
     </main>
 
+    <dialog id="confirmarInicioRuta" class="route-confirm-dialog"
+            aria-labelledby="confirmarInicioRutaTitulo" aria-describedby="confirmarInicioRutaMensaje">
+      <h2 id="confirmarInicioRutaTitulo">Confirmar inicio de ruta</h2>
+      <p id="confirmarInicioRutaMensaje"></p>
+      <div class="route-confirm-actions">
+        <button type="button" id="cancelarInicioRuta" class="route-confirm-no">No</button>
+        <button type="button" id="aceptarInicioRuta" class="route-confirm-yes">Sí, iniciar</button>
+      </div>
+    </dialog>
+
     <div th:replace="fragments/footer :: footer"></div>
   </div>
   <div th:replace="~{fragments/aviso-administrativo :: modal}"></div>
+  <script>
+    (() => {
+      const dialog = document.getElementById('confirmarInicioRuta');
+      const mensaje = document.getElementById('confirmarInicioRutaMensaje');
+      const confirmar = document.getElementById('aceptarInicioRuta');
+      const cancelar = document.getElementById('cancelarInicioRuta');
+      let formularioPendiente = null;
+      let envioConfirmado = false;
+
+      document.querySelectorAll('.start-route-form').forEach((formulario) => {
+        formulario.addEventListener('submit', (event) => {
+          if (envioConfirmado) {
+            envioConfirmado = false;
+            return;
+          }
+          event.preventDefault();
+          formularioPendiente = formulario;
+          const sentidoSeleccionado = formulario.dataset.direction;
+          mensaje.textContent = sentidoSeleccionado === 'Ida'
+            ? 'La ruta iniciará en sentido Ida. ¿Desea iniciar la ruta?'
+            : 'La ruta está en sentido Ida. ¿Desea iniciar la vuelta?';
+          confirmar.textContent = sentidoSeleccionado === 'Ida' ? 'Sí, iniciar' : 'Sí, iniciar vuelta';
+          dialog.showModal();
+          confirmar.focus();
+        });
+      });
+
+      confirmar.addEventListener('click', () => {
+        if (!formularioPendiente) return;
+        envioConfirmado = true;
+        formularioPendiente.requestSubmit();
+        formularioPendiente = null;
+        dialog.close();
+      });
+
+      cancelar.addEventListener('click', () => dialog.close());
+      dialog.addEventListener('close', () => {
+        formularioPendiente = null;
+      });
+    })();
+  </script>
 </body>
 </html>

@@ -2,7 +2,11 @@ package com.transcaribe.transcaribe.Controller;
 
 import java.io.IOException;
 import java.nio.charset.StandardCharsets;
+import java.time.LocalDate;
+import java.time.LocalDateTime;
+import java.time.format.DateTimeParseException;
 import java.util.*;
+import java.util.regex.Pattern;
 
 import org.springframework.data.domain.PageRequest;
 import org.springframework.data.domain.Page;
@@ -75,22 +79,112 @@ public class AdminController {
     public String mostrarUsuarios(
             @RequestParam(defaultValue = "0") int page,
             @RequestParam(required = false) String search,
+            @RequestParam(defaultValue = "") String role,
+            @RequestParam(defaultValue = "") String fechaDesde,
+            @RequestParam(defaultValue = "") String fechaHasta,
+            @RequestParam(defaultValue = "") String estado,
+            @RequestParam(defaultValue = "") String verificacion,
             Model model) {
+        String busqueda = search == null ? "" : search.trim();
+        LocalDate desde = parseFechaUsuario(fechaDesde);
+        LocalDate hasta = parseFechaUsuario(fechaHasta);
+        boolean filtrosValidos = true;
 
-        PageRequest pageable = PageRequest.of(page, TAMANO_PAGINA, Sort.by("nombre").ascending());
+        if (!fechaDesde.isBlank() && desde == null) {
+            model.addAttribute("errorFiltro", "La fecha inicial no tiene un formato válido.");
+            filtrosValidos = false;
+        }
+        if (!fechaHasta.isBlank() && hasta == null) {
+            model.addAttribute("errorFiltro", "La fecha final no tiene un formato válido.");
+            filtrosValidos = false;
+        }
+        if (desde != null && hasta != null && desde.isAfter(hasta)) {
+            model.addAttribute("errorFiltro", "La fecha inicial no puede ser posterior a la fecha final.");
+            filtrosValidos = false;
+        }
 
-        Page<Usuario> resultado = (search != null && !search.isBlank())
-                ? usuarioRepository.findByNombreContainingIgnoreCaseOrCorreoContainingIgnoreCase(
-                search.trim(), search.trim(), pageable)
-                : usuarioRepository.findAll(pageable);
+        Set<String> rolesValidos = Set.of("", Usuario.ROLE_USER, Usuario.ROLE_CONDUCTOR, Usuario.ROLE_ADMIN);
+        if (!rolesValidos.contains(role)) {
+            model.addAttribute("errorFiltro", "El rol seleccionado no es válido.");
+            filtrosValidos = false;
+        }
+        if (!Set.of("", "activos", "inactivos").contains(estado)) {
+            model.addAttribute("errorFiltro", "El estado de cuenta seleccionado no es válido.");
+            filtrosValidos = false;
+        }
+        if (!Set.of("", "verificados", "pendientes").contains(verificacion)) {
+            model.addAttribute("errorFiltro", "El estado de verificación seleccionado no es válido.");
+            filtrosValidos = false;
+        }
 
-        model.addAttribute("usuarios", resultado.getContent());
-        model.addAttribute("currentPage", resultado.getNumber());
-        model.addAttribute("totalPages", resultado.getTotalPages());
-        model.addAttribute("totalUsuarios", resultado.getTotalElements());
+        Query filtro = new Query();
+        if (!busqueda.isBlank()) {
+            String busquedaLiteral = Pattern.quote(busqueda);
+            filtro.addCriteria(new Criteria().orOperator(
+                    Criteria.where("nombre").regex(busquedaLiteral, "i"),
+                    Criteria.where("correo").regex(busquedaLiteral, "i")));
+        }
+        if (!role.isBlank()) {
+            filtro.addCriteria(Criteria.where("role").is(role));
+        }
+        if ("activos".equals(estado)) {
+            filtro.addCriteria(Criteria.where("activo").is(true));
+        } else if ("inactivos".equals(estado)) {
+            filtro.addCriteria(Criteria.where("activo").is(false));
+        }
+        if ("verificados".equals(verificacion)) {
+            filtro.addCriteria(Criteria.where("verificado").is(true));
+        } else if ("pendientes".equals(verificacion)) {
+            filtro.addCriteria(Criteria.where("verificado").is(false));
+        }
+        if (desde != null || hasta != null) {
+            filtro.addCriteria(criterioRangoFechaRegistro(desde, hasta));
+        }
+
+        long totalFiltrado = filtrosValidos ? mongoTemplate.count(filtro, Usuario.class) : 0;
+        int totalPaginas = Math.max(1, (int) Math.ceil((double) totalFiltrado / TAMANO_PAGINA));
+        int paginaSegura = Math.min(Math.max(page, 0), totalPaginas - 1);
+        PageRequest pageable = PageRequest.of(paginaSegura, TAMANO_PAGINA, Sort.by("nombre").ascending());
+        List<Usuario> usuarios = filtrosValidos
+                ? mongoTemplate.find(filtro.with(pageable), Usuario.class)
+                : List.of();
+
+        model.addAttribute("usuarios", usuarios);
+        model.addAttribute("currentPage", paginaSegura);
+        model.addAttribute("totalPages", totalPaginas);
+        model.addAttribute("totalUsuarios", usuarioRepository.count());
+        model.addAttribute("totalFiltrado", totalFiltrado);
         model.addAttribute("search", search != null ? search : "");
+        model.addAttribute("roleSeleccionado", role);
+        model.addAttribute("fechaDesde", fechaDesde);
+        model.addAttribute("fechaHasta", fechaHasta);
+        model.addAttribute("estadoSeleccionado", estado);
+        model.addAttribute("verificacionSeleccionada", verificacion);
         model.addAttribute("buses", busRepository.findAll());
         return "admin/dashboard";
+    }
+
+    private LocalDate parseFechaUsuario(String fecha) {
+        if (fecha == null || fecha.isBlank()) {
+            return null;
+        }
+        try {
+            return LocalDate.parse(fecha);
+        } catch (DateTimeParseException exception) {
+            return null;
+        }
+    }
+
+    static Criteria criterioRangoFechaRegistro(LocalDate desde, LocalDate hasta) {
+        Criteria rangoFecha = Criteria.where("fechaRegistro");
+        if (desde != null) {
+            rangoFecha.gte(desde.atStartOfDay());
+        }
+        if (hasta != null) {
+            LocalDateTime limiteExclusivo = hasta.plusDays(1).atStartOfDay();
+            rangoFecha.lt(limiteExclusivo);
+        }
+        return rangoFecha;
     }
 
     @GetMapping("/transacciones")

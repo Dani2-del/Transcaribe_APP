@@ -40,7 +40,7 @@
                     <p style="margin-top: 0; color: #718096;">Consulta las rutas programadas y el historial operativo de los conductores.</p>
                 </div>
                 <div class="header-actions">
-                    <button type="button" class="btn-secundario" onclick="window.location.href='/admin/horarios'">Volver a horarios</button>
+                    <button type="button" class="btn-secundario" onclick="window.location.href='/admin/horarios'">Menú de rutas</button>
                     <button type="button" class="ghost" onclick="window.location.href='/admin/dashboard'">Panel principal</button>
                 </div>
             </div>
@@ -98,10 +98,12 @@
                         <strong th:text="${nombreConductor[h.conductorId] != null ? nombreConductor[h.conductorId] : 'Conductor no disponible'}"></strong>
                     </div>
                     <div class="history-cell">
-                        <span th:text="${busPorHorario[h.id] != null ? busPorHorario[h.id] : (busConductor[h.conductorId] != null ? busConductor[h.conductorId] : 'Sin bus asignado')}"></span>
+                        <span th:text="${busPorHorario[h.id] != null ? busPorHorario[h.id] : (h.busPlaca != null ? h.busPlaca : (busConductor[h.conductorId] != null ? busConductor[h.conductorId] : 'Sin bus asignado'))}"></span>
                     </div>
                     <div class="history-cell">
                         <strong th:text="${h.ruta}"></strong>
+                        <small th:if="${h.sentido != null}"
+                               th:text="${h.sentido == 'IDA' ? 'Sentido: Ida' : 'Sentido: Vuelta'}"></small>
                     </div>
                     <div class="history-cell">
                         <span th:text="${h.fecha}"></span><br>

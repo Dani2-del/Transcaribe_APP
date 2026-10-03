@@ -27,11 +27,14 @@ class RutaNotificacionServiceTest {
     @Test
     void notificaCuandoRutaFavoritaYProgramadaSoloDifierenEnMayusculas() {
         List<String> correosEnviados = new ArrayList<>();
+        List<String> sentidosNotificados = new ArrayList<>();
         EmailService emailService = new EmailService(null) {
             @Override
             public void enviarNotificacionRutaIniciada(
-                    String destinatario, String nombre, String ruta, String placaBus, String horaProgramada) {
+                    String destinatario, String nombre, String ruta, String sentido,
+                    String placaBus, String horaProgramada) {
                 correosEnviados.add(destinatario);
+                sentidosNotificados.add(sentido);
             }
         };
         Usuario usuario = new Usuario("pasajero@example.com", "hash", "Pasajero");
@@ -47,9 +50,11 @@ class RutaNotificacionServiceTest {
         HorarioConductor horario = new HorarioConductor(
                 "conductor-1", "c001", LocalDate.of(2026, 9, 25),
                 LocalTime.of(7, 0), LocalTime.of(7, 30));
+        horario.setSentido("IDA");
 
         int notificados = service.notificarInicioRuta(horario, "BUS 1");
         assertEquals(1, notificados);
         assertEquals(List.of("pasajero@example.com"), correosEnviados);
+        assertEquals(List.of("IDA"), sentidosNotificados);
     }
 }

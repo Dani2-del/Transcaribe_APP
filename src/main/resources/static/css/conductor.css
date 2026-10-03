@@ -635,6 +635,76 @@ table.mod-table .card-btn { margin: 2px 4px; padding: 8px 12px; font-size: 0.9re
   margin-top: 4px;
 }
 
+.badge-sentido {
+  display: inline-block;
+  margin-left: 5px;
+  padding: 2px 8px;
+  border-radius: 999px;
+  background: var(--caribe-soft);
+  color: var(--tinta);
+  font: 700 0.72rem var(--font-body);
+  letter-spacing: 0;
+  vertical-align: middle;
+}
+
+.start-route-form {
+  display: flex;
+  align-items: end;
+  gap: 8px;
+}
+
+.route-confirm-dialog {
+  width: min(420px, calc(100vw - 32px));
+  padding: 26px;
+  border: 1px solid var(--linea);
+  border-top: 5px solid var(--coral);
+  border-radius: 16px;
+  color: var(--piedra);
+  box-shadow: 0 20px 60px rgba(23, 59, 67, 0.28);
+}
+
+.route-confirm-dialog::backdrop {
+  background: rgba(12, 28, 34, 0.68);
+  backdrop-filter: blur(3px);
+}
+
+.route-confirm-dialog h2 {
+  margin-bottom: 10px;
+  font-size: 1.25rem;
+}
+
+.route-confirm-dialog p {
+  margin: 0;
+  line-height: 1.6;
+}
+
+.route-confirm-actions {
+  display: flex;
+  justify-content: flex-end;
+  gap: 10px;
+  margin-top: 24px;
+}
+
+.route-confirm-actions button {
+  min-height: 40px;
+  padding: 8px 16px;
+  border: 1px solid var(--linea);
+  border-radius: 8px;
+  font: 700 0.9rem var(--font-body);
+  cursor: pointer;
+}
+
+.route-confirm-no {
+  background: #fff;
+  color: var(--piedra);
+}
+
+.route-confirm-yes {
+  border-color: var(--coral) !important;
+  background: var(--coral);
+  color: #fff;
+}
+
 .bus-info {
   background: var(--mango-soft);
   padding: 12px 20px;
@@ -671,6 +741,13 @@ table.mod-table .card-btn { margin: 2px 4px; padding: 8px 12px; font-size: 0.9re
 @keyframes pulso {
   0%, 100% { opacity: 1; }
   50% { opacity: 0.35; }
+}
+
+@media (max-width: 520px) {
+  .start-route-form {
+    width: 100%;
+    justify-content: flex-end;
+  }
 }
 
 .btn-iniciar {

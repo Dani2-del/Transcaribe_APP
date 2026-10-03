@@ -700,6 +700,74 @@ table.mod-table .card-btn { margin: 2px 4px; padding: 8px 12px; font-size: 0.9re
   font: 14px var(--font-body);
 }
 .search-input:focus { outline: none; border-color: var(--caribe); }
+.user-filters {
+  display: grid;
+  grid-template-columns: minmax(220px, 2fr) repeat(5, minmax(130px, 1fr)) auto;
+  align-items: end;
+  gap: 10px;
+  margin-bottom: 10px;
+  padding: 14px;
+  border: 1px solid var(--linea);
+  border-radius: 10px;
+  background: #fffaf7;
+}
+.user-filters > label {
+  display: grid;
+  min-width: 0;
+  gap: 5px;
+  color: var(--tinta);
+  font-size: 12px;
+  font-weight: 700;
+}
+.user-filters input,
+.user-filters select {
+  width: 100%;
+  min-width: 0;
+  min-height: 40px;
+  padding: 8px 10px;
+  border: 1px solid var(--linea);
+  border-radius: 7px;
+  background: #fff;
+  color: var(--tinta);
+  font: 13px var(--font-body);
+}
+.user-filters input:focus,
+.user-filters select:focus {
+  outline: none;
+  border-color: var(--caribe);
+}
+.user-filters .search-input { padding: 8px 10px; }
+.user-filter-actions {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+}
+.user-filter-actions .btn-cancelar {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  min-height: 40px;
+  padding: 8px 12px;
+  text-decoration: none;
+}
+.user-filter-summary {
+  margin: 8px 0 14px;
+  color: var(--piedra);
+  font-size: 13px;
+}
+.user-filter-error {
+  margin: 8px 0;
+  padding: 10px 12px;
+  border: 1px solid #efbcbc;
+  border-radius: 8px;
+  background: #fff2f2;
+  color: #8b2929;
+}
+.user-empty-result {
+  padding: 24px !important;
+  color: var(--piedra);
+  text-align: center;
+}
 .btn-buscar {
   background: var(--coral);
   color: white;
@@ -877,6 +945,8 @@ table.mod-table .card-btn { margin: 2px 4px; padding: 8px 12px; font-size: 0.9re
   font-size: 1.8rem;
 }
 .schedules-module .admin-module-icon { background: #e5f5f2; }
+.buses-module .admin-module-icon { background: #e8efff; }
+.history-module .admin-module-icon { background: #fff3de; }
 .announcements-module .admin-module-icon { background: #fff0e8; }
 .route-map-module .admin-module-icon { background: #e8f7f1; }
 .reports-module .admin-module-icon { background: var(--mango-soft); }
@@ -1043,6 +1113,9 @@ table.mod-table .card-btn { margin: 2px 4px; padding: 8px 12px; font-size: 0.9re
   .admin-section-header { align-items: flex-start; flex-direction: column; }
   .admin-module-grid { grid-template-columns: repeat(2, minmax(0, 1fr)); }
   .transaction-filters { grid-template-columns: repeat(2, minmax(0, 1fr)); }
+  .user-filters { grid-template-columns: repeat(2, minmax(0, 1fr)); }
+  .user-filter-search { grid-column: 1 / -1; }
+  .user-filter-actions { grid-column: 1 / -1; }
 }
 
 @media (max-width: 520px) {
@@ -1052,6 +1125,9 @@ table.mod-table .card-btn { margin: 2px 4px; padding: 8px 12px; font-size: 0.9re
   .admin-module-card { min-height: 200px; }
   .transaction-filters { grid-template-columns: 1fr; }
   .transaction-filter-actions { grid-column: 1; flex-wrap: wrap; }
+  .user-filters { grid-template-columns: 1fr; }
+  .user-filter-search,
+  .user-filter-actions { grid-column: 1; }
   .excel-modal-box { width: calc(100% - 32px); padding: 22px; }
   .granularity-tabs { flex-wrap: wrap; }
 }

@@ -51,6 +51,7 @@ public class RutaNotificacionService {
                     usuario.getCorreo(),
                     usuario.getNombre() != null ? usuario.getNombre() : usuario.getCorreo(),
                     ruta,
+                    horario.getSentido(),
                     placaBus,
                     horario.getHoraInicio().toString()
             );
