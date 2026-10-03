@@ -4,6 +4,7 @@
   <link rel="stylesheet" th:href="@{/css/usuario.css}" />
   <meta charset="UTF-8" />
   <title>Rutas Favoritas - Transcaribe</title>
+    <th:block th:replace="~{fragments/loading-indicator :: styles}"></th:block>
 </head>
 <body>
   <div class="page">
@@ -87,5 +88,6 @@
 
     <div th:replace="fragments/footer :: footer"></div>
   </div>
+    <th:block th:replace="~{fragments/loading-indicator :: overlay}"></th:block>
 </body>
 </html>

@@ -15,6 +15,7 @@
         .ghost { background: #edf2f7; color: #2d3748; }
         .notice { background: #ebf8ff; color: #2c5282; border: 1px solid #90cdf4; padding: 12px; border-radius: 8px; margin-bottom: 18px; }
     </style>
+    <th:block th:replace="~{fragments/loading-indicator :: styles}"></th:block>
 </head>
 <body>
 <div class="page">
@@ -93,5 +94,6 @@
     }
     actualizarRutas();
 </script>
+    <th:block th:replace="~{fragments/loading-indicator :: overlay}"></th:block>
 </body>
 </html>

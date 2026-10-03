@@ -7,6 +7,7 @@
     <link rel="stylesheet" href="https://unpkg.com/leaflet@1.9.4/dist/leaflet.css"
           integrity="sha256-p4NxAoJBhIIN+hmNHrzRCf9tD/miZyoHS5obTRR9BMY=" crossorigin="">
     <link rel="stylesheet" th:href="@{/css/mapa-rutas.css}">
+    <th:block th:replace="~{fragments/loading-indicator :: styles}"></th:block>
 </head>
 <body>
 <main class="route-map-page">
@@ -83,5 +84,6 @@
         integrity="sha256-20nQCchB9co0qIjJZRGuk2/Z9VM+kNiyxNV1lvTlZBo=" crossorigin=""></script>
 <script th:src="@{/js/rutas-catalogo.js}"></script>
 <script th:src="@{/js/editar-rutas-mapa.js}"></script>
+    <th:block th:replace="~{fragments/loading-indicator :: overlay}"></th:block>
 </body>
 </html>

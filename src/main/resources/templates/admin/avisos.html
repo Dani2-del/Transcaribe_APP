@@ -6,6 +6,7 @@
     <title>Avisos y alertas - Transcaribe</title>
     <link rel="stylesheet" th:href="@{/css/admin.css}">
     <link rel="stylesheet" th:href="@{/css/avisos.css}">
+    <th:block th:replace="~{fragments/loading-indicator :: styles}"></th:block>
 </head>
 <body class="admin-announcements-page">
 <div class="page">
@@ -99,5 +100,6 @@
     </main>
 </div>
 <script th:src="@{/js/avisos-admin.js}" defer></script>
+    <th:block th:replace="~{fragments/loading-indicator :: overlay}"></th:block>
 </body>
 </html>

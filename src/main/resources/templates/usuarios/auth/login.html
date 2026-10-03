@@ -5,6 +5,7 @@
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
   <link rel="stylesheet" th:href="@{/css/usuario.css}" />
   <title>Iniciar sesión - Transcaribe</title>
+    <th:block th:replace="~{fragments/loading-indicator :: styles}"></th:block>
 </head>
 <body class="login-page">
   <div class="page registration-page-shell login-page-shell">
@@ -60,5 +61,6 @@
 
     <div th:replace="~{fragments/footer :: footer}"></div>
   </div>
+    <th:block th:replace="~{fragments/loading-indicator :: overlay}"></th:block>
 </body>
 </html>

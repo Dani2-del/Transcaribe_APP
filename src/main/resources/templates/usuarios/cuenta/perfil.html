@@ -4,6 +4,7 @@
   <link rel="stylesheet" th:href="@{/css/usuario.css}" />
   <meta charset="UTF-8" />
   <title>Editar Perfil</title>
+    <th:block th:replace="~{fragments/loading-indicator :: styles}"></th:block>
 </head>
 <body>
   <div class="page">
@@ -81,5 +82,6 @@
     </main>
 
   </div>
+    <th:block th:replace="~{fragments/loading-indicator :: overlay}"></th:block>
 </body>
 </html>

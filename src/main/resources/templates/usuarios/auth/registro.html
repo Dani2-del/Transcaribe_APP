@@ -5,6 +5,7 @@
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
   <link rel="stylesheet" th:href="@{/css/usuario.css}" />
   <title>Registro - Transcaribe</title>
+    <th:block th:replace="~{fragments/loading-indicator :: styles}"></th:block>
 </head>
 <body class="registration-page">
   <div class="page registration-page-shell">
@@ -104,5 +105,6 @@
       this.value = this.value.replace(/[^0-9]/g, '');
     });
   </script>
+    <th:block th:replace="~{fragments/loading-indicator :: overlay}"></th:block>
 </body>
 </html>

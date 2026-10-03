@@ -55,7 +55,7 @@ public class ExcelReportService {
                 row.createCell(2).setCellValue(u.getCorreo());
                 row.createCell(3).setCellValue(u.getRole());
             }
-            for (int i = 0; i < colUsers.length; i++) sheetUsers.autoSizeColumn(i);
+            setColumnWidths(sheetUsers, 18, 28, 36, 20);
 
             // --- Hoja 2: Transacciones filtradas ---
             // Título dinámico según filtro
@@ -97,7 +97,7 @@ public class ExcelReportService {
                 row.createCell(4).setCellValue(t.getTipo());
                 row.createCell(5).setCellValue(t.getMonto());
             }
-            for (int i = 0; i < colTrans.length; i++) sheetTrans.autoSizeColumn(i);
+            setColumnWidths(sheetTrans, 22, 26, 36, 28, 18, 18);
 
             workbook.write(out);
             return new ByteArrayInputStream(out.toByteArray());
@@ -114,6 +114,12 @@ public class ExcelReportService {
             case "mensual": return "Mes " + mes + "-" + anio;
             case "diario":  return "Día " + dia + "-" + mes + "-" + anio;
             default:        return "Historial Global";
+        }
+    }
+
+    private void setColumnWidths(Sheet sheet, int... widthsInCharacters) {
+        for (int i = 0; i < widthsInCharacters.length; i++) {
+            sheet.setColumnWidth(i, widthsInCharacters[i] * 256);
         }
     }
 }

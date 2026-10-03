@@ -88,6 +88,7 @@
         }
         .tab-btn.active { background: #f09454; color: white; border-color: #f09454; }
     </style>
+    <th:block th:replace="~{fragments/loading-indicator :: styles}"></th:block>
 </head>
 
 <body>
@@ -291,7 +292,7 @@ function descargarExcel() {
     if (granularidadActual !== 'todo') url += '&anio=' + document.getElementById('filtroAnio').value;
     if (granularidadActual === 'mensual' || granularidadActual === 'diario') url += '&mes=' + document.getElementById('filtroMes').value;
     if (granularidadActual === 'diario') url += '&dia=' + document.getElementById('filtroDia').value;
-    window.location.href = url;
+    window.transcaribeDownloadFile(url);
     cerrarModalExcel();
 }
 
@@ -375,5 +376,6 @@ function deleteUser(btn) {
         .then(r => r.json()).then(res => { if(res.status==='ok') location.reload(); });
 }
 </script>
+    <th:block th:replace="~{fragments/loading-indicator :: overlay}"></th:block>
 </body>
 </html>

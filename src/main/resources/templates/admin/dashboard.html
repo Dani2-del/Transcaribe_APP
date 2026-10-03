@@ -6,6 +6,7 @@
     <meta name="_csrf" th:content="${_csrf?.token}"/>
     <meta name="_csrf_header" th:content="${_csrf?.headerName}"/>
     <link rel="stylesheet" th:href="@{/css/admin.css}" />
+    <th:block th:replace="~{fragments/loading-indicator :: styles}"></th:block>
 </head>
 
 <body>
@@ -254,5 +255,6 @@
             .then(r => r.json()).then(res => { if(res.status==='ok') location.reload(); });
     }
 </script>
+    <th:block th:replace="~{fragments/loading-indicator :: overlay}"></th:block>
 </body>
 </html>

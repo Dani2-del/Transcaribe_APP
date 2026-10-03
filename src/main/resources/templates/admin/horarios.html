@@ -5,6 +5,7 @@
     <meta name="viewport" content="width=device-width, initial-scale=1">
     <title>Gestión de rutas - Transcaribe</title>
     <link rel="stylesheet" th:href="@{/css/admin.css}">
+    <th:block th:replace="~{fragments/loading-indicator :: styles}"></th:block>
 </head>
 <body>
 <div class="page">
@@ -49,5 +50,6 @@
         </section>
     </main>
 </div>
+    <th:block th:replace="~{fragments/loading-indicator :: overlay}"></th:block>
 </body>
 </html>

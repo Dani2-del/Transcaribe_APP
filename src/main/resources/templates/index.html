@@ -6,6 +6,7 @@
   <title>Transcaribe — Sistema Integrado de Transporte Masivo</title>
   <link rel="icon" th:href="@{/images/logo.png}" />
   <link rel="stylesheet" th:href="@{/css/index.css}" />
+    <th:block th:replace="~{fragments/loading-indicator :: styles}"></th:block>
 </head>
 <body>
 
@@ -234,5 +235,6 @@
     <div th:replace="~{fragments/footer :: footer}"></div>
   </div>
 
+    <th:block th:replace="~{fragments/loading-indicator :: overlay}"></th:block>
 </body>
 </html>

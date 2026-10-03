@@ -7,6 +7,7 @@
   <title>Mi espacio - Transcaribe</title>
   <link rel="stylesheet" th:href="@{/css/usuario.css}" />
   <link rel="stylesheet" th:href="@{/css/avisos.css}" />
+    <th:block th:replace="~{fragments/loading-indicator :: styles}"></th:block>
 </head>
 <body class="menu-page">
   <div class="page">
@@ -232,5 +233,6 @@
     <div th:replace="~{fragments/footer :: footer}"></div>
   </div>
   <div th:replace="~{fragments/aviso-administrativo :: modal}"></div>
+    <th:block th:replace="~{fragments/loading-indicator :: overlay}"></th:block>
 </body>
 </html>

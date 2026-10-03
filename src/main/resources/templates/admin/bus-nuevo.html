@@ -85,6 +85,7 @@
             margin-bottom: 16px;
         }
     </style>
+    <th:block th:replace="~{fragments/loading-indicator :: styles}"></th:block>
 </head>
 <body>
 <div class="page">
@@ -125,5 +126,6 @@
         </form>
     </div>
 </div>
+    <th:block th:replace="~{fragments/loading-indicator :: overlay}"></th:block>
 </body>
 </html>

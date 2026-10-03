@@ -8,6 +8,7 @@
     <title>Panel administrador - Transcaribe</title>
     <link rel="stylesheet" th:href="@{/css/admin.css}">
     <link rel="stylesheet" th:href="@{/css/avisos.css}">
+    <th:block th:replace="~{fragments/loading-indicator :: styles}"></th:block>
 </head>
 <body>
 <div class="page">
@@ -186,9 +187,10 @@
         if (granularidadActual === 'diario') {
             parametros.set('dia', document.getElementById('filtroDia').value);
         }
-        window.location.href = '/admin/reporte/excel?' + parametros.toString();
+        window.transcaribeDownloadFile('/admin/reporte/excel?' + parametros.toString());
         cerrarModalExcel();
     }
 </script>
+    <th:block th:replace="~{fragments/loading-indicator :: overlay}"></th:block>
 </body>
 </html>

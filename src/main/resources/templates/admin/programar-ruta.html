@@ -15,6 +15,7 @@
         .flash-ok { background: #e6fffa; color: #22543d; border: 1px solid #38a169; padding: 10px 14px; border-radius: 8px; margin-bottom: 14px; }
         .flash-error { background: #fff5f5; color: #822727; border: 1px solid #f56565; padding: 10px 14px; border-radius: 8px; margin-bottom: 14px; }
     </style>
+    <th:block th:replace="~{fragments/loading-indicator :: styles}"></th:block>
 </head>
 <body>
 <div class="page">
@@ -187,5 +188,6 @@
         });
     }
 </script>
+    <th:block th:replace="~{fragments/loading-indicator :: overlay}"></th:block>
 </body>
 </html>>
