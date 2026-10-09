@@ -4,7 +4,7 @@
   <link rel="stylesheet" th:href="@{/css/usuario.css}" />
   <meta charset="UTF-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-  <title>Recarga exitosa - Transcaribe</title>
+  <title>Recarga exitosa - Digitrans</title>
     <th:block th:replace="~{fragments/loading-indicator :: styles}"></th:block>
 </head>
 <body>
@@ -29,7 +29,7 @@
         <p>Cuenta PSE:
           <strong th:text="${transaccion.cuentaPse ?: 'No aplica'}"></strong>
         </p>
-        <p>Tarjeta Transcaribe:
+        <p>Tarjeta Digitrans:
           <strong th:text="${transaccion.tarjetaTranscaribe ?: 'No disponible'}"></strong>
         </p>
         <a class="primary"

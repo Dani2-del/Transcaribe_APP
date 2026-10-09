@@ -4,19 +4,19 @@
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
   <link rel="stylesheet" th:href="@{/css/usuario.css}" />
-  <title>Iniciar sesión - Transcaribe</title>
+  <title>Iniciar sesión - Digitrans</title>
     <th:block th:replace="~{fragments/loading-indicator :: styles}"></th:block>
 </head>
 <body class="login-page">
   <div class="page registration-page-shell login-page-shell">
     <main class="registration-layout login-layout">
       <aside class="registration-art">
-        <a class="registration-brand" th:href="@{/}" aria-label="Volver al inicio de Transcaribe">
-          <img th:src="@{/images/logo.png}" alt="">
-          <span>Transcaribe</span>
+        <a class="registration-brand" th:href="@{/}" aria-label="Volver al inicio de Digitrans">
+          <img th:src="@{/images/digitrans-mark.svg}" alt="">
+          <span>Digitrans</span>
         </a>
         <div class="registration-art-copy">
-          <span>TRANSCARIBE · CARTAGENA</span>
+          <span>Digitrans · CARTAGENA</span>
           <h2>Qué bueno tenerte de vuelta.</h2>
           <p>Inicia sesión para consultar tu tarjeta, tus recargas y tus rutas favoritas.</p>
         </div>
@@ -26,7 +26,7 @@
         <div class="registration-card login-card">
           <span class="registration-kicker">TU CIUDAD, A TU ALCANCE</span>
           <h1 id="loginTitle">Bienvenido</h1>
-          <p class="registration-intro">Ingresa a tu cuenta de Transcaribe.</p>
+          <p class="registration-intro">Ingresa a tu cuenta de Digitrans.</p>
 
           <form th:action="@{/login}" method="post" class="form">
             <input type="text" name="correo" placeholder="Correo electrónico" autocomplete="username" required />

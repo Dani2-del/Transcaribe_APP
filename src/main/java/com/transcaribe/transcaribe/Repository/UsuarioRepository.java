@@ -2,6 +2,7 @@ package com.transcaribe.transcaribe.Repository;
 
 import java.util.List;
 import java.util.Optional;
+import java.util.stream.Stream;
 
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.Pageable;
@@ -24,6 +25,9 @@ public interface UsuarioRepository extends MongoRepository<Usuario, String> {
     List<Usuario> findByRoleAndActivoTrue(String role);
 
     Optional<Usuario> findByIdAndActivoTrue(String id);
+
+    @Query("{}")
+    Stream<Usuario> streamAll();
 
     @Query("{ 'rutas_favoritas': { $regex: ?0, $options: 'i' } }")
     List<Usuario> findByRutaFavoritaIgnoreCase(String rutaRegex);

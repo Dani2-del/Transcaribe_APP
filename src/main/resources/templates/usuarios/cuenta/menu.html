@@ -4,7 +4,7 @@
   <meta charset="UTF-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1.0" />
   <meta name="theme-color" content="#0F3948" />
-  <title>Mi espacio - Transcaribe</title>
+  <title>Mi espacio - Digitrans</title>
   <link rel="stylesheet" th:href="@{/css/usuario.css}" />
   <link rel="stylesheet" th:href="@{/css/avisos.css}" />
     <th:block th:replace="~{fragments/loading-indicator :: styles}"></th:block>
@@ -16,7 +16,7 @@
     <main class="user-dashboard">
       <section class="dashboard-welcome">
         <div class="welcome-copy">
-          <span class="dashboard-eyebrow">TU ESPACIO TRANSCARIBE</span>
+          <span class="dashboard-eyebrow">TU ESPACIO Digitrans</span>
           <h1>Hola, <span th:text="${usuario.nombre != null && !usuario.nombre.isBlank() ? usuario.nombre : 'viajero'}">viajero</span></h1>
           <p>Todo lo que necesitas para moverte por Cartagena, en un solo lugar.</p>
         </div>
@@ -180,7 +180,7 @@
         <form th:action="@{/api/buses/simular-viaje}" method="post" class="ride-form">
           <input type="hidden" th:if="${_csrf}" th:name="${_csrf.parameterName}" th:value="${_csrf.token}" />
           <input type="hidden" name="usuarioId" th:value="${usuario.id}" />
-          <label for="rideCard">Tarjeta Transcaribe</label>
+          <label for="rideCard">Tarjeta Digitrans</label>
           <select id="rideCard" name="numeroTarjeta" class="select-bus" required>
             <option value="" disabled selected>Selecciona una tarjeta</option>
             <option th:each="t : ${usuario.tarjetas}"

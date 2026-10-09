@@ -197,7 +197,6 @@ body.login-page .center-card {
   border-radius: 10px;
   background: transparent;
   padding: 6px;
-  filter: brightness(0) invert(1);
   transition: transform 0.3s ease;
 }
 

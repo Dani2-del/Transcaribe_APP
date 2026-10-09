@@ -3,8 +3,8 @@
 <head>
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  <title>Transcaribe — Sistema Integrado de Transporte Masivo</title>
-  <link rel="icon" th:href="@{/images/logo.png}" />
+  <title>Digitrans — Sistema Integrado de Transporte Masivo</title>
+  <link rel="icon" th:href="@{/images/digitrans-mark.svg}" />
   <link rel="stylesheet" th:href="@{/css/index.css}" />
     <th:block th:replace="~{fragments/loading-indicator :: styles}"></th:block>
 </head>
@@ -16,8 +16,8 @@
 
     <nav class="landing-nav">
       <a class="brand" th:href="@{/}">
-        <img th:src="@{/images/logo.png}" alt="Transcaribe" />
-        <span>Transcaribe</span>
+        <img th:src="@{/images/digitrans-mark.svg}" alt="Digitrans" />
+        <span>Digitrans</span>
       </a>
       <div class="nav-actions">
         <a th:href="@{/login}" class="btn btn-outline">Iniciar sesión</a>
@@ -30,7 +30,7 @@
         <span class="eyebrow-pill">Sistema Integrado de Transporte Masivo · Cartagena de Indias</span>
         <h1>Tu ciudad, en <em>una sola tarjeta</em>.</h1>
         <p class="lead">
-          Transcaribe reúne tu registro, tu tarjeta digital, tus recargas y tus rutas
+          Digitrans reúne tu registro, tu tarjeta digital, tus recargas y tus rutas
           favoritas en un solo lugar, para que te muevas por la ciudad sin filas ni papeleo.
         </p>
         <div class="hero-ctas">
@@ -45,12 +45,12 @@
     <strong>Proyecto académico</strong> · Electiva I · Fundación Universitaria Tecnológico Comfenalco · Spring Boot + Thymeleaf
   </div>
 
-  <!-- ===== QUÉ ES TRANSCARIBE ===== -->
+  <!-- ===== QUÉ ES Digitrans ===== -->
   <section class="section" id="que-es">
     <div class="wrap about-grid">
       <div>
         <div class="section-head" style="margin-bottom: 28px;">
-          <h2>Qué es Transcaribe</h2>
+          <h2>Qué es Digitrans</h2>
           <p>
             Es la plataforma digital del sistema de transporte masivo de Cartagena,
             pensada para que cada pasajero administre su cuenta y su tarjeta desde
@@ -84,7 +84,7 @@
       </div>
 
       <div class="about-card">
-        <img th:src="@{/images/Transcaribe-image-index.png}" alt="Buses de Transcaribe transportando pasajeros en Cartagena" />
+        <img th:src="@{/images/bus.png}" alt="Ilustración de un autobús urbano" />
         <p style="color: var(--piedra); font-size: 0.92rem; margin: 0 0 16px;">
           Construido como proyecto de la Electiva I, replicando los flujos reales de un
           sistema de transporte integrado: registro, verificación, pagos y roles diferenciados.
@@ -141,7 +141,7 @@
       </div>
 
       <div class="map-showcase">
-        <img th:src="@{/images/Rutas/preview/mapa-general.jpg}" alt="Mapa general del sistema Transcaribe" />
+        <img th:src="@{/images/Rutas/preview/mapa-general.jpg}" alt="Mapa general del sistema Digitrans" />
       </div>
       <p style="text-align:center; margin: 20px 0;">
         <a th:href="@{/mapa-rutas}" class="primary">Probar mapa de rutas (Beta)</a>
@@ -217,7 +217,7 @@
   <!-- ===== CTA FINAL ===== -->
   <section class="final-cta">
     <div class="wrap">
-      <img th:src="@{/images/bus.png}" alt="Bus de Transcaribe" class="cta-bus" />
+      <img th:src="@{/images/bus.png}" alt="Autobús urbano" class="cta-bus" />
       <h2>¿Listo para subirte?</h2>
       <p>Crea tu cuenta en unos minutos y deja el efectivo y las filas atrás.</p>
       <a th:href="@{/registro}" class="btn btn-primary">Crear cuenta →</a>

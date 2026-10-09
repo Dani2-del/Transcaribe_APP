@@ -1,6 +1,5 @@
 package com.transcaribe.transcaribe.Controller;
 
-import java.io.IOException;
 import java.nio.charset.StandardCharsets;
 import java.time.LocalDate;
 import java.time.LocalDateTime;
@@ -15,7 +14,6 @@ import org.springframework.data.domain.Sort;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.http.HttpHeaders;
 import org.springframework.http.MediaType;
-import org.springframework.core.io.InputStreamResource;
 import org.springframework.http.ResponseEntity;
 import org.springframework.stereotype.Controller;
 import org.springframework.ui.Model;
@@ -23,6 +21,7 @@ import org.springframework.data.mongodb.core.MongoTemplate;
 import org.springframework.data.mongodb.core.query.Criteria;
 import org.springframework.data.mongodb.core.query.Query;
 import org.springframework.web.bind.annotation.*;
+import org.springframework.web.servlet.mvc.method.annotation.StreamingResponseBody;
 
 import com.transcaribe.transcaribe.Model.Usuario;
 import com.transcaribe.transcaribe.Model.Transaccion;
@@ -265,12 +264,12 @@ public class AdminController {
     }
 
     @GetMapping("/reporte/excel")
-    public ResponseEntity<InputStreamResource> descargarExcel(
+    public ResponseEntity<StreamingResponseBody> descargarExcel(
             @RequestParam(defaultValue = "todo") String tipo,
             @RequestParam(required = false) Integer anio,
             @RequestParam(required = false) Integer mes,
             @RequestParam(required = false) Integer dia,
-            @RequestParam(required = false) String nombreReporte) throws IOException {
+            @RequestParam(required = false) String nombreReporte) {
 
         String nombrePredeterminado = switch (tipo) {
             case "anual"   -> "Reporte_" + anio + ".xlsx";
@@ -293,9 +292,7 @@ public class AdminController {
             nombreArchivo += ".xlsx";
         }
 
-        InputStreamResource file = new InputStreamResource(
-                excelService.generarReporte(tipo, anio, mes, dia)
-        );
+        StreamingResponseBody file = out -> excelService.generarReporte(tipo, anio, mes, dia, out);
 
         return ResponseEntity.ok()
                 .header(HttpHeaders.CONTENT_DISPOSITION,

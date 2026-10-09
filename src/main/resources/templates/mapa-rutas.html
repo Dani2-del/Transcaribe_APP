@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1">
-    <title>Beta: Mapa de rutas - Transcaribe</title>
+    <title>Beta: Mapa de rutas - Digitrans</title>
     <link rel="stylesheet" th:href="@{/css/index.css}">
     <link rel="stylesheet" href="https://unpkg.com/leaflet@1.9.4/dist/leaflet.css"
           integrity="sha256-p4NxAoJBhIIN+hmNHrzRCf9tD/miZyoHS5obTRR9BMY=" crossorigin="">
@@ -13,9 +13,9 @@
 <body>
 <nav class="route-map-navbar" aria-label="Navegación principal">
     <div class="route-map-navbar-left">
-        <a class="route-map-brand" th:href="@{/}" aria-label="Transcaribe, inicio">
-            <img th:src="@{/images/logo.png}" alt="">
-            <span>Transcaribe</span>
+        <a class="route-map-brand" th:href="@{/}" aria-label="Digitrans, inicio">
+            <img th:src="@{/images/digitrans-mark.svg}" alt="">
+            <span>Digitrans</span>
         </a>
         <div class="route-map-nav-links">
             <a th:href="@{/recarga}">Recargas</a>
@@ -35,7 +35,7 @@
 <main class="route-map-page">
     <header class="route-map-header">
         <div>
-            <p class="route-map-eyebrow">CARTAGENA · TRANSCARIBE</p>
+            <p class="route-map-eyebrow">CARTAGENA · Digitrans</p>
             <h1>Mapa interactivo <span class="route-map-beta">BETA</span></h1>
             <p>Versión de prueba independiente. Revísala antes de integrarla a los paneles.</p>
         </div>
@@ -79,7 +79,7 @@
         </aside>
 
         <div id="routeMap" class="route-map-canvas" role="application"
-             aria-label="Mapa interactivo de paradas de Transcaribe"></div>
+             aria-label="Mapa interactivo de paradas de Digitrans"></div>
     </section>
 
     <footer class="route-map-footer">

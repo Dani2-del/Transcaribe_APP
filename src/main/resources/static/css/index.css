@@ -90,7 +90,6 @@ img { max-width: 100%; display: block; }
   width: 34px;
   height: 34px;
   object-fit: contain;
-  filter: brightness(0) invert(1);
 }
 
 .landing-nav .brand span {

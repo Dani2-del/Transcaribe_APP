@@ -3,7 +3,7 @@
 <head>
   <link rel="stylesheet" th:href="@{/css/usuario.css}" />
   <meta charset="UTF-8" />
-  <title>Rutas Favoritas - Transcaribe</title>
+  <title>Rutas Favoritas - Digitrans</title>
     <th:block th:replace="~{fragments/loading-indicator :: styles}"></th:block>
 </head>
 <body>
@@ -62,7 +62,7 @@
             <h4 style="margin-bottom: 10px;">Agregar ruta a favoritos</h4>
             <form th:action="@{/rutas/favorito/agregar}" method="post" style="display: flex; gap: 10px;">
                 <select name="ruta" class="select-ruta" required>
-                    <option value="" disabled selected>Selecciona una ruta de Transcaribe...</option>
+                    <option value="" disabled selected>Selecciona una ruta de Digitrans...</option>
                     <option th:each="r : ${rutasDisponibles}"
                             th:value="${r}"
                             th:text="${r}">

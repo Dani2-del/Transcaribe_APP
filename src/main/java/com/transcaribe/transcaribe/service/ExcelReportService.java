@@ -5,14 +5,16 @@ import com.transcaribe.transcaribe.Model.Transaccion;
 import com.transcaribe.transcaribe.Repository.UsuarioRepository;
 import com.transcaribe.transcaribe.Repository.TransaccionRepository;
 import org.apache.poi.ss.usermodel.*;
-import org.apache.poi.xssf.usermodel.XSSFWorkbook;
+import org.apache.poi.xssf.streaming.SXSSFWorkbook;
 import org.springframework.stereotype.Service;
 
-import java.io.ByteArrayInputStream;
-import java.io.ByteArrayOutputStream;
 import java.io.IOException;
-import java.util.List;
-import java.util.stream.Collectors;
+import java.io.OutputStream;
+import java.time.DateTimeException;
+import java.time.LocalDate;
+import java.time.LocalDateTime;
+import java.util.Iterator;
+import java.util.stream.Stream;
 
 @Service
 public class ExcelReportService {
@@ -25,8 +27,10 @@ public class ExcelReportService {
         this.transaccionRepository = transaccionRepository;
     }
 
-    public ByteArrayInputStream generarReporte(String tipo, Integer anio, Integer mes, Integer dia) throws IOException {
-        try (Workbook workbook = new XSSFWorkbook(); ByteArrayOutputStream out = new ByteArrayOutputStream()) {
+    public void generarReporte(String tipo, Integer anio, Integer mes, Integer dia, OutputStream out) throws IOException {
+        SXSSFWorkbook workbook = new SXSSFWorkbook(100);
+        workbook.setCompressTempFiles(true);
+        try (workbook) {
 
             // --- Estilos ---
             CellStyle headerStyle = workbook.createCellStyle();
@@ -46,14 +50,17 @@ public class ExcelReportService {
                 cell.setCellValue(colUsers[i]);
                 cell.setCellStyle(headerStyle);
             }
-            List<Usuario> usuarios = usuarioRepository.findAll();
-            int rowU = 1;
-            for (Usuario u : usuarios) {
-                Row row = sheetUsers.createRow(rowU++);
-                row.createCell(0).setCellValue(u.getId());
-                row.createCell(1).setCellValue(u.getNombre() != null ? u.getNombre() : "N/A");
-                row.createCell(2).setCellValue(u.getCorreo());
-                row.createCell(3).setCellValue(u.getRole());
+            try (Stream<Usuario> usuarios = usuarioRepository.streamAll()) {
+                Iterator<Usuario> iterator = usuarios.iterator();
+                int rowU = 1;
+                while (iterator.hasNext()) {
+                    Usuario u = iterator.next();
+                    Row row = sheetUsers.createRow(rowU++);
+                    row.createCell(0).setCellValue(u.getId());
+                    row.createCell(1).setCellValue(u.getNombre() != null ? u.getNombre() : "N/A");
+                    row.createCell(2).setCellValue(u.getCorreo());
+                    row.createCell(3).setCellValue(u.getRole());
+                }
             }
             setColumnWidths(sheetUsers, 18, 28, 36, 20);
 
@@ -69,44 +76,70 @@ public class ExcelReportService {
                 cell.setCellStyle(headerStyle);
             }
 
-            List<Transaccion> transacciones = transaccionRepository.findAll().stream()
-                .filter(t -> {
-                    if (t.getFecha() == null) return false;
-                    if ("todo".equals(tipo)) return true;
-                    if (anio != null && t.getFecha().getYear() != anio) return false;
-                    if (("mensual".equals(tipo) || "diario".equals(tipo)) && mes != null
-                            && t.getFecha().getMonthValue() != mes) return false;
-                    if ("diario".equals(tipo) && dia != null
-                            && t.getFecha().getDayOfMonth() != dia) return false;
-                    return true;
-                })
-                .collect(Collectors.toList());
-
-            int rowT = 1;
-            for (Transaccion t : transacciones) {
-                Row row = sheetTrans.createRow(rowT++);
-                row.createCell(0).setCellValue(t.getFecha() != null ? t.getFecha().toString() : "Sin fecha");
-                row.createCell(1).setCellValue(t.getId());
-                if (t.getUsuario() != null) {
-                    row.createCell(2).setCellValue(t.getUsuario().getCorreo());
-                    row.createCell(3).setCellValue(t.getUsuario().getNombre());
-                } else {
-                    row.createCell(2).setCellValue("N/A");
-                    row.createCell(3).setCellValue("N/A");
+            DateRange rango = buildRango(tipo, anio, mes, dia);
+            try (Stream<Transaccion> transacciones = rango == null
+                    ? transaccionRepository.streamAll()
+                    : transaccionRepository.streamByFechaEnRango(rango.inicio(), rango.fin())) {
+                Iterator<Transaccion> iterator = transacciones.iterator();
+                int rowT = 1;
+                while (iterator.hasNext()) {
+                    Transaccion t = iterator.next();
+                    if (!coincideConFiltro(t, tipo, anio, mes, dia)) {
+                        continue;
+                    }
+                    Row row = sheetTrans.createRow(rowT++);
+                    row.createCell(0).setCellValue(t.getFecha().toString());
+                    row.createCell(1).setCellValue(t.getId());
+                    if (t.getUsuario() != null) {
+                        row.createCell(2).setCellValue(t.getUsuario().getCorreo());
+                        row.createCell(3).setCellValue(t.getUsuario().getNombre());
+                    } else {
+                        row.createCell(2).setCellValue("N/A");
+                        row.createCell(3).setCellValue("N/A");
+                    }
+                    row.createCell(4).setCellValue(t.getTipo());
+                    row.createCell(5).setCellValue(t.getMonto());
                 }
-                row.createCell(4).setCellValue(t.getTipo());
-                row.createCell(5).setCellValue(t.getMonto());
             }
             setColumnWidths(sheetTrans, 22, 26, 36, 28, 18, 18);
 
             workbook.write(out);
-            return new ByteArrayInputStream(out.toByteArray());
+        } finally {
+            workbook.dispose();
         }
     }
 
-    public ByteArrayInputStream generarReporteGeneral() throws IOException {
-        return generarReporte("todo", null, null, null);
+    private boolean coincideConFiltro(Transaccion transaccion, String tipo, Integer anio, Integer mes, Integer dia) {
+        if (transaccion.getFecha() == null) return false;
+        if ("todo".equals(tipo)) return true;
+        if (anio != null && transaccion.getFecha().getYear() != anio) return false;
+        if (("mensual".equals(tipo) || "diario".equals(tipo)) && mes != null
+                && transaccion.getFecha().getMonthValue() != mes) return false;
+        if ("diario".equals(tipo) && dia != null
+                && transaccion.getFecha().getDayOfMonth() != dia) return false;
+        return true;
     }
+
+    private DateRange buildRango(String tipo, Integer anio, Integer mes, Integer dia) {
+        if ("todo".equals(tipo) || anio == null) return null;
+        try {
+            LocalDate inicio;
+            if (("mensual".equals(tipo) || "diario".equals(tipo)) && mes != null) {
+                inicio = LocalDate.of(anio, mes, 1);
+                if ("diario".equals(tipo) && dia != null) {
+                    inicio = LocalDate.of(anio, mes, dia);
+                    return new DateRange(inicio.atStartOfDay(), inicio.plusDays(1).atStartOfDay());
+                }
+                return new DateRange(inicio.atStartOfDay(), inicio.plusMonths(1).atStartOfDay());
+            }
+            inicio = LocalDate.of(anio, 1, 1);
+            return new DateRange(inicio.atStartOfDay(), inicio.plusYears(1).atStartOfDay());
+        } catch (DateTimeException e) {
+            return null;
+        }
+    }
+
+    private record DateRange(LocalDateTime inicio, LocalDateTime fin) {}
 
     private String buildNombreHoja(String tipo, Integer anio, Integer mes, Integer dia) {
         switch (tipo) {
