@@ -59,9 +59,4 @@ Aplicación web académica cuyo objetivo principal es permitir a los usuarios ge
 
 ## Configuración y ejecución local
 
-Configura las propiedades sensibles mediante variables de entorno y evita guardar credenciales reales en el repositorio. Como mínimo, la aplicación requiere acceso a MongoDB y la cuenta de correo configurada para Spring Mail. Para habilitar el inicio de sesión con Google, configura también las credenciales OAuth 2.0 de Google.
-
-En PowerShell, asigna los valores correspondientes en el entorno local y ejecuta:
-
-```powershell
 .\mvnw.cmd spring-boot:run
