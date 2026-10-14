@@ -26,7 +26,8 @@
             <p class="announcement-feedback announcement-error"
                th:if="${errorAviso}" th:text="${errorAviso}" role="alert"></p>
 
-            <form class="announcement-form" th:action="@{/admin/avisos}" method="post">
+            <form class="announcement-form" th:action="@{/admin/avisos}" method="post"
+                  enctype="multipart/form-data">
                 <label for="asunto">Asunto del aviso</label>
                 <input id="asunto" name="asunto" type="text" maxlength="120" required
                        placeholder="Ej.: Cambios temporales en el servicio">
@@ -34,6 +35,9 @@
                 <label for="mensaje">Mensaje</label>
                 <textarea id="mensaje" name="mensaje" maxlength="3000" rows="6" required
                           placeholder="Escribe la información que quieres comunicar."></textarea>
+
+                <label for="imagen">Imagen del aviso (opcional, PNG o JPEG, máximo 5 MB)</label>
+                <input id="imagen" name="imagen" type="file" accept="image/png,image/jpeg">
 
                 <fieldset class="announcement-audience">
                     <legend>Destinatarios</legend>
@@ -92,6 +96,9 @@
             <article class="announcement-history-item" th:each="aviso : ${avisosRecientes}">
                 <div>
                     <h3 th:text="${aviso.asunto}">Asunto</h3>
+                    <img th:if="${aviso.imagen != null}"
+                         th:src="@{/avisos/{id}/imagen(id=${aviso.id})}"
+                         alt="Imagen del aviso" class="announcement-history-image">
                     <p th:text="${aviso.mensaje}">Mensaje del aviso</p>
                 </div>
                 <span th:text="|${#lists.size(aviso.destinatarios)} destinatario(s)|">Destinatarios</span>

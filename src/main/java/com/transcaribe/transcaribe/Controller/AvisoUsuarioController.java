@@ -3,9 +3,13 @@ package com.transcaribe.transcaribe.Controller;
 import com.transcaribe.transcaribe.Model.Usuario;
 import com.transcaribe.transcaribe.Repository.UsuarioRepository;
 import com.transcaribe.transcaribe.service.AvisoAdministrativoService;
+import org.springframework.http.CacheControl;
 import org.springframework.http.HttpStatus;
+import org.springframework.http.MediaType;
+import org.springframework.http.ResponseEntity;
 import org.springframework.security.core.Authentication;
 import org.springframework.stereotype.Controller;
+import org.springframework.web.bind.annotation.GetMapping;
 import org.springframework.web.bind.annotation.PathVariable;
 import org.springframework.web.bind.annotation.PostMapping;
 import org.springframework.web.bind.annotation.RequestParam;
@@ -21,6 +25,28 @@ public class AvisoUsuarioController {
                                   UsuarioRepository usuarioRepository) {
         this.avisoService = avisoService;
         this.usuarioRepository = usuarioRepository;
+    }
+
+    @GetMapping("/avisos/{avisoId}/imagen")
+    public ResponseEntity<byte[]> obtenerImagen(@PathVariable String avisoId,
+                                                Authentication authentication) {
+        Usuario usuario = usuarioRepository.findByCorreo(authentication.getName())
+                .orElseThrow(() -> new ResponseStatusException(HttpStatus.UNAUTHORIZED));
+        try {
+            AvisoAdministrativoService.ImagenAviso imagen =
+                    avisoService.obtenerImagenParaUsuario(avisoId, usuario.getId(),
+                            authentication.getAuthorities().stream()
+                                    .anyMatch(authority -> "ROLE_ADMIN".equals(authority.getAuthority())));
+            return ResponseEntity.ok()
+                    .contentType(MediaType.parseMediaType(imagen.tipoContenido()))
+                    .cacheControl(CacheControl.noStore())
+                    .header("X-Content-Type-Options", "nosniff")
+                    .body(imagen.contenido());
+        } catch (IllegalArgumentException exception) {
+            throw new ResponseStatusException(HttpStatus.NOT_FOUND, exception.getMessage());
+        } catch (SecurityException exception) {
+            throw new ResponseStatusException(HttpStatus.FORBIDDEN, exception.getMessage());
+        }
     }
 
     @PostMapping("/avisos/{avisoId}/cerrar")

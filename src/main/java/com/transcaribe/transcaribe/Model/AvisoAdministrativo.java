@@ -20,6 +20,12 @@ public class AvisoAdministrativo {
     @Field("mensaje")
     private String mensaje;
 
+    @Field("imagen")
+    private byte[] imagen;
+
+    @Field("imagen_tipo_contenido")
+    private String imagenTipoContenido;
+
     @Field("fecha_creacion")
     private LocalDateTime fechaCreacion;
 
@@ -47,6 +53,14 @@ public class AvisoAdministrativo {
 
     public String getMensaje() { return mensaje; }
     public void setMensaje(String mensaje) { this.mensaje = mensaje; }
+
+    public byte[] getImagen() { return imagen; }
+    public void setImagen(byte[] imagen) { this.imagen = imagen; }
+
+    public String getImagenTipoContenido() { return imagenTipoContenido; }
+    public void setImagenTipoContenido(String imagenTipoContenido) {
+        this.imagenTipoContenido = imagenTipoContenido;
+    }
 
     public LocalDateTime getFechaCreacion() { return fechaCreacion; }
     public void setFechaCreacion(LocalDateTime fechaCreacion) { this.fechaCreacion = fechaCreacion; }

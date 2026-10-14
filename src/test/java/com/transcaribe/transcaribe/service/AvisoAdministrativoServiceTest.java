@@ -10,10 +10,12 @@ import org.junit.jupiter.api.extension.ExtendWith;
 import org.mockito.ArgumentCaptor;
 import org.mockito.Mock;
 import org.mockito.junit.jupiter.MockitoExtension;
+import org.springframework.mock.web.MockMultipartFile;
 
 import java.util.List;
 import java.util.Optional;
 
+import static org.junit.jupiter.api.Assertions.assertArrayEquals;
 import static org.junit.jupiter.api.Assertions.assertEquals;
 import static org.junit.jupiter.api.Assertions.assertThrows;
 import static org.mockito.ArgumentMatchers.any;
@@ -41,6 +43,20 @@ class AvisoAdministrativoServiceTest {
                                                    String asunto, String mensaje) {
                 correosEnviados.add(destinatario);
             }
+
+            @Override
+            public void enviarAvisoAdministrativo(String destinatario, String nombre,
+                                                   String asunto, String mensaje,
+                                                   byte[] imagen, String tipoContenidoImagen) {
+                correosEnviados.add(destinatario);
+            }
+
+            @Override
+            public void enviarAvisosAdministrativosEnSegundoPlano(
+                    String avisoId, List<DestinatarioAviso> destinatarios, String asunto,
+                    String mensajeAviso, byte[] imagen, String tipoContenidoImagen) {
+                destinatarios.forEach(destinatario -> correosEnviados.add(destinatario.correo()));
+            }
         };
         service = new AvisoAdministrativoService(avisoRepository, usuarioRepository, emailService);
     }
@@ -62,7 +78,7 @@ class AvisoAdministrativoServiceTest {
                         List.of(Usuario.ROLE_USER, Usuario.ROLE_ADMIN, Usuario.ROLE_CONDUCTOR), List.of());
 
         assertEquals(3, resultado.totalDestinatarios());
-        assertEquals(3, resultado.correosEnviados());
+        assertEquals(3, resultado.correosProgramados());
         assertEquals(List.of("admin@example.com", "conductor@example.com", "pasajero@example.com"),
                 correosEnviados);
         ArgumentCaptor<AvisoAdministrativo> avisoCaptor = ArgumentCaptor.forClass(AvisoAdministrativo.class);
@@ -92,6 +108,55 @@ class AvisoAdministrativoServiceTest {
 
         assertEquals(2, resultado.totalDestinatarios());
         assertEquals(List.of("uno@example.com", "dos@example.com"), correosEnviados);
+    }
+
+    @Test
+    void guardaImagenValidaYPermiteQueElDestinatarioLaConsulte() {
+        Usuario destinatario = usuario("user-1", "uno@example.com", Usuario.ROLE_USER);
+        byte[] png = {(byte) 0x89, 0x50, 0x4E, 0x47, 0x0D, 0x0A, 0x1A, 0x0A};
+        MockMultipartFile imagen = new MockMultipartFile(
+                "imagen", "aviso.png", "image/png", png);
+        when(usuarioRepository.findAllById(any())).thenReturn(List.of(destinatario));
+        when(avisoRepository.save(any(AvisoAdministrativo.class)))
+                .thenAnswer(invocation -> {
+                    AvisoAdministrativo guardado = invocation.getArgument(0);
+                    guardado.setId("aviso-1");
+                    return guardado;
+                });
+
+        service.crearAviso("Asunto", "Mensaje", false,
+                List.of(Usuario.ROLE_USER), List.of("user-1"), imagen);
+
+        ArgumentCaptor<AvisoAdministrativo> avisoCaptor = ArgumentCaptor.forClass(AvisoAdministrativo.class);
+        verify(avisoRepository).save(avisoCaptor.capture());
+        AvisoAdministrativo aviso = avisoCaptor.getValue();
+        assertArrayEquals(png, aviso.getImagen());
+        assertEquals("image/png", aviso.getImagenTipoContenido());
+
+        when(avisoRepository.findById(aviso.getId())).thenReturn(Optional.of(aviso));
+        assertArrayEquals(png, service.obtenerImagenParaUsuario(aviso.getId(), "user-1", false)
+                .contenido());
+    }
+
+    @Test
+    void rechazaArchivoQueNoSeaImagenValida() {
+        MockMultipartFile imagen = new MockMultipartFile(
+                "imagen", "documento.png", "image/png", "no es una imagen".getBytes());
+
+        assertThrows(IllegalArgumentException.class,
+                () -> service.crearAviso("Asunto", "Mensaje", false,
+                        List.of(Usuario.ROLE_USER), List.of("user-1"), imagen));
+    }
+
+    @Test
+    void noPermiteQueUnNoDestinatarioDescargueLaImagen() {
+        AvisoAdministrativo aviso = new AvisoAdministrativo("Asunto", "Mensaje", List.of("user-1"));
+        aviso.setImagen(new byte[] {1});
+        aviso.setImagenTipoContenido("image/png");
+        when(avisoRepository.findById("aviso-1")).thenReturn(Optional.of(aviso));
+
+        assertThrows(SecurityException.class,
+                () -> service.obtenerImagenParaUsuario("aviso-1", "user-2", false));
     }
 
     @Test

@@ -58,6 +58,7 @@ public class SecurityConfig {
                     "/js/**"
                 ).permitAll()
                 .requestMatchers("/choose-view").authenticated()
+                .requestMatchers("/chat/**").hasAnyRole("ADMIN", "CONDUCTOR")
                 .requestMatchers("/admin/**").hasRole("ADMIN")
                 .requestMatchers("/conductor/**").hasRole("CONDUCTOR")
                 .anyRequest().authenticated()

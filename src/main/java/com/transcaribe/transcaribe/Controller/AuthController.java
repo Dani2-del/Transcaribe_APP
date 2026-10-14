@@ -33,16 +33,18 @@ public class AuthController {
     public String mapaRutas(Authentication authentication, Model model) {
         String menuUrl = "/";
         String menuLabel = "Volver al inicio";
+        boolean esAdmin = false;
         if (authentication != null
                 && authentication.isAuthenticated()
                 && !(authentication instanceof AnonymousAuthenticationToken)) {
-            boolean esAdmin = authentication.getAuthorities().stream()
+            esAdmin = authentication.getAuthorities().stream()
                     .anyMatch(authority -> "ROLE_ADMIN".equals(authority.getAuthority()));
             boolean esConductor = authentication.getAuthorities().stream()
                     .anyMatch(authority -> "ROLE_CONDUCTOR".equals(authority.getAuthority()));
             menuUrl = esAdmin ? "/admin/dashboard" : esConductor ? "/conductor/panel" : "/menu";
-            menuLabel = "Volver al menú";
+            menuLabel = esAdmin ? "Volver al panel" : "Volver al menú";
         }
+        model.addAttribute("esAdmin", esAdmin);
         model.addAttribute("menuUrl", menuUrl);
         model.addAttribute("menuLabel", menuLabel);
         return "mapa-rutas";

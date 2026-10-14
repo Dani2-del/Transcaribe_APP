@@ -1,9 +1,13 @@
 package com.transcaribe.transcaribe.service;
 
-import com.transcaribe.transcaribe.Model.Usuario;
+import com.transcaribe.transcaribe.Model.AvisoAdministrativo;
+import com.transcaribe.transcaribe.Model.HorarioConductor;
 import com.transcaribe.transcaribe.Model.Transaccion;
-import com.transcaribe.transcaribe.Repository.UsuarioRepository;
+import com.transcaribe.transcaribe.Model.Usuario;
+import com.transcaribe.transcaribe.Repository.AvisoAdministrativoRepository;
+import com.transcaribe.transcaribe.Repository.HorarioConductorRepository;
 import com.transcaribe.transcaribe.Repository.TransaccionRepository;
+import com.transcaribe.transcaribe.Repository.UsuarioRepository;
 import org.apache.poi.ss.usermodel.*;
 import org.apache.poi.xssf.streaming.SXSSFWorkbook;
 import org.springframework.stereotype.Service;
@@ -13,7 +17,9 @@ import java.io.OutputStream;
 import java.time.DateTimeException;
 import java.time.LocalDate;
 import java.time.LocalDateTime;
+import java.util.HashMap;
 import java.util.Iterator;
+import java.util.Map;
 import java.util.stream.Stream;
 
 @Service
@@ -21,87 +27,42 @@ public class ExcelReportService {
 
     private final UsuarioRepository usuarioRepository;
     private final TransaccionRepository transaccionRepository;
+    private final HorarioConductorRepository horarioRepository;
+    private final AvisoAdministrativoRepository avisoRepository;
 
-    public ExcelReportService(UsuarioRepository usuarioRepository, TransaccionRepository transaccionRepository) {
+    public ExcelReportService(UsuarioRepository usuarioRepository,
+                              TransaccionRepository transaccionRepository,
+                              HorarioConductorRepository horarioRepository,
+                              AvisoAdministrativoRepository avisoRepository) {
         this.usuarioRepository = usuarioRepository;
         this.transaccionRepository = transaccionRepository;
+        this.horarioRepository = horarioRepository;
+        this.avisoRepository = avisoRepository;
     }
 
-    public void generarReporte(String tipo, Integer anio, Integer mes, Integer dia, OutputStream out) throws IOException {
+    public void generarReporte(String tipo, Integer anio, Integer mes, Integer dia,
+                               boolean incluirUsuarios, boolean incluirTransacciones,
+                               boolean incluirRutas, boolean incluirAvisos,
+                               OutputStream out) throws IOException {
         SXSSFWorkbook workbook = new SXSSFWorkbook(100);
         workbook.setCompressTempFiles(true);
         try (workbook) {
-
-            // --- Estilos ---
-            CellStyle headerStyle = workbook.createCellStyle();
-            Font headerFont = workbook.createFont();
-            headerFont.setBold(true);
-            headerFont.setColor(IndexedColors.WHITE.getIndex());
-            headerStyle.setFont(headerFont);
-            headerStyle.setFillForegroundColor(IndexedColors.DARK_BLUE.getIndex());
-            headerStyle.setFillPattern(FillPatternType.SOLID_FOREGROUND);
-
-            // --- Hoja 1: Resumen Usuarios ---
-            Sheet sheetUsers = workbook.createSheet("Resumen Usuarios");
-            String[] colUsers = {"ID", "Nombre", "Correo", "Rol"};
-            Row headerUsers = sheetUsers.createRow(0);
-            for (int i = 0; i < colUsers.length; i++) {
-                Cell cell = headerUsers.createCell(i);
-                cell.setCellValue(colUsers[i]);
-                cell.setCellStyle(headerStyle);
-            }
-            try (Stream<Usuario> usuarios = usuarioRepository.streamAll()) {
-                Iterator<Usuario> iterator = usuarios.iterator();
-                int rowU = 1;
-                while (iterator.hasNext()) {
-                    Usuario u = iterator.next();
-                    Row row = sheetUsers.createRow(rowU++);
-                    row.createCell(0).setCellValue(u.getId());
-                    row.createCell(1).setCellValue(u.getNombre() != null ? u.getNombre() : "N/A");
-                    row.createCell(2).setCellValue(u.getCorreo());
-                    row.createCell(3).setCellValue(u.getRole());
-                }
-            }
-            setColumnWidths(sheetUsers, 18, 28, 36, 20);
-
-            // --- Hoja 2: Transacciones filtradas ---
-            // Título dinámico según filtro
-            String nombreHoja = buildNombreHoja(tipo, anio, mes, dia);
-            Sheet sheetTrans = workbook.createSheet(nombreHoja);
-            String[] colTrans = {"Fecha y Hora", "ID Transacción", "Usuario (Correo)", "Nombre", "Tipo", "Monto"};
-            Row headerTrans = sheetTrans.createRow(0);
-            for (int i = 0; i < colTrans.length; i++) {
-                Cell cell = headerTrans.createCell(i);
-                cell.setCellValue(colTrans[i]);
-                cell.setCellStyle(headerStyle);
-            }
-
+            CellStyle headerStyle = crearEstiloEncabezado(workbook);
             DateRange rango = buildRango(tipo, anio, mes, dia);
-            try (Stream<Transaccion> transacciones = rango == null
-                    ? transaccionRepository.streamAll()
-                    : transaccionRepository.streamByFechaEnRango(rango.inicio(), rango.fin())) {
-                Iterator<Transaccion> iterator = transacciones.iterator();
-                int rowT = 1;
-                while (iterator.hasNext()) {
-                    Transaccion t = iterator.next();
-                    if (!coincideConFiltro(t, tipo, anio, mes, dia)) {
-                        continue;
-                    }
-                    Row row = sheetTrans.createRow(rowT++);
-                    row.createCell(0).setCellValue(t.getFecha().toString());
-                    row.createCell(1).setCellValue(t.getId());
-                    if (t.getUsuario() != null) {
-                        row.createCell(2).setCellValue(t.getUsuario().getCorreo());
-                        row.createCell(3).setCellValue(t.getUsuario().getNombre());
-                    } else {
-                        row.createCell(2).setCellValue("N/A");
-                        row.createCell(3).setCellValue("N/A");
-                    }
-                    row.createCell(4).setCellValue(t.getTipo());
-                    row.createCell(5).setCellValue(t.getMonto());
-                }
+            Map<String, String> nombresUsuarios = new HashMap<>();
+
+            if (incluirUsuarios) {
+                escribirUsuarios(workbook, headerStyle);
             }
-            setColumnWidths(sheetTrans, 22, 26, 36, 28, 18, 18);
+            if (incluirTransacciones) {
+                escribirTransacciones(workbook, headerStyle, tipo, anio, mes, dia, rango);
+            }
+            if (incluirRutas) {
+                escribirRutas(workbook, headerStyle, tipo, anio, mes, dia, rango, nombresUsuarios);
+            }
+            if (incluirAvisos) {
+                escribirAvisos(workbook, headerStyle, tipo, anio, mes, dia, rango, nombresUsuarios);
+            }
 
             workbook.write(out);
         } finally {
@@ -109,15 +70,174 @@ public class ExcelReportService {
         }
     }
 
-    private boolean coincideConFiltro(Transaccion transaccion, String tipo, Integer anio, Integer mes, Integer dia) {
-        if (transaccion.getFecha() == null) return false;
+    private CellStyle crearEstiloEncabezado(Workbook workbook) {
+        CellStyle headerStyle = workbook.createCellStyle();
+        Font headerFont = workbook.createFont();
+        headerFont.setBold(true);
+        headerFont.setColor(IndexedColors.WHITE.getIndex());
+        headerStyle.setFont(headerFont);
+        headerStyle.setFillForegroundColor(IndexedColors.DARK_BLUE.getIndex());
+        headerStyle.setFillPattern(FillPatternType.SOLID_FOREGROUND);
+        return headerStyle;
+    }
+
+    private void escribirUsuarios(Workbook workbook, CellStyle headerStyle) {
+        Sheet sheet = workbook.createSheet("Resumen Usuarios");
+        String[] columns = {"ID", "Nombre", "Correo", "Rol"};
+        crearEncabezado(sheet, headerStyle, columns);
+        try (Stream<Usuario> usuarios = usuarioRepository.streamAll()) {
+            Iterator<Usuario> iterator = usuarios.iterator();
+            int rowNumber = 1;
+            while (iterator.hasNext()) {
+                Usuario usuario = iterator.next();
+                Row row = sheet.createRow(rowNumber++);
+                row.createCell(0).setCellValue(valor(usuario.getId()));
+                row.createCell(1).setCellValue(valor(usuario.getNombre()));
+                row.createCell(2).setCellValue(valor(usuario.getCorreo()));
+                row.createCell(3).setCellValue(valor(usuario.getRole()));
+            }
+        }
+        setColumnWidths(sheet, 18, 28, 36, 20);
+    }
+
+    private void escribirTransacciones(Workbook workbook, CellStyle headerStyle,
+                                       String tipo, Integer anio, Integer mes, Integer dia,
+                                       DateRange rango) {
+        Sheet sheet = workbook.createSheet(buildNombreHoja(tipo, anio, mes, dia));
+        String[] columns = {"Fecha y Hora", "ID Transacción", "Usuario (Correo)", "Nombre", "Tipo", "Monto"};
+        crearEncabezado(sheet, headerStyle, columns);
+        try (Stream<Transaccion> transacciones = rango == null
+                ? transaccionRepository.streamAll()
+                : transaccionRepository.streamByFechaEnRango(rango.inicio(), rango.fin())) {
+            Iterator<Transaccion> iterator = transacciones.iterator();
+            int rowNumber = 1;
+            while (iterator.hasNext()) {
+                Transaccion transaccion = iterator.next();
+                if (!coincideConFiltro(transaccion.getFecha(), tipo, anio, mes, dia)) {
+                    continue;
+                }
+                Row row = sheet.createRow(rowNumber++);
+                row.createCell(0).setCellValue(transaccion.getFecha().toString());
+                row.createCell(1).setCellValue(valor(transaccion.getId()));
+                Usuario usuario = transaccion.getUsuario();
+                row.createCell(2).setCellValue(usuario == null ? "N/A" : valor(usuario.getCorreo()));
+                row.createCell(3).setCellValue(usuario == null ? "N/A" : valor(usuario.getNombre()));
+                row.createCell(4).setCellValue(valor(transaccion.getTipo()));
+                row.createCell(5).setCellValue(transaccion.getMonto());
+            }
+        }
+        setColumnWidths(sheet, 22, 26, 36, 28, 18, 18);
+    }
+
+    private void escribirRutas(Workbook workbook, CellStyle headerStyle,
+                               String tipo, Integer anio, Integer mes, Integer dia,
+                               DateRange rango, Map<String, String> nombresUsuarios) {
+        Sheet sheet = workbook.createSheet("Rutas conductores");
+        String[] columns = {"Fecha", "Hora inicio", "Hora fin", "Conductor", "ID conductor",
+                "Ruta", "Sentido", "Placa bus", "ID bus", "Estado"};
+        crearEncabezado(sheet, headerStyle, columns);
+        try (Stream<HorarioConductor> horarios = rango == null
+                ? horarioRepository.streamAll()
+                : horarioRepository.streamByFechaEnRango(rango.inicio().toLocalDate(), rango.fin().toLocalDate())) {
+            Iterator<HorarioConductor> iterator = horarios.iterator();
+            int rowNumber = 1;
+            while (iterator.hasNext()) {
+                HorarioConductor horario = iterator.next();
+                if (!coincideConFiltro(horario.getFecha(), tipo, anio, mes, dia)) {
+                    continue;
+                }
+                Row row = sheet.createRow(rowNumber++);
+                row.createCell(0).setCellValue(valor(horario.getFecha()));
+                row.createCell(1).setCellValue(valor(horario.getHoraInicio()));
+                row.createCell(2).setCellValue(valor(horario.getHoraFin()));
+                row.createCell(3).setCellValue(nombreUsuario(horario.getConductorId(), nombresUsuarios));
+                row.createCell(4).setCellValue(valor(horario.getConductorId()));
+                row.createCell(5).setCellValue(valor(horario.getRuta()));
+                row.createCell(6).setCellValue(valor(horario.getSentido()));
+                row.createCell(7).setCellValue(valor(horario.getBusPlaca()));
+                row.createCell(8).setCellValue(valor(horario.getBusId()));
+                row.createCell(9).setCellValue(valor(horario.getEstado()));
+            }
+        }
+        setColumnWidths(sheet, 16, 16, 16, 30, 26, 24, 20, 18, 26, 18);
+    }
+
+    private void escribirAvisos(Workbook workbook, CellStyle headerStyle,
+                                String tipo, Integer anio, Integer mes, Integer dia,
+                                DateRange rango, Map<String, String> nombresUsuarios) {
+        Sheet sheet = workbook.createSheet("Historial avisos");
+        String[] columns = {"Fecha de creación", "ID aviso", "Asunto", "Mensaje",
+                "Destinatarios", "Descartado por"};
+        crearEncabezado(sheet, headerStyle, columns);
+        try (Stream<AvisoAdministrativo> avisos = rango == null
+                ? avisoRepository.streamAll()
+                : avisoRepository.streamByFechaCreacionEnRango(rango.inicio(), rango.fin())) {
+            Iterator<AvisoAdministrativo> iterator = avisos.iterator();
+            int rowNumber = 1;
+            while (iterator.hasNext()) {
+                AvisoAdministrativo aviso = iterator.next();
+                if (!coincideConFiltro(aviso.getFechaCreacion(), tipo, anio, mes, dia)) {
+                    continue;
+                }
+                Row row = sheet.createRow(rowNumber++);
+                row.createCell(0).setCellValue(valor(aviso.getFechaCreacion()));
+                row.createCell(1).setCellValue(valor(aviso.getId()));
+                row.createCell(2).setCellValue(valor(aviso.getAsunto()));
+                row.createCell(3).setCellValue(valor(aviso.getMensaje()));
+                row.createCell(4).setCellValue(nombresDestinatarios(aviso.getDestinatarios(), nombresUsuarios));
+                row.createCell(5).setCellValue(nombresDestinatarios(aviso.getDescartadaPor(), nombresUsuarios));
+            }
+        }
+        setColumnWidths(sheet, 22, 26, 30, 60, 50, 50);
+    }
+
+    private void crearEncabezado(Sheet sheet, CellStyle headerStyle, String[] columns) {
+        Row header = sheet.createRow(0);
+        for (int i = 0; i < columns.length; i++) {
+            Cell cell = header.createCell(i);
+            cell.setCellValue(columns[i]);
+            cell.setCellStyle(headerStyle);
+        }
+    }
+
+    private String nombreUsuario(String usuarioId, Map<String, String> nombresUsuarios) {
+        if (usuarioId == null || usuarioId.isBlank()) {
+            return "N/A";
+        }
+        return nombresUsuarios.computeIfAbsent(usuarioId, id -> usuarioRepository.findById(id)
+                .map(usuario -> valor(usuario.getNombre()))
+                .orElse(id));
+    }
+
+    private String nombresDestinatarios(Iterable<String> ids, Map<String, String> nombresUsuarios) {
+        if (ids == null) {
+            return "";
+        }
+        StringBuilder nombres = new StringBuilder();
+        for (String id : ids) {
+            if (nombres.length() > 0) {
+                nombres.append("; ");
+            }
+            nombres.append(nombreUsuario(id, nombresUsuarios));
+        }
+        return nombres.toString();
+    }
+
+    private String valor(Object value) {
+        return value == null ? "N/A" : value.toString();
+    }
+
+    private boolean coincideConFiltro(LocalDateTime fecha, String tipo, Integer anio, Integer mes, Integer dia) {
+        return fecha != null && coincideConFiltro(fecha.toLocalDate(), tipo, anio, mes, dia);
+    }
+
+    private boolean coincideConFiltro(LocalDate fecha, String tipo, Integer anio, Integer mes, Integer dia) {
+        if (fecha == null) return false;
         if ("todo".equals(tipo)) return true;
-        if (anio != null && transaccion.getFecha().getYear() != anio) return false;
+        if (anio != null && fecha.getYear() != anio) return false;
         if (("mensual".equals(tipo) || "diario".equals(tipo)) && mes != null
-                && transaccion.getFecha().getMonthValue() != mes) return false;
-        if ("diario".equals(tipo) && dia != null
-                && transaccion.getFecha().getDayOfMonth() != dia) return false;
-        return true;
+                && fecha.getMonthValue() != mes) return false;
+        return !"diario".equals(tipo) || dia == null || fecha.getDayOfMonth() == dia;
     }
 
     private DateRange buildRango(String tipo, Integer anio, Integer mes, Integer dia) {
@@ -142,12 +262,12 @@ public class ExcelReportService {
     private record DateRange(LocalDateTime inicio, LocalDateTime fin) {}
 
     private String buildNombreHoja(String tipo, Integer anio, Integer mes, Integer dia) {
-        switch (tipo) {
-            case "anual":   return "Año " + anio;
-            case "mensual": return "Mes " + mes + "-" + anio;
-            case "diario":  return "Día " + dia + "-" + mes + "-" + anio;
-            default:        return "Historial Global";
-        }
+        return switch (tipo) {
+            case "anual" -> "Año " + anio;
+            case "mensual" -> "Mes " + mes + "-" + anio;
+            case "diario" -> "Día " + dia + "-" + mes + "-" + anio;
+            default -> "Historial Global";
+        };
     }
 
     private void setColumnWidths(Sheet sheet, int... widthsInCharacters) {

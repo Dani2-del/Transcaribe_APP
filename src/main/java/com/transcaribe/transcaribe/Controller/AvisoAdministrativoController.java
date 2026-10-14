@@ -10,6 +10,7 @@ import org.springframework.web.bind.annotation.GetMapping;
 import org.springframework.web.bind.annotation.PostMapping;
 import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RequestParam;
+import org.springframework.web.multipart.MultipartFile;
 import org.springframework.web.servlet.mvc.support.RedirectAttributes;
 
 import java.util.List;
@@ -49,6 +50,7 @@ public class AvisoAdministrativoController {
                               @RequestParam String tipoDestinatarios,
                               @RequestParam(required = false) List<String> roles,
                               @RequestParam(required = false) List<String> usuarios,
+                              @RequestParam(name = "imagen", required = false) MultipartFile imagen,
                               RedirectAttributes redirectAttributes) {
         try {
             boolean paraTodos = "roles".equals(tipoDestinatarios);
@@ -56,13 +58,10 @@ public class AvisoAdministrativoController {
                 throw new IllegalArgumentException("Selecciona destinatarios por tipo de cuenta o de forma individual.");
             }
             AvisoAdministrativoService.ResultadoEnvio resultado =
-                    avisoService.crearAviso(asunto, mensaje, paraTodos, roles, usuarios);
+                    avisoService.crearAviso(asunto, mensaje, paraTodos, roles, usuarios, imagen);
             String reporte = "Aviso publicado para " + resultado.totalDestinatarios()
-                    + " cuenta(s). Correos enviados: " + resultado.correosEnviados() + ".";
-            if (!resultado.correosFallidos().isEmpty()) {
-                reporte += " Correos no enviados: " + resultado.correosFallidos().size()
-                        + ". El aviso sí aparecerá dentro de la aplicación.";
-            }
+                    + " cuenta(s). El envío de " + resultado.correosProgramados()
+                    + " correo(s) continuará en segundo plano.";
             redirectAttributes.addFlashAttribute("mensajeAviso", reporte);
         } catch (IllegalArgumentException exception) {
             redirectAttributes.addFlashAttribute("errorAviso", exception.getMessage());

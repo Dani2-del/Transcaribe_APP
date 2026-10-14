@@ -4,14 +4,14 @@ import com.transcaribe.transcaribe.Model.AvisoAdministrativo;
 import com.transcaribe.transcaribe.Model.Usuario;
 import com.transcaribe.transcaribe.Repository.AvisoAdministrativoRepository;
 import com.transcaribe.transcaribe.Repository.UsuarioRepository;
-import org.slf4j.Logger;
-import org.slf4j.LoggerFactory;
 import org.springframework.stereotype.Service;
 import org.springframework.util.StringUtils;
+import org.springframework.web.multipart.MultipartFile;
 
-import java.util.ArrayList;
+import java.io.IOException;
 import java.util.LinkedHashSet;
 import java.util.List;
+import java.util.Locale;
 import java.util.Set;
 import java.util.regex.Pattern;
 import java.util.stream.Collectors;
@@ -19,9 +19,9 @@ import java.util.stream.Collectors;
 @Service
 public class AvisoAdministrativoService {
 
-    private static final Logger LOGGER = LoggerFactory.getLogger(AvisoAdministrativoService.class);
     private static final int MAX_ASUNTO = 120;
     private static final int MAX_MENSAJE = 3000;
+    private static final int MAX_IMAGEN_BYTES = 5 * 1024 * 1024;
     private static final Pattern CORREO_VALIDO =
             Pattern.compile("^[^\\s@]+@[^\\s@]+\\.[^\\s@]+$");
     private static final Set<String> ROLES_NOTIFICABLES = Set.of(
@@ -49,6 +49,12 @@ public class AvisoAdministrativoService {
 
     public ResultadoEnvio crearAviso(String asunto, String mensaje, boolean paraTodos,
                                      List<String> rolesSeleccionados, List<String> idsSeleccionados) {
+        return crearAviso(asunto, mensaje, paraTodos, rolesSeleccionados, idsSeleccionados, null);
+    }
+
+    public ResultadoEnvio crearAviso(String asunto, String mensaje, boolean paraTodos,
+                                     List<String> rolesSeleccionados, List<String> idsSeleccionados,
+                                     MultipartFile imagenSubida) {
         String asuntoValidado = asunto == null ? "" : asunto.trim();
         String mensajeValidado = mensaje == null ? "" : mensaje.trim();
         if (!StringUtils.hasText(asuntoValidado) || asuntoValidado.length() > MAX_ASUNTO) {
@@ -57,6 +63,7 @@ public class AvisoAdministrativoService {
         if (!StringUtils.hasText(mensajeValidado) || mensajeValidado.length() > MAX_MENSAJE) {
             throw new IllegalArgumentException("El mensaje es obligatorio y debe tener máximo 3000 caracteres.");
         }
+        ImagenAviso imagen = validarImagen(imagenSubida);
 
         Set<String> roles = validarRoles(rolesSeleccionados);
         List<Usuario> destinatarios = paraTodos
@@ -72,25 +79,36 @@ public class AvisoAdministrativoService {
                 .map(Usuario::getId)
                 .distinct()
                 .toList();
-        AvisoAdministrativo aviso = avisoRepository.save(
-                new AvisoAdministrativo(asuntoValidado, mensajeValidado, idsDestinatarios));
-
-        int enviados = 0;
-        List<String> correosFallidos = new ArrayList<>();
-        for (Usuario destinatario : destinatarios) {
-            try {
-                emailService.enviarAvisoAdministrativo(
-                        destinatario.getCorreo(), nombreParaMostrar(destinatario),
-                        asuntoValidado, mensajeValidado);
-                enviados++;
-            } catch (IllegalStateException exception) {
-                LOGGER.warn("No se pudo enviar el aviso administrativo {} a {}",
-                        aviso.getId(), destinatario.getId(), exception);
-                correosFallidos.add(destinatario.getCorreo());
-            }
+        AvisoAdministrativo nuevoAviso =
+                new AvisoAdministrativo(asuntoValidado, mensajeValidado, idsDestinatarios);
+        if (imagen != null) {
+            nuevoAviso.setImagen(imagen.contenido());
+            nuevoAviso.setImagenTipoContenido(imagen.tipoContenido());
         }
+        AvisoAdministrativo aviso = avisoRepository.save(nuevoAviso);
 
-        return new ResultadoEnvio(aviso.getId(), destinatarios.size(), enviados, correosFallidos);
+        List<EmailService.DestinatarioAviso> destinatariosCorreo = destinatarios.stream()
+                .map(destinatario -> new EmailService.DestinatarioAviso(
+                        destinatario.getId(), destinatario.getCorreo(), nombreParaMostrar(destinatario)))
+                .toList();
+        emailService.enviarAvisosAdministrativosEnSegundoPlano(aviso.getId(), destinatariosCorreo,
+                asuntoValidado, mensajeValidado,
+                imagen == null ? null : imagen.contenido(),
+                imagen == null ? null : imagen.tipoContenido());
+
+        return new ResultadoEnvio(aviso.getId(), destinatarios.size(), destinatariosCorreo.size());
+    }
+
+    public ImagenAviso obtenerImagenParaUsuario(String avisoId, String usuarioId, boolean administrador) {
+        AvisoAdministrativo aviso = avisoRepository.findById(avisoId)
+                .orElseThrow(() -> new IllegalArgumentException("No se encontró el aviso solicitado."));
+        if (!administrador && !aviso.getDestinatarios().contains(usuarioId)) {
+            throw new SecurityException("El usuario no es destinatario de este aviso.");
+        }
+        if (aviso.getImagen() == null || aviso.getImagen().length == 0) {
+            throw new IllegalArgumentException("El aviso no contiene una imagen.");
+        }
+        return new ImagenAviso(aviso.getImagen(), aviso.getImagenTipoContenido());
     }
 
     public List<AvisoAdministrativo> obtenerPendientes(String usuarioId) {
@@ -151,6 +169,45 @@ public class AvisoAdministrativoService {
         return roles;
     }
 
+    private ImagenAviso validarImagen(MultipartFile imagenSubida) {
+        if (imagenSubida == null || imagenSubida.isEmpty()) {
+            return null;
+        }
+        if (imagenSubida.getSize() > MAX_IMAGEN_BYTES) {
+            throw new IllegalArgumentException("La imagen no puede superar los 5 MB.");
+        }
+
+        String tipoContenido = imagenSubida.getContentType();
+        if (!"image/png".equalsIgnoreCase(tipoContenido)
+                && !"image/jpeg".equalsIgnoreCase(tipoContenido)) {
+            throw new IllegalArgumentException("La imagen debe estar en formato PNG o JPEG.");
+        }
+
+        try {
+            byte[] contenido = imagenSubida.getBytes();
+            if (!esImagenValida(contenido, tipoContenido)) {
+                throw new IllegalArgumentException("El archivo no contiene una imagen PNG o JPEG válida.");
+            }
+            return new ImagenAviso(contenido, tipoContenido.toLowerCase(Locale.ROOT));
+        } catch (IOException exception) {
+            throw new IllegalArgumentException("No se pudo leer la imagen seleccionada.", exception);
+        }
+    }
+
+    private boolean esImagenValida(byte[] contenido, String tipoContenido) {
+        if ("image/png".equalsIgnoreCase(tipoContenido)) {
+            return contenido.length >= 8
+                    && contenido[0] == (byte) 0x89 && contenido[1] == 0x50
+                    && contenido[2] == 0x4E && contenido[3] == 0x47
+                    && contenido[4] == 0x0D && contenido[5] == 0x0A
+                    && contenido[6] == 0x1A && contenido[7] == 0x0A;
+        }
+        return contenido.length >= 3
+                && contenido[0] == (byte) 0xFF
+                && contenido[1] == (byte) 0xD8
+                && contenido[2] == (byte) 0xFF;
+    }
+
     private boolean esDestinatarioElegible(Usuario usuario) {
         return usuario != null
                 && usuario.isActivo()
@@ -164,10 +221,9 @@ public class AvisoAdministrativoService {
         return StringUtils.hasText(usuario.getNombre()) ? usuario.getNombre().trim() : usuario.getCorreo();
     }
 
-    public record ResultadoEnvio(String avisoId, int totalDestinatarios, int correosEnviados,
-                                 List<String> correosFallidos) {
-        public ResultadoEnvio {
-            correosFallidos = List.copyOf(correosFallidos);
-        }
+    public record ResultadoEnvio(String avisoId, int totalDestinatarios, int correosProgramados) {
+    }
+
+    public record ImagenAviso(byte[] contenido, String tipoContenido) {
     }
 }

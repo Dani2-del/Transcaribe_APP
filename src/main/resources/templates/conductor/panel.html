@@ -21,6 +21,7 @@
       <a th:href="@{/conductor/panel}" th:classappend="${!verHistorial} ? ' active' : ''">Mis rutas</a>
       <a th:href="@{/conductor/panel(historial=true)}"
          th:classappend="${verHistorial} ? ' active' : ''">Historial</a>
+      <a th:href="@{/chat}">Chat operativo</a>
       <a th:href="@{/menu}" class="conductor-view-switch">Vista usuario</a>
       <form th:action="@{/logout}" method="post">
         <button type="submit">Cerrar sesión</button>

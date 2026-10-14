@@ -13,11 +13,13 @@
 <body>
 <nav class="route-map-navbar" aria-label="Navegación principal">
     <div class="route-map-navbar-left">
-        <a class="route-map-brand" th:href="@{/}" aria-label="Digitrans, inicio">
+        <a class="route-map-brand"
+           th:href="${esAdmin == true ? '/admin/dashboard' : '/'}"
+           th:attr="aria-label=${esAdmin == true ? 'Digitrans, panel de administración' : 'Digitrans, inicio'}">
             <img th:src="@{/images/digitrans-mark.svg}" alt="">
             <span>Digitrans</span>
         </a>
-        <div class="route-map-nav-links">
+        <div class="route-map-nav-links" th:if="${esAdmin != true}">
             <a th:href="@{/recarga}">Recargas</a>
             <span aria-hidden="true">·</span>
             <a th:href="@{/tarjetas}">Tarjetas</a>

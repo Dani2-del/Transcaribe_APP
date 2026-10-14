@@ -9,14 +9,18 @@ import org.springframework.mail.javamail.MimeMessageHelper;
 import org.springframework.scheduling.annotation.Async;
 import org.springframework.stereotype.Service;
 import org.springframework.beans.factory.annotation.Value;
+import org.springframework.core.io.ByteArrayResource;
 import org.springframework.web.util.HtmlUtils;
 import java.time.LocalDate;
 import java.time.LocalTime;
 import java.util.List;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 
 @Service
 public class EmailService {
-    
+
+    private static final Logger LOGGER = LoggerFactory.getLogger(EmailService.class);
     private final JavaMailSender mailSender;
 
     @Value("${spring.mail.username}")
@@ -26,11 +30,39 @@ public class EmailService {
         this.mailSender = mailSender;
     }
 
+    @Async
+    public void enviarAvisosAdministrativosEnSegundoPlano(String avisoId,
+                                                           List<DestinatarioAviso> destinatarios,
+                                                           String asunto, String mensajeAviso,
+                                                           byte[] imagen, String tipoContenidoImagen) {
+        int enviados = 0;
+        int fallidos = 0;
+        for (DestinatarioAviso destinatario : destinatarios) {
+            try {
+                enviarAvisoAdministrativo(destinatario.correo(), destinatario.nombre(),
+                        asunto, mensajeAviso, imagen, tipoContenidoImagen);
+                enviados++;
+            } catch (IllegalStateException exception) {
+                fallidos++;
+                LOGGER.warn("No se pudo enviar el aviso administrativo {} al destinatario {}",
+                        avisoId, destinatario.usuarioId(), exception);
+            }
+        }
+        LOGGER.info("Envío de correos del aviso administrativo {} completado: {} enviados, {} fallidos.",
+                avisoId, enviados, fallidos);
+    }
+
     public void enviarAvisoAdministrativo(String destinatario, String nombre,
                                            String asunto, String mensajeAviso) {
+        enviarAvisoAdministrativo(destinatario, nombre, asunto, mensajeAviso, null, null);
+    }
+
+    public void enviarAvisoAdministrativo(String destinatario, String nombre,
+                                           String asunto, String mensajeAviso,
+                                           byte[] imagen, String tipoContenidoImagen) {
         try {
             MimeMessage message = mailSender.createMimeMessage();
-            MimeMessageHelper helper = new MimeMessageHelper(message, false, "UTF-8");
+            MimeMessageHelper helper = new MimeMessageHelper(message, imagen != null, "UTF-8");
             helper.setTo(destinatario);
             helper.setSubject(asunto);
             helper.setFrom(remitente);
@@ -40,14 +72,21 @@ public class EmailService {
                     "<div style='font-family: Arial, sans-serif; border: 1px solid #ddd; border-radius: 10px; padding: 24px; max-width: 620px;'>" +
                     "<h2 style='color: #b75c16;'>Transcaribe · Aviso importante</h2>" +
                     "<p>Hola <strong>" + HtmlUtils.htmlEscape(nombre) + "</strong>,</p>" +
+                    (imagen == null ? "" : "<img src='cid:imagenAviso' alt='Imagen del aviso' style='display:block; max-width:100%; height:auto; margin: 0 0 20px; border-radius:8px;'>") +
                     "<div style='white-space: pre-wrap; line-height: 1.6;'>" + mensajeHtml + "</div>" +
                     "<p style='font-size: 12px; color: #777; margin-top: 24px;'>Mensaje enviado por la administración de Transcaribe.</p>" +
                     "</div>";
             helper.setText(contenidoHtml, true);
+            if (imagen != null) {
+                helper.addInline("imagenAviso", new ByteArrayResource(imagen), tipoContenidoImagen);
+            }
             mailSender.send(message);
         } catch (MessagingException | MailException exception) {
             throw new IllegalStateException("No se pudo enviar el aviso al correo " + destinatario + ".", exception);
         }
+    }
+
+    public record DestinatarioAviso(String usuarioId, String correo, String nombre) {
     }
 
     @Async

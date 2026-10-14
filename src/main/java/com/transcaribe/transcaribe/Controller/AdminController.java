@@ -269,7 +269,15 @@ public class AdminController {
             @RequestParam(required = false) Integer anio,
             @RequestParam(required = false) Integer mes,
             @RequestParam(required = false) Integer dia,
-            @RequestParam(required = false) String nombreReporte) {
+            @RequestParam(required = false) String nombreReporte,
+            @RequestParam(defaultValue = "true") boolean incluirUsuarios,
+            @RequestParam(defaultValue = "true") boolean incluirTransacciones,
+            @RequestParam(defaultValue = "false") boolean incluirRutas,
+            @RequestParam(defaultValue = "false") boolean incluirAvisos) {
+
+        if (!incluirUsuarios && !incluirTransacciones && !incluirRutas && !incluirAvisos) {
+            return ResponseEntity.badRequest().build();
+        }
 
         String nombrePredeterminado = switch (tipo) {
             case "anual"   -> "Reporte_" + anio + ".xlsx";
@@ -292,7 +300,9 @@ public class AdminController {
             nombreArchivo += ".xlsx";
         }
 
-        StreamingResponseBody file = out -> excelService.generarReporte(tipo, anio, mes, dia, out);
+        StreamingResponseBody file = out -> excelService.generarReporte(
+                tipo, anio, mes, dia, incluirUsuarios, incluirTransacciones,
+                incluirRutas, incluirAvisos, out);
 
         return ResponseEntity.ok()
                 .header(HttpHeaders.CONTENT_DISPOSITION,
